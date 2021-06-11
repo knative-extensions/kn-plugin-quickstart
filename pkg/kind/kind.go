@@ -12,24 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package command
+package kind
 
 import (
 	"fmt"
 
-	"github.com/spf13/cobra"
-	"knative.dev/kn-plugin-quickstart/pkg/kind"
+	"knative.dev/kn-plugin-quickstart/pkg/eventing"
+	"knative.dev/kn-plugin-quickstart/pkg/serving"
 )
 
-// NewKindCommand implements 'kn kind' command
-func NewKindCommand() *cobra.Command {
-	return &cobra.Command{
-		Use:   "kind",
-		Short: "Quickstart with Kind",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			fmt.Println("Running Knative Quickstart using Kind")
-			kind.SetUpKind()
-			return nil
-		},
-	}
+func SetUpKind() {
+	createKindCluster()
+	serving.InstallKnativeServing()
+	eventing.InstallKnativeEventing()
+}
+
+func createKindCluster() {
+	fmt.Println("TODO: Creating Kind cluster...")
 }
