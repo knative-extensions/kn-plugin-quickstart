@@ -28,8 +28,7 @@ func NewKindCommand() *cobra.Command {
 		Short: "Quickstart with Kind",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			fmt.Println("Running Knative Quickstart using Kind")
-			kind.SetUpKind()
-			return nil
+			return kind.SetUp()
 		},
 	}
 }

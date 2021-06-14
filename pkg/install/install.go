@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package serving
+package install
 
 import (
 	"fmt"
@@ -21,43 +21,40 @@ import (
 
 var servingVersion = "0.23.0"
 
-// InstallKnativeServing installs Serving from Github YAML files
-func InstallKnativeServing() {
+// Serving installs Knative Serving from Github YAML files
+func Serving() error {
 	fmt.Println("Starting Knative Serving install...")
 
 	crds := exec.Command("kubectl", "apply", "-f", "https://github.com/knative/serving/releases/download/v"+servingVersion+"/serving-crds.yaml")
-	err := crds.Run()
-	if err != nil {
-		fmt.Errorf("%s", err)
+	if err := crds.Run(); err != nil {
+		return fmt.Errorf("apply: %w", err)
 	}
+
 	crdWait := exec.Command("kubectl", "wait", "--for=condition=Established", "--all", "crd")
-	err = crdWait.Start()
-	if err != nil {
-		fmt.Errorf("%s", err)
-	}
-	err = crdWait.Wait()
-	if err != nil {
-		fmt.Errorf("%s", err)
+	if err := crdWait.Run(); err != nil {
+		return fmt.Errorf("wait: %w", err)
 	}
 	fmt.Println("    CRDs installed...")
 
 	core := exec.Command("kubectl", "apply", "-f", "https://github.com/knative/serving/releases/download/v"+servingVersion+"/serving-core.yaml")
-	err = core.Run()
-	if err != nil {
-		fmt.Errorf("%s", err)
+	if err := core.Run(); err != nil {
+		return fmt.Errorf("core apply: %w", err)
 	}
-	coreWait := exec.Command("kubectl", "wait", "pod", "--timeout=-1s", "--for=condition=Ready", "-l", "'!job-name'", "-n", "knative-serving")
-	err = coreWait.Start()
-	if err != nil {
-		fmt.Errorf("%s", err)
-	}
-	err = coreWait.Wait()
-	if err != nil {
-		fmt.Errorf("%s", err)
+
+	coreWait := exec.Command("kubectl", "wait", "pod", "--timeout=-1s", "--for=condition=Ready", "-l", "!job-name", "-n", "knative-serving")
+	if err := coreWait.Run(); err != nil {
+		fmt.Errorf("core wait: %w", err)
 	}
 
 	fmt.Println("    Core installed...")
 
 	fmt.Println("Finished installing Knative Serving")
 
+	return nil
+}
+
+// Eventing installs Knative Eventing from Github YAML files
+// TODO
+func Eventing() {
+	fmt.Println("TODO: Installing Knative Eventing...")
 }

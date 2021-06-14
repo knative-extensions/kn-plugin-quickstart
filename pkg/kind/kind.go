@@ -17,14 +17,16 @@ package kind
 import (
 	"fmt"
 
-	"knative.dev/kn-plugin-quickstart/pkg/eventing"
-	"knative.dev/kn-plugin-quickstart/pkg/serving"
+	"knative.dev/kn-plugin-quickstart/pkg/install"
 )
 
-func SetUpKind() {
+func SetUp() error {
 	createKindCluster()
-	serving.InstallKnativeServing()
-	eventing.InstallKnativeEventing()
+	if err := install.Serving(); err != nil {
+		return fmt.Errorf("apply: %w", err)
+	}
+	install.Eventing()
+	return nil
 }
 
 func createKindCluster() {
