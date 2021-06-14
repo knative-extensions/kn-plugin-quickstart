@@ -43,7 +43,7 @@ func Serving() error {
 
 	coreWait := exec.Command("kubectl", "wait", "pod", "--timeout=-1s", "--for=condition=Ready", "-l", "!job-name", "-n", "knative-serving")
 	if err := coreWait.Run(); err != nil {
-		fmt.Errorf("core wait: %w", err)
+		return fmt.Errorf("core wait: %w", err)
 	}
 
 	fmt.Println("    Core installed...")
