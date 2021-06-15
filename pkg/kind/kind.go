@@ -20,15 +20,21 @@ import (
 	"knative.dev/kn-plugin-quickstart/pkg/install"
 )
 
+// SetUp creates a local Kind cluster and installs all the relevant Knative components
 func SetUp() error {
-	createKindCluster()
+	if err := createKindCluster(); err != nil {
+		return fmt.Errorf("creating cluster: %w", err)
+	}
 	if err := install.Serving(); err != nil {
 		return fmt.Errorf("apply: %w", err)
 	}
-	install.Eventing()
+	if err := install.Eventing(); err != nil {
+		return fmt.Errorf("install eventing: %w", err)
+	}
 	return nil
 }
 
-func createKindCluster() {
+func createKindCluster() error {
 	fmt.Println("TODO: Creating Kind cluster...")
+	return nil
 }

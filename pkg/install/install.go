@@ -55,6 +55,7 @@ func Serving() error {
 
 // Eventing installs Knative Eventing from Github YAML files
 // TODO
-func Eventing() {
+func Eventing() error {
 	fmt.Println("TODO: Installing Knative Eventing...")
+	return nil
 }
