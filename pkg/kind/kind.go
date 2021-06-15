@@ -26,7 +26,10 @@ func SetUp() error {
 		return fmt.Errorf("creating cluster: %w", err)
 	}
 	if err := install.Serving(); err != nil {
-		return fmt.Errorf("apply: %w", err)
+		return fmt.Errorf("install serving: %w", err)
+	}
+	if err := install.Kourier(); err != nil {
+		return fmt.Errorf("install kourier: %w", err)
 	}
 	if err := install.Eventing(); err != nil {
 		return fmt.Errorf("install eventing: %w", err)
