@@ -55,6 +55,12 @@ func Kourier() error {
 	}
 	fmt.Println("    Kourier service installed...")
 
+	domainDns := exec.Command("kubectl", "patch", "configmap", "-n", "knative-serving", "config-domain", "-p", "{\"data\": {\"127.0.0.1.nip.io\": \"\"}}")
+	if err := domainDns.Run(); err != nil {
+		return fmt.Errorf("domain dns: %w", err)
+	}
+	fmt.Println("    Domain DNS set up...")
+
 	fmt.Println("Finished installing Networking layer")
 
 	return nil
