@@ -71,7 +71,8 @@ func createKindCluster() error {
 		return fmt.Errorf("kind create: %w", err)
 	}
 
-	createCluster := exec.Command("kind", "create", "cluster", "--config", kindConfig.Name())
+	configFile := kindConfig.Name()
+	createCluster := exec.Command("kind", "create", "cluster", "--config", configFile)
 	if err := createCluster.Run(); err != nil {
 		return fmt.Errorf("kind create: %w", err)
 	}
