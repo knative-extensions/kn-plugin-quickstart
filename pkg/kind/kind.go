@@ -16,9 +16,16 @@ package kind
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
+	"os/exec"
+	"time"
 
 	"knative.dev/kn-plugin-quickstart/pkg/install"
 )
+
+var kubernetesVersion = "v1.21.1@sha256:fae9a58f17f18f06aeac9772ca8b5ac680ebbed985e266f711d936e91d113bad"
+var clusterName = "knative"
 
 // SetUp creates a local Kind cluster and installs all the relevant Knative components
 func SetUp() error {
@@ -38,6 +45,49 @@ func SetUp() error {
 }
 
 func createKindCluster() error {
-	fmt.Println("TODO: Creating Kind cluster...")
+	fmt.Println("Creating Kind cluster...")
+
+	// Get kind config file
+	kindConfig, err := ioutil.TempFile(os.TempDir(), "kind-config-*.yaml")
+	if err != nil {
+		return fmt.Errorf("kind create: %w", err)
+	}
+
+	defer os.Remove(kindConfig.Name())
+
+	configRaw := "kind: Cluster\n" +
+		"apiVersion: kind.x-k8s.io/v1alpha4\n" +
+		"name: " + clusterName + "\n" +
+		"nodes:\n" +
+		"- role: control-plane\n" +
+		"  image: kindest/node:" + kubernetesVersion + "\n" +
+		"  extraPortMappings:\n" +
+		"  - containerPort: 31080\n" +
+		"    listenAddress: 127.0.0.1\n" +
+		"    hostPort: 80"
+	config := []byte(configRaw)
+
+	if _, err := kindConfig.Write(config); err != nil {
+		return fmt.Errorf("kind create: %w", err)
+	}
+
+	createCluster := exec.Command("kind", "create", "cluster", "--config", kindConfig.Name())
+	if err := createCluster.Run(); err != nil {
+		return fmt.Errorf("kind create: %w", err)
+	}
+
+	if err := kindConfig.Close(); err != nil {
+		return fmt.Errorf("kind create: %w", err)
+	}
+
+	fmt.Println("    Waiting on cluster to be ready...")
+	time.Sleep(10 * time.Second)
+
+	clusterWait := exec.Command("kubectl", "wait", "pod", "--timeout=-1s", "--for=condition=Ready", "-l", "!job-name", "-n", "kube-system")
+	if err := clusterWait.Run(); err != nil {
+		fmt.Errorf("wait: %w", err)
+	}
+
+	fmt.Println("Cluster created")
 	return nil
 }
