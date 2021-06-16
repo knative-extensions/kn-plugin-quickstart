@@ -85,7 +85,7 @@ func createKindCluster() error {
 
 	clusterWait := exec.Command("kubectl", "wait", "pod", "--timeout=-1s", "--for=condition=Ready", "-l", "!job-name", "-n", "kube-system")
 	if err := clusterWait.Run(); err != nil {
-		fmt.Errorf("wait: %w", err)
+		return fmt.Errorf("wait: %w", err)
 	}
 
 	fmt.Println("Cluster created")
