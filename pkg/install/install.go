@@ -20,6 +20,51 @@ import (
 )
 
 var servingVersion = "0.23.0"
+var kourierVersion = "0.23.0"
+
+// Kourier installs Kourier networking layer from Github YAML files
+func Kourier() error {
+
+	fmt.Println("Starting Networking layer install...")
+
+	kourier := exec.Command("kubectl", "apply", "-f", "https://github.com/knative-sandbox/net-kourier/releases/download/v"+kourierVersion+"/kourier.yaml")
+	if err := kourier.Run(); err != nil {
+		return fmt.Errorf("apply: %w", err)
+	}
+
+	kourierWait := exec.Command("kubectl", "wait", "pod", "--timeout=-1s", "--for=condition=Ready", "-l", "!job-name", "-n", "kourier-system")
+	if err := kourierWait.Run(); err != nil {
+		return fmt.Errorf("wait: %w", err)
+	}
+	servingWait := exec.Command("kubectl", "wait", "pod", "--timeout=-1s", "--for=condition=Ready", "-l", "!job-name", "-n", "knative-serving")
+	if err := servingWait.Run(); err != nil {
+		return fmt.Errorf("wait: %w", err)
+	}
+	fmt.Println("    Kourier installed...")
+
+	ingress := exec.Command("kubectl", "patch", "configmap/config-network", "--namespace", "knative-serving", "--type", "merge", "--patch", "{\"data\":{\"ingress.class\":\"kourier.ingress.networking.knative.dev\"}}")
+	if err := ingress.Run(); err != nil {
+		return fmt.Errorf("ingress error: %w", err)
+	}
+	fmt.Println("    Ingress patched...")
+
+	// TODO move svc yaml to kn-plugin-quickstart repo and update location
+	kourierIngress := exec.Command("kubectl", "apply", "-f", "https://gist.githubusercontent.com/psschwei/8321b367bb9e4281025b5b17e9cbb673/raw/e9efa21df77322a42de183b60c4e0933dbaae830/kourier-ingress.yaml")
+	if err := kourierIngress.Run(); err != nil {
+		return fmt.Errorf("kourier-ingress error: %w", err)
+	}
+	fmt.Println("    Kourier service installed...")
+
+	domainDns := exec.Command("kubectl", "patch", "configmap", "-n", "knative-serving", "config-domain", "-p", "{\"data\": {\"127.0.0.1.nip.io\": \"\"}}")
+	if err := domainDns.Run(); err != nil {
+		return fmt.Errorf("domain dns: %w", err)
+	}
+	fmt.Println("    Domain DNS set up...")
+
+	fmt.Println("Finished installing Networking layer")
+
+	return nil
+}
 
 // Serving installs Knative Serving from Github YAML files
 func Serving() error {
