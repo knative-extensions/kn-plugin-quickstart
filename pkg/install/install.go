@@ -17,6 +17,7 @@ package install
 import (
 	"fmt"
 	"os/exec"
+	"time"
 )
 
 var servingVersion = "0.23.0"
@@ -29,17 +30,19 @@ func Kourier() error {
 	fmt.Println("Starting Networking layer install...")
 
 	kourier := exec.Command("kubectl", "apply", "-f", "https://github.com/knative-sandbox/net-kourier/releases/download/v"+kourierVersion+"/kourier.yaml")
-	if err := kourier.Run(); err != nil {
-		return fmt.Errorf("apply: %w", err)
+	for i := 0; i <= 2; {
+		kourier.Run()
+		i++
+		time.Sleep(5 * time.Second)
 	}
 
 	kourierWait := exec.Command("kubectl", "wait", "pod", "--timeout=-1s", "--for=condition=Ready", "-l", "!job-name", "-n", "kourier-system")
 	if err := kourierWait.Run(); err != nil {
-		return fmt.Errorf("wait: %w", err)
+		return fmt.Errorf("kourier: %w", err)
 	}
 	servingWait := exec.Command("kubectl", "wait", "pod", "--timeout=-1s", "--for=condition=Ready", "-l", "!job-name", "-n", "knative-serving")
 	if err := servingWait.Run(); err != nil {
-		return fmt.Errorf("wait: %w", err)
+		return fmt.Errorf("serving: %w", err)
 	}
 	fmt.Println("    Kourier installed...")
 
@@ -51,8 +54,10 @@ func Kourier() error {
 
 	// TODO move svc yaml to kn-plugin-quickstart repo and update location
 	kourierIngress := exec.Command("kubectl", "apply", "-f", "https://gist.githubusercontent.com/psschwei/8321b367bb9e4281025b5b17e9cbb673/raw/e9efa21df77322a42de183b60c4e0933dbaae830/kourier-ingress.yaml")
-	if err := kourierIngress.Run(); err != nil {
-		return fmt.Errorf("kourier-ingress error: %w", err)
+	for i := 0; i <= 2; {
+		kourierIngress.Run()
+		i++
+		time.Sleep(5 * time.Second)
 	}
 	fmt.Println("    Kourier service installed...")
 
@@ -72,24 +77,28 @@ func Serving() error {
 	fmt.Println("Starting Knative Serving install...")
 
 	crds := exec.Command("kubectl", "apply", "-f", "https://github.com/knative/serving/releases/download/v"+servingVersion+"/serving-crds.yaml")
-	if err := crds.Run(); err != nil {
-		return fmt.Errorf("apply: %w", err)
+	for i := 0; i <= 2; {
+		crds.Run()
+		i++
+		time.Sleep(5 * time.Second)
 	}
 
 	crdWait := exec.Command("kubectl", "wait", "--for=condition=Established", "--all", "crd")
 	if err := crdWait.Run(); err != nil {
-		return fmt.Errorf("wait: %w", err)
+		return fmt.Errorf("crds: %w", err)
 	}
 	fmt.Println("    CRDs installed...")
 
 	core := exec.Command("kubectl", "apply", "-f", "https://github.com/knative/serving/releases/download/v"+servingVersion+"/serving-core.yaml")
-	if err := core.Run(); err != nil {
-		return fmt.Errorf("core apply: %w", err)
+	for i := 0; i <= 2; {
+		core.Run()
+		i++
+		time.Sleep(5 * time.Second)
 	}
 
 	coreWait := exec.Command("kubectl", "wait", "pod", "--timeout=-1s", "--for=condition=Ready", "-l", "!job-name", "-n", "knative-serving")
 	if err := coreWait.Run(); err != nil {
-		return fmt.Errorf("core wait: %w", err)
+		return fmt.Errorf("core: %w", err)
 	}
 
 	fmt.Println("    Core installed...")
