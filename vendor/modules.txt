@@ -1,4 +1,4 @@
-# github.com/google/go-cmp v0.5.4
+# github.com/google/go-cmp v0.5.6
 github.com/google/go-cmp/cmp
 github.com/google/go-cmp/cmp/internal/diff
 github.com/google/go-cmp/cmp/internal/flags
@@ -23,9 +23,9 @@ gotest.tools/v3/internal/assert
 gotest.tools/v3/internal/difflib
 gotest.tools/v3/internal/format
 gotest.tools/v3/internal/source
-# knative.dev/client v0.21.1-0.20210304102315-ffe385a34e60
+# knative.dev/client v0.23.1-0.20210614133120-935c2a5303ac
 ## explicit
 knative.dev/client/pkg/kn/plugin
-# knative.dev/hack v0.0.0-20210203173706-8368e1f6eacf
+# knative.dev/hack v0.0.0-20210614141220-66ab1a098940
 ## explicit
 knative.dev/hack
