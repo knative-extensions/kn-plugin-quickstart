@@ -48,7 +48,7 @@ func createKindCluster() error {
 	fmt.Println("Creating Kind cluster...")
 
 	// Get kind config file
-	kindConfig, err := ioutil.TempFile(os.TempDir(), "kind-config-*.yaml")
+	kindConfig, err := ioutil.TempFile("", "kind-config-*.yaml")
 	if err != nil {
 		return fmt.Errorf("kind create: %w", err)
 	}
