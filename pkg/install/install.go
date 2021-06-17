@@ -21,6 +21,7 @@ import (
 
 var servingVersion = "0.23.0"
 var kourierVersion = "0.23.0"
+var eventingVersion = "0.23.0"
 
 // Kourier installs Kourier networking layer from Github YAML files
 func Kourier() error {
@@ -99,8 +100,52 @@ func Serving() error {
 }
 
 // Eventing installs Knative Eventing from Github YAML files
-// TODO
 func Eventing() error {
-	fmt.Println("TODO: Installing Knative Eventing...")
+	fmt.Println("Starting Knative Eventing install...")
+
+	crds := exec.Command("kubectl", "apply", "-f", "https://github.com/knative/eventing/releases/download/v"+eventingVersion+"/eventing-crds.yaml")
+	if err := crds.Run(); err != nil {
+		return fmt.Errorf("apply: %w", err)
+	}
+
+	crdWait := exec.Command("kubectl", "wait", "--for=condition=Established", "--all", "crd")
+	if err := crdWait.Run(); err != nil {
+		return fmt.Errorf("wait: %w", err)
+	}
+	fmt.Println("    CRDs installed...")
+
+	core := exec.Command("kubectl", "apply", "-f", "https://github.com/knative/eventing/releases/download/v"+eventingVersion+"/eventing-core.yaml")
+	if err := core.Run(); err != nil {
+		return fmt.Errorf("core apply: %w", err)
+	}
+
+	coreWait := exec.Command("kubectl", "wait", "pod", "--timeout=-1s", "--for=condition=Ready", "-l", "!job-name", "-n", "knative-eventing")
+	if err := coreWait.Run(); err != nil {
+		return fmt.Errorf("core wait: %w", err)
+	}
+	fmt.Println("    Core installed...")
+
+	channel := exec.Command("kubectl", "apply", "-f", "https://github.com/knative/eventing/releases/download/v"+eventingVersion+"/in-memory-channel.yaml")
+	if err := channel.Run(); err != nil {
+		return fmt.Errorf("channel apply: %w", err)
+	}
+
+	channelWait := exec.Command("kubectl", "wait", "pod", "--timeout=-1s", "--for=condition=Ready", "-l", "!job-name", "-n", "knative-eventing")
+	if err := channelWait.Run(); err != nil {
+		return fmt.Errorf("channel wait: %w", err)
+	}
+	fmt.Println("    In-memory channel installed...")
+
+	broker := exec.Command("kubectl", "apply", "-f", "https://github.com/knative/eventing/releases/download/v"+eventingVersion+"/mt-channel-broker.yaml")
+	if err := broker.Run(); err != nil {
+		return fmt.Errorf("broker apply: %w", err)
+	}
+
+	brokerWait := exec.Command("kubectl", "wait", "pod", "--timeout=-1s", "--for=condition=Ready", "-l", "!job-name", "-n", "knative-eventing")
+	if err := brokerWait.Run(); err != nil {
+		return fmt.Errorf("broker wait: %w", err)
+	}
+	fmt.Println("    Mt-channel broker installed...")
+
 	return nil
 }
