@@ -73,7 +73,7 @@ func createKindCluster() error {
 
 	configFile := kindConfig.Name()
 	createCluster := exec.Command("kind", "create", "cluster", "--config", configFile)
-	if err := createCluster.Run(); err != nil {
+	if err := runCommand(createCluster); err != nil {
 		return fmt.Errorf("kind create: %w", err)
 	}
 
@@ -85,10 +85,18 @@ func createKindCluster() error {
 	time.Sleep(10 * time.Second)
 
 	clusterWait := exec.Command("kubectl", "wait", "pod", "--timeout=-1s", "--for=condition=Ready", "-l", "!job-name", "-n", "kube-system")
-	if err := clusterWait.Run(); err != nil {
-		return fmt.Errorf("wait: %w", err)
+	if err := runCommand(clusterWait); err != nil {
+		return fmt.Errorf("kind ready: %w", err)
 	}
 
 	fmt.Println("Cluster created")
+	return nil
+}
+
+func runCommand(c *exec.Cmd) error {
+	if out, err := c.CombinedOutput(); err != nil {
+		fmt.Println(string(out))
+		return err
+	}
 	return nil
 }
