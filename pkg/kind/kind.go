@@ -114,7 +114,7 @@ func checkForExistingCluster() error {
 				return fmt.Errorf("new cluster: %w", err)
 			}
 		} else {
-			fmt.Println("Cluster create skipped")
+			fmt.Println("Installation skipped")
 			return nil
 		}
 	} else {
