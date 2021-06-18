@@ -19,13 +19,15 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"regexp"
 	"time"
 
 	"knative.dev/kn-plugin-quickstart/pkg/install"
 )
 
 var kubernetesVersion = "v1.21.1@sha256:fae9a58f17f18f06aeac9772ca8b5ac680ebbed985e266f711d936e91d113bad"
-var clusterName = "knative"
+var clusterName = "knative-quickstart"
+var kindVersion = "v0.11"
 
 // SetUp creates a local Kind cluster and installs all the relevant Knative components
 func SetUp() error {
@@ -45,10 +47,90 @@ func SetUp() error {
 }
 
 func createKindCluster() error {
-	fmt.Println("Creating Kind cluster...")
 
-	// Get kind config file
-	kindConfig, err := ioutil.TempFile("", "kind-config-*.yaml")
+	if err := checkKindVersion(); err != nil {
+		return fmt.Errorf("kind version: %w", err)
+	}
+	if err := checkForExistingCluster(); err != nil {
+		return fmt.Errorf("existing cluster: %w", err)
+	}
+
+	return nil
+}
+
+// checkKindVersion validates that the user has the correct version of Kind installed.
+// If not, it prompts the user to download a newer version before continuing.
+func checkKindVersion() error {
+
+	versionCheck := exec.Command("kind", "version")
+	out, err := versionCheck.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("kind version: %w", err)
+	}
+	fmt.Printf("Kind version is: %s\n", string(out))
+
+	r := regexp.MustCompile(kindVersion)
+	matches := r.Match(out)
+	if !matches {
+		var resp string
+		fmt.Printf("WARNING: Please make sure you are using Kind version %s.x", kindVersion)
+		fmt.Println("Download from https://github.com/kubernetes-sigs/kind/releases")
+		fmt.Print("Do you want to continue at your own risk [Y/n]: ")
+		fmt.Scanf("%s", &resp)
+		if resp == "n" || resp == "N" {
+			fmt.Println("Installation stopped. Please upgrade kind and run again")
+			os.Exit(0)
+		}
+	}
+
+	return nil
+}
+
+// checkForExistingCluster checks if the user already has a Kind cluster. If so, it provides
+// the option of deleting the existing cluster and recreating it. If not, it proceeds to
+// creating a new cluster
+func checkForExistingCluster() error {
+
+	getClusters := exec.Command("kind", "get", "clusters", "-q")
+	out, err := getClusters.CombinedOutput()
+	fmt.Println(string(out))
+	if err != nil {
+		fmt.Errorf("check cluster: %w", err)
+	}
+	// TODO Add tests for regex
+	r := regexp.MustCompile(`(?m)^knative-quickstart\n`)
+	matches := r.Match(out)
+	if matches {
+		var resp string
+		fmt.Print("Knative Cluster kind-" + clusterName + " already installed.\nDelete and recreate [y/N]: ")
+		fmt.Scanf("%s", &resp)
+		if resp == "y" || resp == "Y" {
+			fmt.Println("deleting cluster...")
+			deleteCluster := exec.Command("kind", "delete", "cluster", "--name", clusterName)
+			if err := deleteCluster.Run(); err != nil {
+				return fmt.Errorf("delete cluster: %w", err)
+			}
+			if err := createNewCluster(); err != nil {
+				return fmt.Errorf("new cluster: %w", err)
+			}
+		} else {
+			fmt.Println("Cluster create skipped")
+			return nil
+		}
+	} else {
+		if err := createNewCluster(); err != nil {
+			return fmt.Errorf("new cluster: %w", err)
+		}
+	}
+
+	return nil
+}
+
+// createNewCluster creates a new Kind cluster
+func createNewCluster() error {
+
+	fmt.Println("Creating Kind cluster...")
+	kindConfig, err := ioutil.TempFile(os.TempDir(), "kind-config-*.yaml")
 	if err != nil {
 		return fmt.Errorf("kind create: %w", err)
 	}
