@@ -21,6 +21,7 @@ import (
 	"os/exec"
 	"time"
 
+	"k8s.io/apimachinery/pkg/util/wait"
 	"knative.dev/kn-plugin-quickstart/pkg/install"
 )
 
@@ -82,10 +83,10 @@ func createKindCluster() error {
 	}
 
 	fmt.Println("    Waiting on cluster to be ready...")
-	time.Sleep(10 * time.Second)
-
 	clusterWait := exec.Command("kubectl", "wait", "pod", "--for=condition=Ready", "-l", "!job-name", "-n", "kube-system")
-	if err := runCommand(clusterWait); err != nil {
+	if err := wait.Poll(10*time.Second, 30*time.Second, func() (bool, error) {
+		return runCommand(clusterWait) == nil, nil
+	}); err != nil {
 		return fmt.Errorf("kind ready: %w", err)
 	}
 
