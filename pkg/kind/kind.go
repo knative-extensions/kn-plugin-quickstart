@@ -21,8 +21,6 @@ import (
 	"os/exec"
 	"time"
 
-	"knative.dev/kn-plugin-quickstart/pkg/util"
-
 	"knative.dev/kn-plugin-quickstart/pkg/install"
 )
 
@@ -75,8 +73,8 @@ func createKindCluster() error {
 
 	configFile := kindConfig.Name()
 	createCluster := exec.Command("kind", "create", "cluster", "--config", configFile)
-	if err := util.RunCommand(createCluster); err != nil {
-		return fmt.Errorf("%w", err)
+	if err := runCommand(createCluster); err != nil {
+		return fmt.Errorf("kind create error: %w", err)
 	}
 
 	if err := kindConfig.Close(); err != nil {
@@ -87,10 +85,18 @@ func createKindCluster() error {
 	time.Sleep(10 * time.Second)
 
 	clusterWait := exec.Command("kubectl", "wait", "pod", "--timeout=-1s", "--for=condition=Ready", "-l", "!job-name", "-n", "kube-system")
-	if err := util.RunCommand(clusterWait); err != nil {
-		return fmt.Errorf("%w", err)
+	if err := runCommand(clusterWait); err != nil {
+		return fmt.Errorf("kind ready error: %w", err)
 	}
 
 	fmt.Println("Cluster created")
+	return nil
+}
+
+func runCommand(c *exec.Cmd) error {
+	if out, err := c.CombinedOutput(); err != nil {
+		fmt.Println(string(out))
+		return err
+	}
 	return nil
 }
