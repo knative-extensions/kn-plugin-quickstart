@@ -33,23 +33,23 @@ func Kourier() error {
 
 	kourier := exec.Command("kubectl", "apply", "-f", "https://github.com/knative-sandbox/net-kourier/releases/download/v"+kourierVersion+"/kourier.yaml")
 	if err := wait.PollImmediate(1*time.Second, 5*time.Second, func() (bool, error) {
-		return kourier.Run() == nil, nil
+		return runCommand(kourier) == nil, nil
 	}); err != nil {
 		return fmt.Errorf("wait: %w", err)
 	}
 
 	kourierWait := exec.Command("kubectl", "wait", "pod", "--timeout=-1s", "--for=condition=Ready", "-l", "!job-name", "-n", "kourier-system")
-	if err := kourierWait.Run(); err != nil {
+	if err := runCommand(kourierWait); err != nil {
 		return fmt.Errorf("kourier: %w", err)
 	}
 	servingWait := exec.Command("kubectl", "wait", "pod", "--timeout=-1s", "--for=condition=Ready", "-l", "!job-name", "-n", "knative-serving")
-	if err := servingWait.Run(); err != nil {
+	if err := runCommand(servingWait); err != nil {
 		return fmt.Errorf("serving: %w", err)
 	}
 	fmt.Println("    Kourier installed...")
 
 	ingress := exec.Command("kubectl", "patch", "configmap/config-network", "--namespace", "knative-serving", "--type", "merge", "--patch", "{\"data\":{\"ingress.class\":\"kourier.ingress.networking.knative.dev\"}}")
-	if err := ingress.Run(); err != nil {
+	if err := runCommand(ingress); err != nil {
 		return fmt.Errorf("ingress error: %w", err)
 	}
 	fmt.Println("    Ingress patched...")
@@ -57,7 +57,7 @@ func Kourier() error {
 	// TODO move svc yaml to kn-plugin-quickstart repo and update location
 	kourierIngress := exec.Command("kubectl", "apply", "-f", "https://gist.githubusercontent.com/psschwei/8321b367bb9e4281025b5b17e9cbb673/raw/e9efa21df77322a42de183b60c4e0933dbaae830/kourier-ingress.yaml")
 	if err := wait.PollImmediate(1*time.Second, 5*time.Second, func() (bool, error) {
-		return kourierIngress.Run() == nil, nil
+		return runCommand(kourierIngress) == nil, nil
 	}); err != nil {
 		return fmt.Errorf("wait: %w", err)
 	}
@@ -80,26 +80,26 @@ func Serving() error {
 
 	crds := exec.Command("kubectl", "apply", "-f", "https://github.com/knative/serving/releases/download/v"+servingVersion+"/serving-crds.yaml")
 	if err := wait.PollImmediate(1*time.Second, 5*time.Second, func() (bool, error) {
-		return crds.Run() == nil, nil
+		return runCommand(crds) == nil, nil
 	}); err != nil {
 		return fmt.Errorf("wait: %w", err)
 	}
 
 	crdWait := exec.Command("kubectl", "wait", "--for=condition=Established", "--all", "crd")
-	if err := crdWait.Run(); err != nil {
+	if err := runCommand(crdWait); err != nil {
 		return fmt.Errorf("crds: %w", err)
 	}
 	fmt.Println("    CRDs installed...")
 
 	core := exec.Command("kubectl", "apply", "-f", "https://github.com/knative/serving/releases/download/v"+servingVersion+"/serving-core.yaml")
 	if err := wait.PollImmediate(1*time.Second, 5*time.Second, func() (bool, error) {
-		return core.Run() == nil, nil
+		return runCommand(core) == nil, nil
 	}); err != nil {
 		return fmt.Errorf("wait: %w", err)
 	}
 
 	coreWait := exec.Command("kubectl", "wait", "pod", "--timeout=-1s", "--for=condition=Ready", "-l", "!job-name", "-n", "knative-serving")
-	if err := coreWait.Run(); err != nil {
+	if err := runCommand(coreWait); err != nil {
 		return fmt.Errorf("core: %w", err)
 	}
 
@@ -116,55 +116,63 @@ func Eventing() error {
 
 	crds := exec.Command("kubectl", "apply", "-f", "https://github.com/knative/eventing/releases/download/v"+eventingVersion+"/eventing-crds.yaml")
 	if err := wait.PollImmediate(1*time.Second, 5*time.Second, func() (bool, error) {
-		return crds.Run() == nil, nil
+		return runCommand(crds) == nil, nil
 	}); err != nil {
 		return fmt.Errorf("wait: %w", err)
 	}
 
 	crdWait := exec.Command("kubectl", "wait", "--for=condition=Established", "--all", "crd")
-	if err := crdWait.Run(); err != nil {
+	if err := runCommand(crdWait); err != nil {
 		return fmt.Errorf("crds: %w", err)
 	}
 	fmt.Println("    CRDs installed...")
 
 	core := exec.Command("kubectl", "apply", "-f", "https://github.com/knative/eventing/releases/download/v"+eventingVersion+"/eventing-core.yaml")
 	if err := wait.PollImmediate(1*time.Second, 5*time.Second, func() (bool, error) {
-		return core.Run() == nil, nil
+		return runCommand(core) == nil, nil
 	}); err != nil {
 		return fmt.Errorf("wait: %w", err)
 	}
 
 	coreWait := exec.Command("kubectl", "wait", "pod", "--timeout=-1s", "--for=condition=Ready", "-l", "!job-name", "-n", "knative-eventing")
-	if err := coreWait.Run(); err != nil {
+	if err := runCommand(coreWait); err != nil {
 		return fmt.Errorf("core: %w", err)
 	}
 	fmt.Println("    Core installed...")
 
 	channel := exec.Command("kubectl", "apply", "-f", "https://github.com/knative/eventing/releases/download/v"+eventingVersion+"/in-memory-channel.yaml")
 	if err := wait.PollImmediate(1*time.Second, 5*time.Second, func() (bool, error) {
-		return channel.Run() == nil, nil
+		return runCommand(channel) == nil, nil
 	}); err != nil {
 		return fmt.Errorf("wait: %w", err)
 	}
 
 	channelWait := exec.Command("kubectl", "wait", "pod", "--timeout=-1s", "--for=condition=Ready", "-l", "!job-name", "-n", "knative-eventing")
-	if err := channelWait.Run(); err != nil {
+	if err := runCommand(channelWait); err != nil {
 		return fmt.Errorf("channel: %w", err)
 	}
 	fmt.Println("    In-memory channel installed...")
 
 	broker := exec.Command("kubectl", "apply", "-f", "https://github.com/knative/eventing/releases/download/v"+eventingVersion+"/mt-channel-broker.yaml")
 	if err := wait.PollImmediate(1*time.Second, 5*time.Second, func() (bool, error) {
-		return broker.Run() == nil, nil
+		return runCommand(broker) == nil, nil
 	}); err != nil {
 		return fmt.Errorf("wait: %w", err)
 	}
 
 	brokerWait := exec.Command("kubectl", "wait", "pod", "--timeout=-1s", "--for=condition=Ready", "-l", "!job-name", "-n", "knative-eventing")
-	if err := brokerWait.Run(); err != nil {
+	if err := runCommand(brokerWait); err != nil {
 		return fmt.Errorf("broker: %w", err)
 	}
 	fmt.Println("    Mt-channel broker installed...")
 
+	return nil
+}
+
+func runCommand(c *exec.Cmd) error {
+	if out, err := c.CombinedOutput(); err != nil {
+		fmt.Println(string(out))
+		return err
+	}
 	return nil
 }
