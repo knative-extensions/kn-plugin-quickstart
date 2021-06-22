@@ -95,7 +95,7 @@ func checkForExistingCluster() error {
 	out, err := getClusters.CombinedOutput()
 	fmt.Println(string(out))
 	if err != nil {
-		fmt.Errorf("check cluster: %w", err)
+		return fmt.Errorf("check cluster: %w", err)
 	}
 	// TODO Add tests for regex
 	r := regexp.MustCompile(`(?m)^knative\n`)
