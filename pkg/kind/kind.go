@@ -26,7 +26,7 @@ import (
 )
 
 var kubernetesVersion = "v1.21.1@sha256:fae9a58f17f18f06aeac9772ca8b5ac680ebbed985e266f711d936e91d113bad"
-var clusterName = "knative-quickstart"
+var clusterName = "knative"
 var kindVersion = "v0.11"
 
 // SetUp creates a local Kind cluster and installs all the relevant Knative components
@@ -98,7 +98,7 @@ func checkForExistingCluster() error {
 		fmt.Errorf("check cluster: %w", err)
 	}
 	// TODO Add tests for regex
-	r := regexp.MustCompile(`(?m)^knative-quickstart\n`)
+	r := regexp.MustCompile(`(?m)^knative\n`)
 	matches := r.Match(out)
 	if matches {
 		var resp string
