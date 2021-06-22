@@ -32,7 +32,7 @@ func Kourier() error {
 	fmt.Println("Starting Networking layer install...")
 
 	kourier := exec.Command("kubectl", "apply", "-f", "https://github.com/knative-sandbox/net-kourier/releases/download/v"+kourierVersion+"/kourier.yaml")
-	if err := wait.PollImmediate(1*time.Second, 5*time.Second, func() (bool, error) {
+	if err := wait.PollImmediate(1*time.Second, 10*time.Second, func() (bool, error) {
 		return runCommand(kourier) == nil, nil
 	}); err != nil {
 		return fmt.Errorf("wait: %w", err)
@@ -79,7 +79,7 @@ func Serving() error {
 	fmt.Println("Starting Knative Serving install...")
 
 	crds := exec.Command("kubectl", "apply", "-f", "https://github.com/knative/serving/releases/download/v"+servingVersion+"/serving-crds.yaml")
-	if err := wait.PollImmediate(1*time.Second, 5*time.Second, func() (bool, error) {
+	if err := wait.PollImmediate(1*time.Second, 10*time.Second, func() (bool, error) {
 		return runCommand(crds) == nil, nil
 	}); err != nil {
 		return fmt.Errorf("wait: %w", err)
@@ -92,7 +92,7 @@ func Serving() error {
 	fmt.Println("    CRDs installed...")
 
 	core := exec.Command("kubectl", "apply", "-f", "https://github.com/knative/serving/releases/download/v"+servingVersion+"/serving-core.yaml")
-	if err := wait.PollImmediate(1*time.Second, 5*time.Second, func() (bool, error) {
+	if err := wait.PollImmediate(1*time.Second, 10*time.Second, func() (bool, error) {
 		return runCommand(core) == nil, nil
 	}); err != nil {
 		return fmt.Errorf("wait: %w", err)
@@ -115,7 +115,7 @@ func Eventing() error {
 	fmt.Println("Starting Knative Eventing install...")
 
 	crds := exec.Command("kubectl", "apply", "-f", "https://github.com/knative/eventing/releases/download/v"+eventingVersion+"/eventing-crds.yaml")
-	if err := wait.PollImmediate(1*time.Second, 5*time.Second, func() (bool, error) {
+	if err := wait.PollImmediate(1*time.Second, 10*time.Second, func() (bool, error) {
 		return runCommand(crds) == nil, nil
 	}); err != nil {
 		return fmt.Errorf("wait: %w", err)
@@ -128,7 +128,7 @@ func Eventing() error {
 	fmt.Println("    CRDs installed...")
 
 	core := exec.Command("kubectl", "apply", "-f", "https://github.com/knative/eventing/releases/download/v"+eventingVersion+"/eventing-core.yaml")
-	if err := wait.PollImmediate(1*time.Second, 5*time.Second, func() (bool, error) {
+	if err := wait.PollImmediate(1*time.Second, 10*time.Second, func() (bool, error) {
 		return runCommand(core) == nil, nil
 	}); err != nil {
 		return fmt.Errorf("wait: %w", err)
@@ -141,7 +141,7 @@ func Eventing() error {
 	fmt.Println("    Core installed...")
 
 	channel := exec.Command("kubectl", "apply", "-f", "https://github.com/knative/eventing/releases/download/v"+eventingVersion+"/in-memory-channel.yaml")
-	if err := wait.PollImmediate(1*time.Second, 5*time.Second, func() (bool, error) {
+	if err := wait.PollImmediate(1*time.Second, 10*time.Second, func() (bool, error) {
 		return runCommand(channel) == nil, nil
 	}); err != nil {
 		return fmt.Errorf("wait: %w", err)
@@ -154,7 +154,7 @@ func Eventing() error {
 	fmt.Println("    In-memory channel installed...")
 
 	broker := exec.Command("kubectl", "apply", "-f", "https://github.com/knative/eventing/releases/download/v"+eventingVersion+"/mt-channel-broker.yaml")
-	if err := wait.PollImmediate(1*time.Second, 5*time.Second, func() (bool, error) {
+	if err := wait.PollImmediate(1*time.Second, 10*time.Second, func() (bool, error) {
 		return runCommand(broker) == nil, nil
 	}); err != nil {
 		return fmt.Errorf("wait: %w", err)
