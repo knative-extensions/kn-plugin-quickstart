@@ -16,10 +16,10 @@ package kind
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"regexp"
+	"strings"
 	"time"
 
 	"knative.dev/kn-plugin-quickstart/pkg/install"
@@ -129,14 +129,7 @@ func checkForExistingCluster() error {
 func createNewCluster() error {
 
 	fmt.Println("Creating Kind cluster...")
-	kindConfig, err := ioutil.TempFile(os.TempDir(), "kind-config-*.yaml")
-	if err != nil {
-		return fmt.Errorf("kind create: %w", err)
-	}
-
-	defer os.Remove(kindConfig.Name())
-
-	configRaw := "kind: Cluster\n" +
+	config := "kind: Cluster\n" +
 		"apiVersion: kind.x-k8s.io/v1alpha4\n" +
 		"name: " + clusterName + "\n" +
 		"nodes:\n" +
@@ -146,19 +139,10 @@ func createNewCluster() error {
 		"  - containerPort: 31080\n" +
 		"    listenAddress: 127.0.0.1\n" +
 		"    hostPort: 80"
-	config := []byte(configRaw)
 
-	if _, err := kindConfig.Write(config); err != nil {
-		return fmt.Errorf("kind create: %w", err)
-	}
-
-	configFile := kindConfig.Name()
-	createCluster := exec.Command("kind", "create", "cluster", "--config", configFile)
+	createCluster := exec.Command("kind", "create", "cluster", "--config=-")
+	createCluster.Stdin = strings.NewReader(config)
 	if err := runCommand(createCluster); err != nil {
-		return fmt.Errorf("kind create: %w", err)
-	}
-
-	if err := kindConfig.Close(); err != nil {
 		return fmt.Errorf("kind create: %w", err)
 	}
 
