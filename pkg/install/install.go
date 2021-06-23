@@ -16,9 +16,8 @@ package install
 
 import (
 	"fmt"
-	"io/ioutil"
-	"os"
 	"os/exec"
+	"strings"
 	"time"
 
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -56,14 +55,7 @@ func Kourier() error {
 	}
 	fmt.Println("    Ingress patched...")
 
-	kourierConfig, err := ioutil.TempFile(os.TempDir(), "kourier-ingress-*.yaml")
-	if err != nil {
-		return fmt.Errorf("kourier service: %w", err)
-	}
-
-	defer os.Remove(kourierConfig.Name())
-
-	configRaw := `apiVersion: v1
+	config := `apiVersion: v1
 kind: Service
 metadata:
   name: kourier-ingress
@@ -79,21 +71,13 @@ spec:
       nodePort: 31080
       port: 80
       targetPort: 8080`
-	config := []byte(configRaw)
 
-	if _, err := kourierConfig.Write(config); err != nil {
-		return fmt.Errorf("kourier service: %w", err)
-	}
-
-	configFile := kourierConfig.Name()
-	kourierIngress := exec.Command("kubectl", "apply", "-f", configFile)
+	kourierIngress := exec.Command("kubectl", "apply", "-f", "-")
+	kourierIngress.Stdin = strings.NewReader(config)
 	if err := runCommand(kourierIngress); err != nil {
 		return fmt.Errorf("kourier service: %w", err)
 	}
 
-	if err := kourierConfig.Close(); err != nil {
-		return fmt.Errorf("kourier service: %w", err)
-	}
 	fmt.Println("    Kourier service installed...")
 
 	domainDns := exec.Command("kubectl", "patch", "configmap", "-n", "knative-serving", "config-domain", "-p", "{\"data\": {\"127.0.0.1.nip.io\": \"\"}}")
