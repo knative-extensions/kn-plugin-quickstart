@@ -93,7 +93,6 @@ func checkForExistingCluster() error {
 
 	getClusters := exec.Command("kind", "get", "clusters", "-q")
 	out, err := getClusters.CombinedOutput()
-	fmt.Println(string(out))
 	if err != nil {
 		return fmt.Errorf("check cluster: %w", err)
 	}
