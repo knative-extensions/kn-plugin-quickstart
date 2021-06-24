@@ -17,6 +17,7 @@ package install
 import (
 	"fmt"
 	"os/exec"
+	"strings"
 	"time"
 
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -54,13 +55,29 @@ func Kourier() error {
 	}
 	fmt.Println("    Ingress patched...")
 
-	// TODO move svc yaml to kn-plugin-quickstart repo and update location
-	kourierIngress := exec.Command("kubectl", "apply", "-f", "https://gist.githubusercontent.com/psschwei/8321b367bb9e4281025b5b17e9cbb673/raw/e9efa21df77322a42de183b60c4e0933dbaae830/kourier-ingress.yaml")
-	if err := wait.PollImmediate(1*time.Second, 5*time.Second, func() (bool, error) {
-		return runCommand(kourierIngress) == nil, nil
-	}); err != nil {
-		return fmt.Errorf("wait: %w", err)
+	config := `apiVersion: v1
+kind: Service
+metadata:
+  name: kourier-ingress
+  namespace: kourier-system
+  labels:
+    networking.knative.dev/ingress-provider: kourier
+spec:
+  type: NodePort
+  selector:
+    app: 3scale-kourier-gateway
+  ports:
+    - name: http2
+      nodePort: 31080
+      port: 80
+      targetPort: 8080`
+
+	kourierIngress := exec.Command("kubectl", "apply", "-f", "-")
+	kourierIngress.Stdin = strings.NewReader(config)
+	if err := runCommand(kourierIngress); err != nil {
+		return fmt.Errorf("kourier service: %w", err)
 	}
+
 	fmt.Println("    Kourier service installed...")
 
 	domainDns := exec.Command("kubectl", "patch", "configmap", "-n", "knative-serving", "config-domain", "-p", "{\"data\": {\"127.0.0.1.nip.io\": \"\"}}")
