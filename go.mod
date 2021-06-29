@@ -6,7 +6,7 @@ require (
 	github.com/spf13/cobra v1.1.3
 	gotest.tools/v3 v3.0.3
 	k8s.io/apimachinery v0.20.7
-	knative.dev/client v0.23.1-0.20210618090750-a54abbdfa1a2
-	knative.dev/hack v0.0.0-20210614141220-66ab1a098940
+	knative.dev/client v0.23.1-0.20210629092513-64915102a044
+	knative.dev/hack v0.0.0-20210622141627-e28525d8d260
 
 )
