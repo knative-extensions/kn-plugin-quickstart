@@ -3,7 +3,7 @@
 `kn-plugin-quickstart` is a plugin of the Knative Client, to enable users to quickly set up a local Knative environment from the command line.
 
 ## Description
- 
+
 tbd
 
 ## Build and Install
