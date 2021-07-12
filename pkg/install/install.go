@@ -26,6 +26,8 @@ var kourierVersion = "0.25.0"
 var eventingVersion = "0.25.0"
 
 // Kourier installs Kourier networking layer from Github YAML files
+// The k8sType parameter is used to run configuration specific to the
+// type of local cluster (i.e. Kind, Minikube, etc.)
 func Kourier() error {
 	fmt.Println("🕸️ Installing Kourier networking layer v" + kourierVersion + " ...")
 
@@ -45,6 +47,15 @@ func Kourier() error {
 		return fmt.Errorf("ingress error: %w", err)
 	}
 	fmt.Println("    Ingress patched...")
+
+	fmt.Println("    Finished installing Kourier Networking layer")
+
+	return nil
+}
+
+// KourierKind runs the kind-specific setup for Kourier
+func KourierKind() error {
+	fmt.Println("🕸 Configuring Kourier for Kind...")
 
 	config := `apiVersion: v1
 kind: Service
@@ -76,9 +87,30 @@ spec:
 		return fmt.Errorf("domain dns: %w", err)
 	}
 	fmt.Println("    Domain DNS set up...")
+	fmt.Println("    Finished configuring Kourier")
 
-	fmt.Println("    Finished installing Kourier Networking layer")
+	return nil
+}
 
+// KourierMinikube runs the minikube-specific setup for Kourier
+func KourierMinikube() error {
+	fmt.Println("🕸 Configuring Kourier for Minikube...")
+
+	if err := retryingApply("https://github.com/knative/serving/releases/download/v" + servingVersion + "/serving-default-domain.yaml"); err != nil {
+		return fmt.Errorf("default domain: %w", err)
+	}
+	if err := waitForPodsReady("knative-serving"); err != nil {
+		return fmt.Errorf("core: %w", err)
+	}
+
+	fmt.Println("    Domain DNS set up...")
+
+	tunnel := exec.Command("minikube", "tunnel", "--profile", "minikube-knative")
+	if err := tunnel.Start(); err != nil {
+		return fmt.Errorf("tunnel: %w", err)
+	}
+	fmt.Println("    Minikube tunnel...")
+	fmt.Println("    Finished configuring Kourier")
 	return nil
 }
 

@@ -19,16 +19,17 @@ import (
 	"knative.dev/kn-plugin-quickstart/internal/command"
 )
 
-// NewSourceKafkaCommand represents the plugin's entrypoint
+// NewRootCommand represents the plugin's entrypoint
 func NewRootCommand() *cobra.Command {
 
 	var rootCmd = &cobra.Command{
 		Use:   "kn-quickstart",
 		Short: "Get started quickly with Knative",
-		Long:  `Get up and running with a local Knative environment running on KinD.`,
+		Long:  `Get up and running with a local Knative environment`,
 	}
 
 	rootCmd.AddCommand(command.NewKindCommand())
+	rootCmd.AddCommand(command.NewMinikubeCommand())
 	rootCmd.AddCommand(command.NewVersionCommand())
 
 	return rootCmd

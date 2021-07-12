@@ -21,7 +21,7 @@ After the plugin is installed, you can use `kn quickstart` to run its related su
 ## Usage
 
 ```
-Get up and running with a local Knative environment running on KinD.
+Get up and running with a local Knative environment
 
 Usage:
   kn-quickstart [command]
@@ -30,6 +30,7 @@ Available Commands:
   completion  generate the autocompletion script for the specified shell
   help        Help about any command
   kind        Quickstart with Kind
+  minikube    Quickstart with Minikube
   version     Prints the plugin version
 
 Flags:
@@ -46,6 +47,14 @@ Set up a local Knative cluster using [KinD](https://kind.sigs.k8s.io/):
 kn quickstart kind
 ```
 
+### Quickstart with Minikube
+
+Set up a local Knative cluster using [Minikube](https://minikube.sigs.k8s.io/):
+
+```bash
+kn quickstart minikube
+```
+
 ## Building from Source
 
 You must [set up your development environment](https://github.com/knative/client/blob/master/docs/DEVELOPMENT.md#prerequisites) before you build `kn-plugin-quickstart`.
@@ -57,3 +66,4 @@ git clone git@github.com:knative-sandbox/kn-plugin-quickstart.git
 cd kn-plugin-quickstart
 ./hack/build.sh
 ```
+

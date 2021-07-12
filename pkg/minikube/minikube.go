@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package kind
+package minikube
 
 import (
 	"fmt"
@@ -20,19 +20,16 @@ import (
 	"os/exec"
 	"regexp"
 	"strings"
-	"time"
 
 	"knative.dev/kn-plugin-quickstart/pkg/install"
 )
 
-var kubernetesVersion = "v1.21.1@sha256:fae9a58f17f18f06aeac9772ca8b5ac680ebbed985e266f711d936e91d113bad"
-var clusterName = "knative"
-var kindVersion = "v0.11"
+var clusterName = "minikube-knative"
+var minikubeVersion = "v1.23"
 
-// SetUp creates a local Kind cluster and installs all the relevant Knative components
+// SetUp creates a local Minikube cluster and installs all the relevant Knative components
 func SetUp() error {
-	start := time.Now()
-	if err := createKindCluster(); err != nil {
+	if err := createMinikubeCluster(); err != nil {
 		return fmt.Errorf("creating cluster: %w", err)
 	}
 	if err := install.Serving(); err != nil {
@@ -41,52 +38,45 @@ func SetUp() error {
 	if err := install.Kourier(); err != nil {
 		return fmt.Errorf("install kourier: %w", err)
 	}
-	if err := install.KourierKind(); err != nil {
+	if err := install.KourierMinikube(); err != nil {
 		return fmt.Errorf("configure kourier: %w", err)
 	}
 	if err := install.Eventing(); err != nil {
 		return fmt.Errorf("install eventing: %w", err)
 	}
-	finish := time.Since(start).Round(time.Second)
-	fmt.Printf("🚀 Knative install took: %s \n", finish)
-	fmt.Println("🎉 Now have some fun with Serverless and Event Driven Apps!")
 	return nil
 }
 
-func createKindCluster() error {
-
-	fmt.Println("✅ Checking dependencies...")
-	if err := checkKindVersion(); err != nil {
-		return fmt.Errorf("kind version: %w", err)
+func createMinikubeCluster() error {
+	if err := checkMinikubeVersion(); err != nil {
+		return fmt.Errorf("minikube version: %w", err)
 	}
 	if err := checkForExistingCluster(); err != nil {
 		return fmt.Errorf("existing cluster: %w", err)
 	}
-
 	return nil
 }
 
-// checkKindVersion validates that the user has the correct version of Kind installed.
+// checkMinikubeVersion validates that the user has the correct version of Minikube installed.
 // If not, it prompts the user to download a newer version before continuing.
-func checkKindVersion() error {
-
-	versionCheck := exec.Command("kind", "version")
+func checkMinikubeVersion() error {
+	versionCheck := exec.Command("minikube", "version", "--short")
 	out, err := versionCheck.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("kind version: %w", err)
+		return fmt.Errorf("minikube version: %w", err)
 	}
-	fmt.Printf("    Kind version is: %s\n", string(out))
+	fmt.Printf("Minikube version is: %s\n", string(out))
 
-	r := regexp.MustCompile(kindVersion)
+	r := regexp.MustCompile(minikubeVersion)
 	matches := r.Match(out)
 	if !matches {
 		var resp string
-		fmt.Printf("WARNING: Please make sure you are using Kind version %s.x", kindVersion)
-		fmt.Println("Download from https://github.com/kubernetes-sigs/kind/releases")
+		fmt.Printf("WARNING: Please make sure you are using Minikube version %s.x\n", minikubeVersion)
+		fmt.Println("Download from https://github.com/kubernetes/minikube/releases/")
 		fmt.Print("Do you want to continue at your own risk [Y/n]: ")
 		fmt.Scanf("%s", &resp)
 		if resp == "n" || resp == "N" {
-			fmt.Println("Installation stopped. Please upgrade kind and run again")
+			fmt.Println("Installation stopped. Please upgrade minikube and run again")
 			os.Exit(0)
 		}
 	}
@@ -94,26 +84,31 @@ func checkKindVersion() error {
 	return nil
 }
 
-// checkForExistingCluster checks if the user already has a Kind cluster. If so, it provides
+// checkForExistingCluster checks if the user already has a Minikube cluster. If so, it provides
 // the option of deleting the existing cluster and recreating it. If not, it proceeds to
 // creating a new cluster
 func checkForExistingCluster() error {
 
-	getClusters := exec.Command("kind", "get", "clusters", "-q")
+	getClusters := exec.Command("minikube", "profile", "list")
 	out, err := getClusters.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("check cluster: %w", err)
+		// there are no existing minikube profiles, the listing profiles command will error
+		// if there were no profiles, we simply want to create a new one and not stop the install
+		// so if the error contains a "no profile found" string, we ignore it and continue onwards
+		if !strings.Contains(string(out), "No minikube profile was found") {
+			return fmt.Errorf("check cluster: %w", err)
+		}
 	}
 	// TODO Add tests for regex
-	r := regexp.MustCompile(`(?m)^knative\n`)
+	r := regexp.MustCompile(clusterName)
 	matches := r.Match(out)
 	if matches {
 		var resp string
-		fmt.Print("Knative Cluster kind-" + clusterName + " already installed.\nDelete and recreate [y/N]: ")
+		fmt.Print("Knative Cluster " + clusterName + " already installed.\nDelete and recreate [y/N]: ")
 		fmt.Scanf("%s", &resp)
 		if resp == "y" || resp == "Y" {
-			fmt.Println("\n    Deleting cluster...")
-			deleteCluster := exec.Command("kind", "delete", "cluster", "--name", clusterName)
+			fmt.Println("deleting cluster...")
+			deleteCluster := exec.Command("minikube", "delete", "--profile", clusterName)
 			if err := deleteCluster.Run(); err != nil {
 				return fmt.Errorf("delete cluster: %w", err)
 			}
@@ -121,7 +116,7 @@ func checkForExistingCluster() error {
 				return fmt.Errorf("new cluster: %w", err)
 			}
 		} else {
-			fmt.Println("\n    Installation skipped")
+			fmt.Println("Installation skipped")
 			return nil
 		}
 	} else {
@@ -133,29 +128,24 @@ func checkForExistingCluster() error {
 	return nil
 }
 
-// createNewCluster creates a new Kind cluster
+// createNewCluster creates a new Minikube cluster
 func createNewCluster() error {
 
-	fmt.Println("☸ Creating Kind cluster...")
-	config := fmt.Sprintf(`
-kind: Cluster
-apiVersion: kind.x-k8s.io/v1alpha4
-name: %s
-nodes:
-- role: control-plane
-  image: kindest/node:%s
-  extraPortMappings:
-  - containerPort: 31080
-    listenAddress: 127.0.0.1
-    hostPort: 80`, clusterName, kubernetesVersion)
+	fmt.Println("Creating Minikube cluster...")
 
-	createCluster := exec.Command("kind", "create", "cluster", "--wait=120s", "--config=-")
-	createCluster.Stdin = strings.NewReader(config)
+	createCluster := exec.Command("minikube", "start", "--profile", clusterName, "--wait", "all")
 	if err := runCommand(createCluster); err != nil {
-		return fmt.Errorf("kind create: %w", err)
+		return fmt.Errorf("minikube create: %w", err)
 	}
 
-	fmt.Println("    Cluster ready")
+	// sleep for 10s to allow initial cluster creation, then wait until all pods in kube-system namespace are ready
+	fmt.Println("    Waiting on cluster to be ready...")
+	clusterWait := exec.Command("kubectl", "wait", "pod", "--timeout=-1s", "--for=condition=Ready", "-l", "!job-name", "-n", "kube-system")
+	if err := runCommand(clusterWait); err != nil {
+		return fmt.Errorf("minikube ready: %w", err)
+	}
+
+	fmt.Println("Cluster created")
 	return nil
 }
 
