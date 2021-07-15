@@ -43,4 +43,4 @@ function build_release() {
   cat checksums.txt
 }
 
-main "$@"
+main $@
