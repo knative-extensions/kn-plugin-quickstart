@@ -2,15 +2,53 @@
 
 `kn-plugin-quickstart` is a plugin of the Knative Client, to enable users to quickly set up a local Knative environment from the command line.
 
-## Description
+## Getting Started
 
-tbd
+### Installation
 
-## Build and Install
+You can download the latest binaries from the [Releases](https://github.com/knative-sandbox/kn-plugin-quickstart/releases) page.
+
+There are two ways to run `kn quickstart`:
+
+1. You can run it standalone, just put it on your system path and make sure it is executable.
+2. You can install it as a plugin of the `kn` client to run:
+    * Follow the [documentation] to install `kn client` if you don't have it
+    * Copy the `kn-quickstart` binary to the `~/.config/kn/plugins/` directory and make sure its filename is `kn-quickstart`
+    * Run `kn plugin list` to verify that the `kn-quickstart` plugin is installed successfully
+    
+After the plugin is installed, you can use `kn quickstart` to run its related subcommands.
+
+## Usage 
+
+```
+Get up and running with a local Knative environment running on KinD.
+
+Usage:
+  kn-quickstart [command]
+
+Available Commands:
+  completion  generate the autocompletion script for the specified shell
+  help        Help about any command
+  kind        Quickstart with Kind
+  version     Prints the plugin version
+
+Flags:
+  -h, --help   help for kn-quickstart
+
+Use "kn-quickstart [command] --help" for more information about a command.
+```
+
+### Quickstart with KinD
+
+Set up a local Knative cluster using [KinD](https://kind.sigs.k8s.io/):
+
+``` bash
+kn quickstart kind
+```
+
+## Building from Source
 
 You must [set up your development environment](https://github.com/knative/client/blob/master/docs/DEVELOPMENT.md#prerequisites) before you build `kn-plugin-quickstart`.
-
-### Building
 
 Once you've set up your development environment, you can build the plugin by running the following commands:
 
@@ -20,30 +58,3 @@ cd kn-plugin-quickstart
 ./hack/build.sh
 ```
 
-You'll get an executable plugin binary named `kn-plugin-quickstart` in your current directory. To use as a stand-alone binary, check the available commands by running `./kn-quickstart -h`.
-
-### Installing
-
-If you'd like to use the plugin with the `kn` CLI, install the plugin by copying the executable file under the `kn` plugins directory by running the following:
-
-``` bash
-mkdir -p ~/.config/kn/plugins
-cp kn-quickstart ~/.config/kn/plugins
-```
-
-Check if the plugin is loaded by running `kn -h` (`quickstart` should appear in the list of plugin commands in the output).
-
-To run the plugin, use `kn quickstart`, for example:
-
-`kn quickstart -h`
-
-
-## Examples
-
-### Quickstart with KinD
-
-Set up a local Knative cluster using [KinD](https://kind.sigs.k8s.io/):
-
-``` bash
-kn quickstart kind
-```
