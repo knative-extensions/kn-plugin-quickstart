@@ -18,7 +18,7 @@ There are two ways to run `kn quickstart`:
     
 After the plugin is installed, you can use `kn quickstart` to run its related subcommands.
 
-## Usage 
+## Usage
 
 ```
 Get up and running with a local Knative environment running on KinD.
