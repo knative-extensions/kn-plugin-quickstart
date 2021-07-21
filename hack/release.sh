@@ -20,6 +20,7 @@
 
 source $(dirname "$0")/global_vars.sh
 source $(dirname "$0")/../vendor/knative.dev/hack/release.sh
+source $(dirname $0)/build-flags.sh
 
 function build_release() {
   export GO111MODULE=on
