@@ -15,7 +15,7 @@ There are two ways to run `kn quickstart`:
     * Follow the [documentation] to install `kn client` if you don't have it
     * Copy the `kn-quickstart` binary to the `~/.config/kn/plugins/` directory and make sure its filename is `kn-quickstart`
     * Run `kn plugin list` to verify that the `kn-quickstart` plugin is installed successfully
-    
+
 After the plugin is installed, you can use `kn quickstart` to run its related subcommands.
 
 ## Usage
@@ -57,4 +57,3 @@ git clone git@github.com:knative-sandbox/kn-plugin-quickstart.git
 cd kn-plugin-quickstart
 ./hack/build.sh
 ```
-
