@@ -183,6 +183,20 @@ func Eventing() error {
 	}
 	fmt.Println("    Mt-channel broker installed...")
 
+	config := `apiVersion: eventing.knative.dev/v1
+kind: broker
+metadata:
+ name: example-broker
+ namespace: default`
+
+	exampleBroker := exec.Command("kubectl", "apply", "-f", "-")
+	exampleBroker.Stdin = strings.NewReader(config)
+	if err := runCommand(exampleBroker); err != nil {
+		return fmt.Errorf("example broker: %w", err)
+	}
+
+	fmt.Println("    Example broker installed...")
+
 	return nil
 }
 
