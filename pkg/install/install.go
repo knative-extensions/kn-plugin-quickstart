@@ -23,14 +23,14 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 )
 
-var servingVersion = "0.23.0"
-var kourierVersion = "0.23.0"
-var eventingVersion = "0.23.0"
+var servingVersion = "0.24.0"
+var kourierVersion = "0.24.0"
+var eventingVersion = "0.24.1"
 
 // Kourier installs Kourier networking layer from Github YAML files
 func Kourier() error {
 
-	fmt.Println("Starting Networking layer install...")
+	fmt.Println("Starting Kourier Networking layer " + kourierVersion + " install...")
 
 	kourier := exec.Command("kubectl", "apply", "-f", "https://github.com/knative-sandbox/net-kourier/releases/download/v"+kourierVersion+"/kourier.yaml")
 	// retries installing kourier if it fails, see discussion in:
@@ -102,7 +102,7 @@ spec:
 
 // Serving installs Knative Serving from Github YAML files
 func Serving() error {
-	fmt.Println("Starting Knative Serving install...")
+	fmt.Println("Starting Knative Serving " + servingVersion + " install...")
 
 	crds := exec.Command("kubectl", "apply", "-f", "https://github.com/knative/serving/releases/download/v"+servingVersion+"/serving-crds.yaml")
 	if err := wait.PollImmediate(1*time.Second, 10*time.Second, func() (bool, error) {
@@ -138,7 +138,7 @@ func Serving() error {
 
 // Eventing installs Knative Eventing from Github YAML files
 func Eventing() error {
-	fmt.Println("Starting Knative Eventing install...")
+	fmt.Println("Starting Knative Eventing " + eventingVersion + " install...")
 
 	crds := exec.Command("kubectl", "apply", "-f", "https://github.com/knative/eventing/releases/download/v"+eventingVersion+"/eventing-crds.yaml")
 	if err := wait.PollImmediate(1*time.Second, 10*time.Second, func() (bool, error) {
