@@ -35,14 +35,14 @@ func Kourier() error {
 	kourier := exec.Command("kubectl", "apply", "-f", "https://github.com/knative-sandbox/net-kourier/releases/download/v"+kourierVersion+"/kourier.yaml")
 	// retries installing kourier if it fails, see discussion in:
 	// https://github.com/knative-sandbox/kn-plugin-quickstart/pull/58
-	for i := 0; i <= 2; i++ {
+	for i := 0; i <= 3; i++ {
 		if err := wait.PollImmediate(1*time.Second, 10*time.Second, func() (bool, error) {
 			return runCommand(kourier) == nil, nil
 		}); err != nil {
-			if i >= 2 {
+			if i >= 3 {
 				return fmt.Errorf("wait: %w", err)
 			}
-			time.Sleep(5 * time.Second)
+			time.Sleep(10 * time.Second)
 		} else {
 			break
 		}
