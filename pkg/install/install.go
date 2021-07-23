@@ -33,10 +33,19 @@ func Kourier() error {
 	fmt.Println("Starting Networking layer install...")
 
 	kourier := exec.Command("kubectl", "apply", "-f", "https://github.com/knative-sandbox/net-kourier/releases/download/v"+kourierVersion+"/kourier.yaml")
-	if err := wait.PollImmediate(1*time.Second, 10*time.Second, func() (bool, error) {
-		return runCommand(kourier) == nil, nil
-	}); err != nil {
-		return fmt.Errorf("wait: %w", err)
+	// retries installing kourier if it fails, see discussion in:
+	// https://github.com/knative-sandbox/kn-plugin-quickstart/pull/58
+	for i := 0; i <= 2; i++ {
+		if err := wait.PollImmediate(1*time.Second, 10*time.Second, func() (bool, error) {
+			return runCommand(kourier) == nil, nil
+		}); err != nil {
+			if i >= 2 {
+				return fmt.Errorf("wait: %w", err)
+			}
+			time.Sleep(5 * time.Second)
+		} else {
+			break
+		}
 	}
 
 	kourierWait := exec.Command("kubectl", "wait", "pod", "--timeout=-1s", "--for=condition=Ready", "-l", "!job-name", "-n", "kourier-system")
