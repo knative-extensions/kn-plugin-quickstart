@@ -1,4 +1,9 @@
 approvers:
-- client-writers
 - technical-oversight-committee
-- ux-writers
+- knative-release-leads
+- client-writers
+- kn-plugin-quickstart-approvers
+
+reviewers:
+- client-writers
+- kn-plugin-quickstart-approvers
