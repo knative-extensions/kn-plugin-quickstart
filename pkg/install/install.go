@@ -30,7 +30,7 @@ var eventingVersion = "0.24.1"
 // Kourier installs Kourier networking layer from Github YAML files
 func Kourier() error {
 
-	fmt.Println("Starting Kourier Networking layer " + kourierVersion + " install...")
+	fmt.Println("🕸️ Installing Kourier networking layer v" + kourierVersion + " ...")
 
 	kourier := exec.Command("kubectl", "apply", "-f", "https://github.com/knative-sandbox/net-kourier/releases/download/v"+kourierVersion+"/kourier.yaml")
 	// retries installing kourier if it fails, see discussion in:
@@ -95,14 +95,14 @@ spec:
 	}
 	fmt.Println("    Domain DNS set up...")
 
-	fmt.Println("Finished installing Networking layer")
+	fmt.Println("    Finished installing Kourier Networking layer")
 
 	return nil
 }
 
 // Serving installs Knative Serving from Github YAML files
 func Serving() error {
-	fmt.Println("Starting Knative Serving " + servingVersion + " install...")
+	fmt.Println("🍿 Installing Knative Serving v" + servingVersion + " ...")
 
 	crds := exec.Command("kubectl", "apply", "-f", "https://github.com/knative/serving/releases/download/v"+servingVersion+"/serving-crds.yaml")
 	if err := wait.PollImmediate(1*time.Second, 10*time.Second, func() (bool, error) {
@@ -131,14 +131,14 @@ func Serving() error {
 
 	fmt.Println("    Core installed...")
 
-	fmt.Println("Finished installing Knative Serving")
+	fmt.Println("    Finished installing Knative Serving")
 
 	return nil
 }
 
 // Eventing installs Knative Eventing from Github YAML files
 func Eventing() error {
-	fmt.Println("Starting Knative Eventing " + eventingVersion + " install...")
+	fmt.Println("🔥 Installing Knative Eventing v" + eventingVersion + " ... ")
 
 	crds := exec.Command("kubectl", "apply", "-f", "https://github.com/knative/eventing/releases/download/v"+eventingVersion+"/eventing-crds.yaml")
 	if err := wait.PollImmediate(1*time.Second, 10*time.Second, func() (bool, error) {
@@ -205,6 +205,7 @@ metadata:
 	}
 
 	fmt.Println("    Example broker installed...")
+	fmt.Println("    Finished installing Knative Eventing")
 
 	return nil
 }
