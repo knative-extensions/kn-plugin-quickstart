@@ -31,6 +31,7 @@ var kindVersion = "v0.11"
 
 // SetUp creates a local Kind cluster and installs all the relevant Knative components
 func SetUp() error {
+	start := time.Now()
 	if err := createKindCluster(); err != nil {
 		return fmt.Errorf("creating cluster: %w", err)
 	}
@@ -43,6 +44,9 @@ func SetUp() error {
 	if err := install.Eventing(); err != nil {
 		return fmt.Errorf("install eventing: %w", err)
 	}
+	finish := time.Since(start).Round(time.Second)
+	fmt.Printf("🚀 Knative install took: %s \n", finish)
+	fmt.Println("🎉 Now have some fun with Serverless and Event Driven Apps!")
 	return nil
 }
 
