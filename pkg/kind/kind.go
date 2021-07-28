@@ -48,6 +48,7 @@ func SetUp() error {
 
 func createKindCluster() error {
 
+	fmt.Println("✅ Checking dependencies...")
 	if err := checkKindVersion(); err != nil {
 		return fmt.Errorf("kind version: %w", err)
 	}
@@ -67,7 +68,7 @@ func checkKindVersion() error {
 	if err != nil {
 		return fmt.Errorf("kind version: %w", err)
 	}
-	fmt.Printf("Kind version is: %s\n", string(out))
+	fmt.Printf("    Kind version is: %s\n", string(out))
 
 	r := regexp.MustCompile(kindVersion)
 	matches := r.Match(out)
@@ -104,7 +105,7 @@ func checkForExistingCluster() error {
 		fmt.Print("Knative Cluster kind-" + clusterName + " already installed.\nDelete and recreate [y/N]: ")
 		fmt.Scanf("%s", &resp)
 		if resp == "y" || resp == "Y" {
-			fmt.Println("deleting cluster...")
+			fmt.Println("\n    Deleting cluster...")
 			deleteCluster := exec.Command("kind", "delete", "cluster", "--name", clusterName)
 			if err := deleteCluster.Run(); err != nil {
 				return fmt.Errorf("delete cluster: %w", err)
@@ -113,7 +114,7 @@ func checkForExistingCluster() error {
 				return fmt.Errorf("new cluster: %w", err)
 			}
 		} else {
-			fmt.Println("Installation skipped")
+			fmt.Println("\n    Installation skipped")
 			return nil
 		}
 	} else {
@@ -128,7 +129,7 @@ func checkForExistingCluster() error {
 // createNewCluster creates a new Kind cluster
 func createNewCluster() error {
 
-	fmt.Println("Creating Kind cluster...")
+	fmt.Println("☸ Creating Kind cluster...")
 	config := "kind: Cluster\n" +
 		"apiVersion: kind.x-k8s.io/v1alpha4\n" +
 		"name: " + clusterName + "\n" +
@@ -154,7 +155,7 @@ func createNewCluster() error {
 		return fmt.Errorf("kind ready: %w", err)
 	}
 
-	fmt.Println("Cluster created")
+	fmt.Println("    Cluster ready")
 	return nil
 }
 
