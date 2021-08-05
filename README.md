@@ -12,7 +12,7 @@ There are two ways to run `kn quickstart`:
 
 1. You can run it standalone, just put it on your system path and make sure it is executable.
 2. You can install it as a plugin of the `kn` client to run:
-    * Follow the [documentation] to install `kn client` if you don't have it
+    * Follow the [documentation](https://github.com/knative/client/blob/main/docs/README.md#installing-kn) to install `kn client` if you don't have it
     * Copy the `kn-quickstart` binary to the `~/.config/kn/plugins/` directory and make sure its filename is `kn-quickstart`
     * Run `kn plugin list` to verify that the `kn-quickstart` plugin is installed successfully
 
