@@ -23,9 +23,9 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 )
 
-var servingVersion = "0.24.0"
+var servingVersion = "0.25.0"
 var kourierVersion = "0.24.0"
-var eventingVersion = "0.24.1"
+var eventingVersion = "0.25.0"
 
 // Kourier installs Kourier networking layer from Github YAML files
 func Kourier() error {
