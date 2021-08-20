@@ -32,9 +32,9 @@ k8s.io/apimachinery/pkg/util/runtime
 k8s.io/apimachinery/pkg/util/wait
 # k8s.io/klog/v2 v2.5.0
 k8s.io/klog/v2
-# knative.dev/client v0.24.1-0.20210810133812-28a340cce741
+# knative.dev/client v0.25.1-0.20210820052505-e570844b1d53
 ## explicit
 knative.dev/client/pkg/kn/plugin
-# knative.dev/hack v0.0.0-20210622141627-e28525d8d260
+# knative.dev/hack v0.0.0-20210806075220-815cd312d65c
 ## explicit
 knative.dev/hack
