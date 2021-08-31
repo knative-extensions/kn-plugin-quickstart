@@ -134,16 +134,17 @@ func checkForExistingCluster() error {
 func createNewCluster() error {
 
 	fmt.Println("☸ Creating Kind cluster...")
-	config := "kind: Cluster\n" +
-		"apiVersion: kind.x-k8s.io/v1alpha4\n" +
-		"name: " + clusterName + "\n" +
-		"nodes:\n" +
-		"- role: control-plane\n" +
-		"  image: kindest/node:" + kubernetesVersion + "\n" +
-		"  extraPortMappings:\n" +
-		"  - containerPort: 31080\n" +
-		"    listenAddress: 127.0.0.1\n" +
-		"    hostPort: 80"
+	config := fmt.Sprintf(`
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: %s
+nodes:
+- role: control-plane
+  image: kindest/node:%s
+  extraPortMappings:
+  - containerPort: 31080
+    listenAddress: 127.0.0.1
+    hostPort: 80`, clusterName, kubernetesVersion)
 
 	createCluster := exec.Command("kind", "create", "cluster", "--config=-")
 	createCluster.Stdin = strings.NewReader(config)
