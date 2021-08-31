@@ -145,18 +145,10 @@ func createNewCluster() error {
 		"    listenAddress: 127.0.0.1\n" +
 		"    hostPort: 80"
 
-	createCluster := exec.Command("kind", "create", "cluster", "--config=-")
+	createCluster := exec.Command("kind", "create", "cluster", "--wait=120s", "--config=-")
 	createCluster.Stdin = strings.NewReader(config)
 	if err := runCommand(createCluster); err != nil {
 		return fmt.Errorf("kind create: %w", err)
-	}
-
-	// sleep for 10s to allow initial cluster creation, then wait until all pods in kube-system namespace are ready
-	fmt.Println("    Waiting on cluster to be ready...")
-	time.Sleep(10 * time.Second)
-	clusterWait := exec.Command("kubectl", "wait", "pod", "--timeout=-1s", "--for=condition=Ready", "-l", "!job-name", "-n", "kube-system")
-	if err := runCommand(clusterWait); err != nil {
-		return fmt.Errorf("kind ready: %w", err)
 	}
 
 	fmt.Println("    Cluster ready")
