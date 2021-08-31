@@ -25,14 +25,14 @@ gotest.tools/v3/internal/assert
 gotest.tools/v3/internal/difflib
 gotest.tools/v3/internal/format
 gotest.tools/v3/internal/source
-# k8s.io/apimachinery v0.20.7
+# k8s.io/apimachinery v0.21.4
 ## explicit
 k8s.io/apimachinery/pkg/util/clock
 k8s.io/apimachinery/pkg/util/runtime
 k8s.io/apimachinery/pkg/util/wait
-# k8s.io/klog/v2 v2.5.0
+# k8s.io/klog/v2 v2.8.0
 k8s.io/klog/v2
-# knative.dev/client v0.25.1-0.20210820052505-e570844b1d53
+# knative.dev/client v0.25.1-0.20210830145628-7e90dca8f3b4
 ## explicit
 knative.dev/client/pkg/kn/plugin
 # knative.dev/hack v0.0.0-20210806075220-815cd312d65c
