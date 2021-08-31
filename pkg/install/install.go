@@ -19,8 +19,6 @@ import (
 	"os/exec"
 	"strings"
 	"time"
-
-	"k8s.io/apimachinery/pkg/util/wait"
 )
 
 var servingVersion = "0.25.0"
@@ -29,31 +27,15 @@ var eventingVersion = "0.25.0"
 
 // Kourier installs Kourier networking layer from Github YAML files
 func Kourier() error {
-
 	fmt.Println("🕸️ Installing Kourier networking layer v" + kourierVersion + " ...")
 
-	kourier := exec.Command("kubectl", "apply", "-f", "https://github.com/knative-sandbox/net-kourier/releases/download/v"+kourierVersion+"/kourier.yaml")
-	// retries installing kourier if it fails, see discussion in:
-	// https://github.com/knative-sandbox/kn-plugin-quickstart/pull/58
-	for i := 0; i <= 3; i++ {
-		if err := wait.PollImmediate(1*time.Second, 10*time.Second, func() (bool, error) {
-			return runCommand(kourier) == nil, nil
-		}); err != nil {
-			if i >= 3 {
-				return fmt.Errorf("wait: %w", err)
-			}
-			time.Sleep(10 * time.Second)
-		} else {
-			break
-		}
+	if err := retryingApply("https://github.com/knative-sandbox/net-kourier/releases/download/v" + kourierVersion + "/kourier.yaml"); err != nil {
+		return fmt.Errorf("wait: %w", err)
 	}
-
-	kourierWait := exec.Command("kubectl", "wait", "pod", "--timeout=-1s", "--for=condition=Ready", "-l", "!job-name", "-n", "kourier-system")
-	if err := runCommand(kourierWait); err != nil {
+	if err := waitForPodsReady("kourier-system"); err != nil {
 		return fmt.Errorf("kourier: %w", err)
 	}
-	servingWait := exec.Command("kubectl", "wait", "pod", "--timeout=-1s", "--for=condition=Ready", "-l", "!job-name", "-n", "knative-serving")
-	if err := runCommand(servingWait); err != nil {
+	if err := waitForPodsReady("knative-serving"); err != nil {
 		return fmt.Errorf("serving: %w", err)
 	}
 	fmt.Println("    Kourier installed...")
@@ -103,29 +85,22 @@ spec:
 // Serving installs Knative Serving from Github YAML files
 func Serving() error {
 	fmt.Println("🍿 Installing Knative Serving v" + servingVersion + " ...")
+	baseURL := "https://github.com/knative/serving/releases/download/v" + servingVersion
 
-	crds := exec.Command("kubectl", "apply", "-f", "https://github.com/knative/serving/releases/download/v"+servingVersion+"/serving-crds.yaml")
-	if err := wait.PollImmediate(1*time.Second, 10*time.Second, func() (bool, error) {
-		return runCommand(crds) == nil, nil
-	}); err != nil {
+	if err := retryingApply(baseURL + "/serving-crds.yaml"); err != nil {
 		return fmt.Errorf("wait: %w", err)
 	}
 
-	crdWait := exec.Command("kubectl", "wait", "--for=condition=Established", "--all", "crd")
-	if err := runCommand(crdWait); err != nil {
+	if err := waitForCRDsEstablished(); err != nil {
 		return fmt.Errorf("crds: %w", err)
 	}
 	fmt.Println("    CRDs installed...")
 
-	core := exec.Command("kubectl", "apply", "-f", "https://github.com/knative/serving/releases/download/v"+servingVersion+"/serving-core.yaml")
-	if err := wait.PollImmediate(1*time.Second, 10*time.Second, func() (bool, error) {
-		return runCommand(core) == nil, nil
-	}); err != nil {
+	if err := retryingApply(baseURL + "/serving-core.yaml"); err != nil {
 		return fmt.Errorf("wait: %w", err)
 	}
 
-	coreWait := exec.Command("kubectl", "wait", "pod", "--timeout=-1s", "--for=condition=Ready", "-l", "!job-name", "-n", "knative-serving")
-	if err := runCommand(coreWait); err != nil {
+	if err := waitForPodsReady("knative-serving"); err != nil {
 		return fmt.Errorf("core: %w", err)
 	}
 
@@ -139,55 +114,40 @@ func Serving() error {
 // Eventing installs Knative Eventing from Github YAML files
 func Eventing() error {
 	fmt.Println("🔥 Installing Knative Eventing v" + eventingVersion + " ... ")
+	baseURL := "https://github.com/knative/eventing/releases/download/v" + eventingVersion
 
-	crds := exec.Command("kubectl", "apply", "-f", "https://github.com/knative/eventing/releases/download/v"+eventingVersion+"/eventing-crds.yaml")
-	if err := wait.PollImmediate(1*time.Second, 10*time.Second, func() (bool, error) {
-		return runCommand(crds) == nil, nil
-	}); err != nil {
+	if err := retryingApply(baseURL + "/eventing-crds.yaml"); err != nil {
 		return fmt.Errorf("wait: %w", err)
 	}
 
-	crdWait := exec.Command("kubectl", "wait", "--for=condition=Established", "--all", "crd")
-	if err := runCommand(crdWait); err != nil {
+	if err := waitForCRDsEstablished(); err != nil {
 		return fmt.Errorf("crds: %w", err)
 	}
 	fmt.Println("    CRDs installed...")
 
-	core := exec.Command("kubectl", "apply", "-f", "https://github.com/knative/eventing/releases/download/v"+eventingVersion+"/eventing-core.yaml")
-	if err := wait.PollImmediate(1*time.Second, 10*time.Second, func() (bool, error) {
-		return runCommand(core) == nil, nil
-	}); err != nil {
+	if err := retryingApply(baseURL + "/eventing-core.yaml"); err != nil {
 		return fmt.Errorf("wait: %w", err)
 	}
 
-	coreWait := exec.Command("kubectl", "wait", "pod", "--timeout=-1s", "--for=condition=Ready", "-l", "!job-name", "-n", "knative-eventing")
-	if err := runCommand(coreWait); err != nil {
+	if err := waitForPodsReady("knative-eventing"); err != nil {
 		return fmt.Errorf("core: %w", err)
 	}
 	fmt.Println("    Core installed...")
 
-	channel := exec.Command("kubectl", "apply", "-f", "https://github.com/knative/eventing/releases/download/v"+eventingVersion+"/in-memory-channel.yaml")
-	if err := wait.PollImmediate(1*time.Second, 10*time.Second, func() (bool, error) {
-		return runCommand(channel) == nil, nil
-	}); err != nil {
+	if err := retryingApply(baseURL + "/in-memory-channel.yaml"); err != nil {
 		return fmt.Errorf("wait: %w", err)
 	}
 
-	channelWait := exec.Command("kubectl", "wait", "pod", "--timeout=-1s", "--for=condition=Ready", "-l", "!job-name", "-n", "knative-eventing")
-	if err := runCommand(channelWait); err != nil {
+	if err := waitForPodsReady("knative-eventing"); err != nil {
 		return fmt.Errorf("channel: %w", err)
 	}
 	fmt.Println("    In-memory channel installed...")
 
-	broker := exec.Command("kubectl", "apply", "-f", "https://github.com/knative/eventing/releases/download/v"+eventingVersion+"/mt-channel-broker.yaml")
-	if err := wait.PollImmediate(1*time.Second, 10*time.Second, func() (bool, error) {
-		return runCommand(broker) == nil, nil
-	}); err != nil {
+	if err := retryingApply(baseURL + "/mt-channel-broker.yaml"); err != nil {
 		return fmt.Errorf("wait: %w", err)
 	}
 
-	brokerWait := exec.Command("kubectl", "wait", "pod", "--timeout=-1s", "--for=condition=Ready", "-l", "!job-name", "-n", "knative-eventing")
-	if err := runCommand(brokerWait); err != nil {
+	if err := waitForPodsReady("knative-eventing"); err != nil {
 		return fmt.Errorf("broker: %w", err)
 	}
 	fmt.Println("    Mt-channel broker installed...")
@@ -216,4 +176,31 @@ func runCommand(c *exec.Cmd) error {
 		return err
 	}
 	return nil
+}
+
+// retryingApply retries a kubectl apply call with the given path 3 times, sleeping
+// for 10s between each try.
+func retryingApply(path string) error {
+	cmd := exec.Command("kubectl", "apply", "-f", path)
+	for i := 0; ; i++ {
+		err := runCommand(cmd)
+		if err == nil {
+			break
+		}
+		if i >= 3 {
+			return err
+		}
+		time.Sleep(10 * time.Second)
+	}
+	return nil
+}
+
+// waitForCRDsEstablished waits for all CRDs to be established.
+func waitForCRDsEstablished() error {
+	return runCommand(exec.Command("kubectl", "wait", "--for=condition=Established", "--all", "crd"))
+}
+
+// waitForPodsReady waits for all pods in the given namespace to be ready.
+func waitForPodsReady(ns string) error {
+	return runCommand(exec.Command("kubectl", "wait", "pod", "--timeout=-1s", "--for=condition=Ready", "-l", "!job-name", "-n", ns))
 }
