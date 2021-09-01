@@ -182,17 +182,15 @@ func runCommand(c *exec.Cmd) error {
 // for 10s between each try.
 func retryingApply(path string) error {
 	cmd := exec.Command("kubectl", "apply", "-f", path)
-	for i := 0; ; i++ {
-		err := runCommand(cmd)
+	var err error
+	for i := 0; i < 3; i++ {
+		err = runCommand(cmd)
 		if err == nil {
 			break
 		}
-		if i >= 3 {
-			return err
-		}
 		time.Sleep(10 * time.Second)
 	}
-	return nil
+	return err
 }
 
 // waitForCRDsEstablished waits for all CRDs to be established.
