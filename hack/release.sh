@@ -14,13 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Documentation about this script and how to use it can be found
+# at https://github.com/knative/hack
 
-# Documentation about how the functions here are hooked into the release process
-# and how to use it can be found at https://github.com/knative/hack
+source $(dirname $0)/../vendor/knative.dev/hack/release.sh
 
-source $(dirname "$0")/global_vars.sh
-source $(dirname "$0")/../vendor/knative.dev/hack/release.sh
-source $(dirname $0)/build-flags.sh
+PLUGIN="kn-quickstart"
 
 function build_release() {
   export GO111MODULE=on

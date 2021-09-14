@@ -17,6 +17,21 @@
 set -o pipefail
 
 # =================================================
+# CUSTOMIZE ME:
+
+# Name of the plugin
+PLUGIN="kn-quickstart"
+
+# Directories containing go code which needs to be formatted
+SOURCE_DIRS="cmd pkg internal"
+
+# Directory which should be compiled
+MAIN_SOURCE_DIR="cmd"
+
+# Package which holds the version variables
+VERSION_PACKAGE="knative.dev/kn-plugin-quickstart/internal/command"
+
+# =================================================
 
 # Store for later
 if [ -z "$1" ]; then
@@ -92,6 +107,12 @@ run() {
 
 
 codegen() {
+  #TODO: Workaround to update go-licenses until prow-tests image is updated
+  local temp_dir="$(mktemp -d)"
+  pushd "${temp_dir}" > /dev/null 2>&1
+  GO111MODULE=on go get github.com/google/go-licenses@latest || return 1
+  popd > /dev/null 2>&1
+
   # Update dependencies
   update_deps
 
@@ -102,32 +123,32 @@ codegen() {
   check_license
 }
 
-go_fmt() {
-  echo "🧹 ${S}Format"
-  find $(echo $SOURCE_DIRS) -name "*.go" -print0 | xargs -0 gofmt -s -w
+# Run a go tool, get it first if necessary.
+run_go_tool() {
+  local tool=$2
+  local install_failed=0
+  if [ -z "$(which ${tool})" ]; then
+    local temp_dir="$(mktemp -d)"
+    pushd "${temp_dir}" > /dev/null 2>&1
+    GOFLAGS="" go get "$1" || install_failed=1
+    popd > /dev/null 2>&1
+    rm -rf "${temp_dir}"
+  fi
+  (( install_failed )) && return ${install_failed}
+  shift 2
+  ${tool} "$@"
 }
 
 source_format() {
   set +e
-  which goimports >/dev/null 2>&1
-  if [ $? -ne 0 ]; then
-     echo "✋ No 'goimports' found. Please use"
-     echo "✋   go install golang.org/x/tools/cmd/goimports"
-     echo "✋ to enable import cleanup. Import cleanup skipped."
-
-     # Run go fmt instead
-     go_fmt
-  else
-     echo "🧽 ${X}Format"
-     goimports -w $(echo $SOURCE_DIRS)
-     find $(echo $SOURCE_DIRS) -name "*.go" -print0 | xargs -0 gofmt -s -w
-  fi
+  run_go_tool golang.org/x/tools/cmd/goimports goimports -w $(echo $SOURCE_DIRS)
+  find $(echo $SOURCE_DIRS) -name "*.go" -print0 | xargs -0 gofmt -s -w
   set -e
 }
 
 go_build() {
   echo "🚧 Compile"
-  go build -ldflags "$(build_flags $(basedir))" -o $PLUGIN "./$MAIN_SOURCE_DIR/..."
+  go build -mod=vendor -ldflags "$(build_flags $(basedir))" -o $PLUGIN "./$MAIN_SOURCE_DIR/..."
 }
 
 go_test() {
@@ -143,7 +164,7 @@ go_test() {
 
   echo "🧪 ${X}Test"
   set +e
-  go test -v ./pkg/... ./internal/... >$test_output 2>&1
+  go test -v ./pkg/... >$test_output 2>&1
   local err=$?
   if [ $err -ne 0 ]; then
     echo "🔥 ${red}Failure${reset}"
@@ -183,8 +204,7 @@ check_license() {
 
 update_deps() {
   echo "🚒 Update"
-  go mod tidy
-  go mod vendor
+  $(basedir)/hack/update-deps.sh
 }
 
 watch() {
@@ -259,17 +279,12 @@ cross_build() {
 
   export CGO_ENABLED=0
   echo "   🐧 ${PLUGIN}-linux-amd64"
-  GOOS=linux GOARCH=amd64 go build -ldflags "${ld_flags}" -o ./${PLUGIN}-linux-amd64 "./$MAIN_SOURCE_DIR/..."|| failed=1
-  echo "   💪 ${PLUGIN}-linux-arm64"
-  GOOS=linux GOARCH=arm64 go build -mod=vendor -ldflags "${ld_flags}" -o ./${PLUGIN}-linux-arm64 ./cmd/... || failed=1
+  GOOS=linux GOARCH=amd64 go build -mod=vendor -ldflags "${ld_flags}" -o ./${PLUGIN}-linux-amd64 "./$MAIN_SOURCE_DIR/..."|| failed=1
   echo "   🍏 ${PLUGIN}-darwin-amd64"
-  GOOS=darwin GOARCH=amd64 go build -ldflags "${ld_flags}" -o ./${PLUGIN}-darwin-amd64 "./$MAIN_SOURCE_DIR/..." || failed=1
+  GOOS=darwin GOARCH=amd64 go build -mod=vendor -ldflags "${ld_flags}" -o ./${PLUGIN}-darwin-amd64 "./$MAIN_SOURCE_DIR/..." || failed=1
   echo "   🎠 ${PLUGIN}-windows-amd64.exe"
-  GOOS=windows GOARCH=amd64 go build -ldflags "${ld_flags}" -o ./${PLUGIN}-windows-amd64.exe "./$MAIN_SOURCE_DIR/..." || failed=1
-  echo "   Z  ${PLUGIN}-linux-s390x"
-  GOOS=linux GOARCH=s390x go build -mod=vendor -ldflags "${ld_flags}" -o ./${PLUGIN}-linux-s390x ./cmd/... || failed=1
-  echo "   P  ${PLUGIN}-linux-ppc64le"
-  GOOS=linux GOARCH=ppc64le go build -mod=vendor -ldflags "${ld_flags}" -o ./${PLUGIN}-linux-ppc64le ./cmd/... || failed=1
+  GOOS=windows GOARCH=amd64 go build -mod=vendor -ldflags "${ld_flags}" -o ./${PLUGIN}-windows-amd64.exe "./$MAIN_SOURCE_DIR/..." || failed=1
+
   return ${failed}
 }
 
@@ -333,9 +348,6 @@ if $(has_flag --debug); then
     export PS4='+($(basename ${BASH_SOURCE[0]}):${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
     set -x
 fi
-
-# Global variables
-source $(basedir)/hack/global_vars.sh
 
 # Shared funcs with CI
 source $(basedir)/hack/build-flags.sh
