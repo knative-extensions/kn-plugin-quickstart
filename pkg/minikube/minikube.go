@@ -19,13 +19,14 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"knative.dev/kn-plugin-quickstart/pkg/install"
 )
 
 var clusterName = "minikube-knative"
-var minikubeVersion = "v1.23"
+var minikubeVersion = 1.23
 
 // SetUp creates a local Minikube cluster and installs all the relevant Knative components
 func SetUp() error {
@@ -67,11 +68,13 @@ func checkMinikubeVersion() error {
 	}
 	fmt.Printf("Minikube version is: %s\n", string(out))
 
-	r := regexp.MustCompile(minikubeVersion)
-	matches := r.Match(out)
-	if !matches {
+	userMinikubeVersion, err := parseMinikubeVersion(string(out))
+	if err != nil {
+		return fmt.Errorf("parsing minikube version: %w", err)
+	}
+	if userMinikubeVersion < minikubeVersion {
 		var resp string
-		fmt.Printf("WARNING: Please make sure you are using Minikube version %s.x\n", minikubeVersion)
+		fmt.Printf("WARNING: Please make sure you are using Minikube version >= %.2f\n", minikubeVersion)
 		fmt.Println("Download from https://github.com/kubernetes/minikube/releases/")
 		fmt.Print("Do you want to continue at your own risk [Y/n]: ")
 		fmt.Scanf("%s", &resp)
@@ -131,21 +134,22 @@ func checkForExistingCluster() error {
 // createNewCluster creates a new Minikube cluster
 func createNewCluster() error {
 
-	fmt.Println("Creating Minikube cluster...")
+	fmt.Println("☸ Creating Minikube cluster...")
 
+	// create cluster and wait until ready
 	createCluster := exec.Command("minikube", "start", "--profile", clusterName, "--wait", "all")
 	if err := runCommand(createCluster); err != nil {
 		return fmt.Errorf("minikube create: %w", err)
 	}
 
-	// sleep for 10s to allow initial cluster creation, then wait until all pods in kube-system namespace are ready
-	fmt.Println("    Waiting on cluster to be ready...")
-	clusterWait := exec.Command("kubectl", "wait", "pod", "--timeout=-1s", "--for=condition=Ready", "-l", "!job-name", "-n", "kube-system")
-	if err := runCommand(clusterWait); err != nil {
-		return fmt.Errorf("minikube ready: %w", err)
+	// minikube tunnel
+	tunnel := exec.Command("minikube", "tunnel", "--profile", "minikube-knative")
+	if err := tunnel.Start(); err != nil {
+		return fmt.Errorf("tunnel: %w", err)
 	}
+	fmt.Println("    Minikube tunnel...")
 
-	fmt.Println("Cluster created")
+	fmt.Println("    Cluster ready")
 	return nil
 }
 
@@ -155,4 +159,16 @@ func runCommand(c *exec.Cmd) error {
 		return err
 	}
 	return nil
+}
+
+func parseMinikubeVersion(v string) (float64, error) {
+
+	strippedVersion := strings.TrimLeft(strings.TrimRight(v, "\n"), "v")
+	dotVersion := strings.Split(strippedVersion, ".")
+	floatVersion, err := strconv.ParseFloat(dotVersion[0]+"."+dotVersion[1], 64)
+	if err != nil {
+		return 0, err
+	}
+
+	return floatVersion, nil
 }
