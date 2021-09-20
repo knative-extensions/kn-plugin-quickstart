@@ -136,7 +136,7 @@ func createNewCluster() error {
 	fmt.Println("☸ Creating Minikube cluster...")
 
 	// create cluster and wait until ready
-	createCluster := exec.Command("minikube", "start", "--profile", clusterName, "--wait", "all")
+	createCluster := exec.Command("minikube", "start", "--cpus", "3", "--profile", clusterName, "--wait", "all")
 	if err := runCommand(createCluster); err != nil {
 		return fmt.Errorf("minikube create: %w", err)
 	}
