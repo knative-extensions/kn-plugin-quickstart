@@ -19,6 +19,7 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -32,6 +33,11 @@ var minikubeVersion = 1.23
 // SetUp creates a local Minikube cluster and installs all the relevant Knative components
 func SetUp() error {
 	start := time.Now()
+
+	if runtime.GOOS == "darwin" {
+		fmt.Println("NOTE: Using Minikube on Mac may require entering your password to enable networking.")
+	}
+
 	if err := createMinikubeCluster(); err != nil {
 		return fmt.Errorf("creating cluster: %w", err)
 	}
