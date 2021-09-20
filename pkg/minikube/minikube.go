@@ -21,6 +21,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"knative.dev/kn-plugin-quickstart/pkg/install"
 )
@@ -30,6 +31,7 @@ var minikubeVersion = 1.23
 
 // SetUp creates a local Minikube cluster and installs all the relevant Knative components
 func SetUp() error {
+	start := time.Now()
 	if err := createMinikubeCluster(); err != nil {
 		return fmt.Errorf("creating cluster: %w", err)
 	}
@@ -45,6 +47,9 @@ func SetUp() error {
 	if err := install.Eventing(); err != nil {
 		return fmt.Errorf("install eventing: %w", err)
 	}
+	finish := time.Since(start).Round(time.Second)
+	fmt.Printf("🚀 Knative install took: %s \n", finish)
+	fmt.Println("🎉 Now have some fun with Serverless and Event Driven Apps!")
 	return nil
 }
 
