@@ -74,11 +74,11 @@ func checkMinikubeVersion() error {
 	}
 	if userMinikubeVersion < minikubeVersion {
 		var resp string
-		fmt.Printf("WARNING: Please make sure you are using Minikube version >= %.2f\n", minikubeVersion)
-		fmt.Println("Download from https://github.com/kubernetes/minikube/releases/")
-		fmt.Print("Do you want to continue at your own risk [Y/n]: ")
+		fmt.Printf("WARNING: We require at least Minikube v%.2f, while you are using v%.2f\n", minikubeVersion, userMinikubeVersion)
+		fmt.Println("You can download a newer version from https://github.com/kubernetes/minikube/releases/")
+		fmt.Print("Continue anyway? (not recommended) [y/N]: ")
 		fmt.Scanf("%s", &resp)
-		if resp == "n" || resp == "N" {
+		if strings.ToLower(resp) == "y" {
 			fmt.Println("Installation stopped. Please upgrade minikube and run again")
 			os.Exit(0)
 		}
@@ -97,8 +97,8 @@ func checkForExistingCluster() error {
 	if err != nil {
 		// there are no existing minikube profiles, the listing profiles command will error
 		// if there were no profiles, we simply want to create a new one and not stop the install
-		// so if the error contains a "no profile found" string, we ignore it and continue onwards
-		if !strings.Contains(string(out), "No minikube profile was found") {
+		// so if the error is the "MK_USAGE_NO_PROFILE" error, we ignore it and continue onwards
+		if !strings.Contains(string(out), "MK_USAGE_NO_PROFILE") {
 			return fmt.Errorf("check cluster: %w", err)
 		}
 	}
@@ -109,23 +109,22 @@ func checkForExistingCluster() error {
 		var resp string
 		fmt.Print("Knative Cluster " + clusterName + " already installed.\nDelete and recreate [y/N]: ")
 		fmt.Scanf("%s", &resp)
-		if resp == "y" || resp == "Y" {
-			fmt.Println("deleting cluster...")
-			deleteCluster := exec.Command("minikube", "delete", "--profile", clusterName)
-			if err := deleteCluster.Run(); err != nil {
-				return fmt.Errorf("delete cluster: %w", err)
-			}
-			if err := createNewCluster(); err != nil {
-				return fmt.Errorf("new cluster: %w", err)
-			}
-		} else {
+		if strings.ToLower(resp) != "y" {
 			fmt.Println("Installation skipped")
 			return nil
 		}
-	} else {
+		fmt.Println("deleting cluster...")
+		deleteCluster := exec.Command("minikube", "delete", "--profile", clusterName)
+		if err := deleteCluster.Run(); err != nil {
+			return fmt.Errorf("delete cluster: %w", err)
+		}
 		if err := createNewCluster(); err != nil {
 			return fmt.Errorf("new cluster: %w", err)
 		}
+	}
+
+	if err := createNewCluster(); err != nil {
+		return fmt.Errorf("new cluster: %w", err)
 	}
 
 	return nil
@@ -162,7 +161,6 @@ func runCommand(c *exec.Cmd) error {
 }
 
 func parseMinikubeVersion(v string) (float64, error) {
-
 	strippedVersion := strings.TrimLeft(strings.TrimRight(v, "\n"), "v")
 	dotVersion := strings.Split(strippedVersion, ".")
 	floatVersion, err := strconv.ParseFloat(dotVersion[0]+"."+dotVersion[1], 64)
