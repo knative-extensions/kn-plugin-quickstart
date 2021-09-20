@@ -26,8 +26,6 @@ var kourierVersion = "0.25.0"
 var eventingVersion = "0.25.0"
 
 // Kourier installs Kourier networking layer from Github YAML files
-// The k8sType parameter is used to run configuration specific to the
-// type of local cluster (i.e. Kind, Minikube, etc.)
 func Kourier() error {
 	fmt.Println("🕸️ Installing Kourier networking layer v" + kourierVersion + " ...")
 
