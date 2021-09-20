@@ -78,7 +78,7 @@ func checkMinikubeVersion() error {
 		fmt.Println("You can download a newer version from https://github.com/kubernetes/minikube/releases/")
 		fmt.Print("Continue anyway? (not recommended) [y/N]: ")
 		fmt.Scanf("%s", &resp)
-		if strings.ToLower(resp) == "y" {
+		if strings.ToLower(resp) != "y" {
 			fmt.Println("Installation stopped. Please upgrade minikube and run again")
 			os.Exit(0)
 		}
