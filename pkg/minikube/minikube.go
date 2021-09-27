@@ -145,6 +145,9 @@ func checkForExistingCluster() error {
 func createNewCluster() error {
 
 	fmt.Println("☸ Creating Minikube cluster...")
+	fmt.Println("\n By default, using the standard minikube driver for your system")
+	fmt.Println("If you wish to use a different driver, please configure minikube using")
+	fmt.Println("    minikube config set --driver <your-driver>")
 
 	// create cluster and wait until ready
 	createCluster := exec.Command("minikube", "start", "--cpus", "3", "--profile", clusterName, "--wait", "all")
