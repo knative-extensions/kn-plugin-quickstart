@@ -200,5 +200,5 @@ func waitForCRDsEstablished() error {
 
 // waitForPodsReady waits for all pods in the given namespace to be ready.
 func waitForPodsReady(ns string) error {
-	return runCommand(exec.Command("kubectl", "wait", "pod", "--timeout=-1s", "--for=condition=Ready", "-l", "!job-name", "-n", ns))
+	return runCommand(exec.Command("kubectl", "wait", "pod", "--timeout=10m", "--for=condition=Ready", "-l", "!job-name", "-n", ns))
 }
