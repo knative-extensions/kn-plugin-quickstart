@@ -41,6 +41,9 @@ func SetUp() error {
 	if err := install.Kourier(); err != nil {
 		return fmt.Errorf("install kourier: %w", err)
 	}
+	if err := install.KourierKind(); err != nil {
+		return fmt.Errorf("configure kourier: %w", err)
+	}
 	if err := install.Eventing(); err != nil {
 		return fmt.Errorf("install eventing: %w", err)
 	}

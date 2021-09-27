@@ -17,18 +17,19 @@ package command
 import (
 	"fmt"
 
+	"knative.dev/kn-plugin-quickstart/pkg/minikube"
+
 	"github.com/spf13/cobra"
-	"knative.dev/kn-plugin-quickstart/pkg/kind"
 )
 
-// NewKindCommand implements 'kn quickstart kind' command
-func NewKindCommand() *cobra.Command {
+// NewMinikubeCommand implements 'kn quickstart minikube' command
+func NewMinikubeCommand() *cobra.Command {
 	return &cobra.Command{
-		Use:   "kind",
-		Short: "Quickstart with Kind",
+		Use:   "minikube",
+		Short: "Quickstart with Minikube",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			fmt.Println("Running Knative Quickstart using Kind")
-			return kind.SetUp()
+			fmt.Println("Running Knative Quickstart using Minikube")
+			return minikube.SetUp()
 		},
 	}
 }
