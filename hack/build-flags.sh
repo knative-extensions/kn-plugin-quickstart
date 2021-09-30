@@ -21,7 +21,7 @@ function build_flags() {
   if [[ -z "${version}" ]]; then
     # Get the commit, excluding any tags but keeping the "dirty" flag
     local commit="$(git describe --always --dirty --match '^$')"
-    [[ -n "${commit}" ]] || abort "error getting the current commit"
+    [[ -n "${commit}" ]] || (echo "error getting the current commit" && exit 1)
     version="v$(date +%Y%m%d)-local-${commit}"
   fi
 
