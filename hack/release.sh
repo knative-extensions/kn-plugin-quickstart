@@ -45,7 +45,7 @@ function build_release() {
   GOOS=linux GOARCH=s390x go build -mod=vendor -ldflags "${ld_flags}" -o ./${PLUGIN}-linux-s390x ./cmd/...
   echo "🚧 P  Building for Linux (ppc64le)"
   GOOS=linux GOARCH=ppc64le go build -mod=vendor -ldflags "${ld_flags}" -o ./${PLUGIN}-linux-ppc64le ./cmd/...
-  ARTIFACTS_TO_PUBLISH="${PLUGIN}-darwin-amd64 ${PLUGIN}-darwin-arm64 ${PLUGIN}-linux-amd64 ${PLUGIN}-linux-arm64 ${PLUGIN}-windows-amd64.exe ${PLUGIN}-linux-s390x ${PLUGIN}-linux-ppc64le"
+  ARTIFACTS_TO_PUBLISH="${PLUGIN}-darwin-amd64 ${PLUGIN}-linux-amd64 ${PLUGIN}-linux-arm64 ${PLUGIN}-windows-amd64.exe ${PLUGIN}-linux-s390x ${PLUGIN}-linux-ppc64le"
   sha256sum ${ARTIFACTS_TO_PUBLISH} > checksums.txt
   ARTIFACTS_TO_PUBLISH="${ARTIFACTS_TO_PUBLISH} checksums.txt"
   echo "🧮     Checksum:"
