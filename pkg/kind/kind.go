@@ -55,6 +55,9 @@ func SetUp() error {
 
 func createKindCluster() error {
 
+	if err := checkDocker(); err != nil {
+		return fmt.Errorf("%w", err)
+	}
 	fmt.Println("✅ Checking dependencies...")
 	if err := checkKindVersion(); err != nil {
 		return fmt.Errorf("kind version: %w", err)
@@ -63,6 +66,15 @@ func createKindCluster() error {
 		return fmt.Errorf("existing cluster: %w", err)
 	}
 
+	return nil
+}
+
+// checkDocker checks that Docker is running on the users local system.
+func checkDocker() error {
+	dockerCheck := exec.Command("docker", "stats", "--no-stream")
+	if err := dockerCheck.Run(); err != nil {
+		return fmt.Errorf("docker not running")
+	}
 	return nil
 }
 
