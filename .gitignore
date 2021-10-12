@@ -1,1 +1,4 @@
 kn-quickstart*
+
+# ignore releasabilty job until on release train
+.github/workflows/knative-releasability.yaml
