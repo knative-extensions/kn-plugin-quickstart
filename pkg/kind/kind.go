@@ -19,6 +19,7 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -27,7 +28,7 @@ import (
 
 var kubernetesVersion = "v1.21.1@sha256:fae9a58f17f18f06aeac9772ca8b5ac680ebbed985e266f711d936e91d113bad"
 var clusterName = "knative"
-var kindVersion = "v0.11"
+var kindVersion = 0.11
 
 // SetUp creates a local Kind cluster and installs all the relevant Knative components
 func SetUp() error {
@@ -70,18 +71,17 @@ func createKindCluster() error {
 // If not, it prompts the user to download a newer version before continuing.
 func checkKindVersion() error {
 
-	versionCheck := exec.Command("kind", "version")
+	versionCheck := exec.Command("kind", "version", "-q")
 	out, err := versionCheck.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("kind version: %w", err)
 	}
 	fmt.Printf("    Kind version is: %s\n", string(out))
 
-	r := regexp.MustCompile(kindVersion)
-	matches := r.Match(out)
-	if !matches {
+	userKindVersion, err := parseKindVersion(string(out))
+	if userKindVersion < kindVersion {
 		var resp string
-		fmt.Printf("WARNING: Please make sure you are using Kind version %s.x", kindVersion)
+		fmt.Printf("WARNING: Please make sure you are using Kind version %.2f", kindVersion)
 		fmt.Println("Download from https://github.com/kubernetes-sigs/kind/releases")
 		fmt.Print("Do you want to continue at your own risk [Y/n]: ")
 		fmt.Scanf("%s", &resp)
@@ -165,4 +165,14 @@ func runCommand(c *exec.Cmd) error {
 		return err
 	}
 	return nil
+}
+
+func parseKindVersion(v string) (float64, error) {
+	strippedVersion := strings.TrimLeft(strings.TrimRight(v, "\n"), "v")
+	dotVersion := strings.Split(strippedVersion, ".")
+	floatVersion, err := strconv.ParseFloat(dotVersion[0]+"."+dotVersion[1], 64)
+	if err != nil {
+		return 0, err
+	}
+	return floatVersion, nil
 }
