@@ -80,7 +80,7 @@ func checkKindVersion() error {
 
 	userKindVersion, err := parseKindVersion(string(out))
 	if err != nil {
-		fmt.Errorf("parsing kind version: %w", err)
+		return fmt.Errorf("parsing kind version: %w", err)
 	}
 	if userKindVersion < kindVersion {
 		var resp string
