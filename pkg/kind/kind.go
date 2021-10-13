@@ -79,6 +79,9 @@ func checkKindVersion() error {
 	fmt.Printf("    Kind version is: %s\n", string(out))
 
 	userKindVersion, err := parseKindVersion(string(out))
+	if err != nil {
+		fmt.Errorf("parsing kind version: %w", err)
+	}
 	if userKindVersion < kindVersion {
 		var resp string
 		fmt.Printf("WARNING: Please make sure you are using Kind version %.2f", kindVersion)
