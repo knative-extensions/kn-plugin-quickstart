@@ -84,7 +84,7 @@ func checkKindVersion() error {
 	}
 	if userKindVersion < kindVersion {
 		var resp string
-		fmt.Printf("WARNING: Please make sure you are using Kind version %.2f", kindVersion)
+		fmt.Printf("WARNING: Please make sure you are using Kind version %.2f or later", kindVersion)
 		fmt.Println("Download from https://github.com/kubernetes-sigs/kind/releases")
 		fmt.Print("Do you want to continue at your own risk [Y/n]: ")
 		fmt.Scanf("%s", &resp)
