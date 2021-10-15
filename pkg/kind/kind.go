@@ -183,14 +183,6 @@ func runCommandWithOutput(c *exec.Cmd) error {
 	return nil
 }
 
-func runCommand(c *exec.Cmd) error {
-	if out, err := c.CombinedOutput(); err != nil {
-		fmt.Println(string(out))
-		return err
-	}
-	return nil
-}
-
 func parseKindVersion(v string) (float64, error) {
 	strippedVersion := strings.TrimLeft(strings.TrimRight(v, "\n"), "v")
 	dotVersion := strings.Split(strippedVersion, ".")
