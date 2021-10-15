@@ -166,11 +166,20 @@ nodes:
 
 	createCluster := exec.Command("kind", "create", "cluster", "--wait=120s", "--config=-")
 	createCluster.Stdin = strings.NewReader(config)
-	if err := runCommand(createCluster); err != nil {
+	if err := runCommandWithOutput(createCluster); err != nil {
 		return fmt.Errorf("kind create: %w", err)
 	}
 
-	fmt.Println("    Cluster ready")
+	return nil
+}
+
+func runCommandWithOutput(c *exec.Cmd) error {
+	c.Stdout = os.Stdout
+	c.Stderr = os.Stderr
+	if err := c.Run(); err != nil {
+		return fmt.Errorf("piping output: %w", err)
+	}
+	fmt.Print("\n")
 	return nil
 }
 

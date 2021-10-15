@@ -148,11 +148,11 @@ func createNewCluster() error {
 	fmt.Println("☸ Creating Minikube cluster...")
 	fmt.Println("\nBy default, using the standard minikube driver for your system")
 	fmt.Println("If you wish to use a different driver, please configure minikube using")
-	fmt.Println("    minikube config set driver <your-driver>")
+	fmt.Print("    minikube config set driver <your-driver>\n\n")
 
 	// create cluster and wait until ready
 	createCluster := exec.Command("minikube", "start", "--cpus", "3", "--profile", clusterName, "--wait", "all")
-	if err := runCommand(createCluster); err != nil {
+	if err := runCommandWithOutput(createCluster); err != nil {
 		return fmt.Errorf("minikube create: %w", err)
 	}
 
@@ -163,7 +163,16 @@ func createNewCluster() error {
 	}
 	fmt.Println("    Minikube tunnel...")
 
-	fmt.Println("    Cluster ready")
+	return nil
+}
+
+func runCommandWithOutput(c *exec.Cmd) error {
+	c.Stdout = os.Stdout
+	c.Stderr = os.Stderr
+	if err := c.Run(); err != nil {
+		return fmt.Errorf("piping output: %w", err)
+	}
+	fmt.Print("\n")
 	return nil
 }
 
