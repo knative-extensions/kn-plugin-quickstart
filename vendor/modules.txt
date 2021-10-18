@@ -23,9 +23,9 @@ gotest.tools/v3/internal/assert
 gotest.tools/v3/internal/difflib
 gotest.tools/v3/internal/format
 gotest.tools/v3/internal/source
-# knative.dev/client v0.25.1-0.20210921184138-539a5a97a692
+# knative.dev/client v0.26.1-0.20211014105642-b1e4132be8b5
 ## explicit
 knative.dev/client/pkg/kn/plugin
-# knative.dev/hack v0.0.0-20210806075220-815cd312d65c
+# knative.dev/hack v0.0.0-20211015200324-86876688e735
 ## explicit
 knative.dev/hack
