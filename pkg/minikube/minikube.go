@@ -156,13 +156,6 @@ func createNewCluster() error {
 		return fmt.Errorf("minikube create: %w", err)
 	}
 
-	// minikube tunnel
-	tunnel := exec.Command("minikube", "tunnel", "--profile", "minikube-knative")
-	if err := tunnel.Start(); err != nil {
-		return fmt.Errorf("tunnel: %w", err)
-	}
-	fmt.Println("    Minikube tunnel...")
-
 	return nil
 }
 
