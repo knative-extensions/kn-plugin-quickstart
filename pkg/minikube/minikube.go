@@ -28,7 +28,7 @@ import (
 )
 
 var clusterName = "minikube-knative"
-var kubernetesVersion = "1.21.5"
+var kubernetesVersion = "1.22.2"
 var minikubeVersion = 1.23
 
 // SetUp creates a local Minikube cluster and installs all the relevant Knative components
