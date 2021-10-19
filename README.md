@@ -55,6 +55,12 @@ Set up a local Knative cluster using [Minikube](https://minikube.sigs.k8s.io/):
 kn quickstart minikube
 ```
 
+Note: for Windows/Mac users, after the above command completes, you will need to run the following in a separate terminal window:
+
+``` bash
+minikube tunnel --profile minikube-knative
+```
+
 ## Building from Source
 
 You must [set up your development environment](https://github.com/knative/client/blob/master/docs/DEVELOPMENT.md#prerequisites) before you build `kn-plugin-quickstart`.

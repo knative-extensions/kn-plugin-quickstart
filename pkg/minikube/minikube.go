@@ -34,10 +34,6 @@ var minikubeVersion = 1.23
 func SetUp() error {
 	start := time.Now()
 
-	if runtime.GOOS == "darwin" {
-		fmt.Println("NOTE: Using Minikube on Mac may require entering your password to enable networking.")
-	}
-
 	if err := createMinikubeCluster(); err != nil {
 		return fmt.Errorf("creating cluster: %w", err)
 	}
@@ -53,9 +49,17 @@ func SetUp() error {
 	if err := install.Eventing(); err != nil {
 		return fmt.Errorf("install eventing: %w", err)
 	}
+
 	finish := time.Since(start).Round(time.Second)
 	fmt.Printf("🚀 Knative install took: %s \n", finish)
 	fmt.Println("🎉 Now have some fun with Serverless and Event Driven Apps!")
+
+	if runtime.GOOS == "darwin" || runtime.GOOS == "windows" {
+		fmt.Print("\n")
+		fmt.Println("To finish setting up networking for minikube, run the following command in a separate terminal window:")
+		fmt.Println("    minikube tunnel --profile minikube-knative")
+	}
+
 	return nil
 }
 
