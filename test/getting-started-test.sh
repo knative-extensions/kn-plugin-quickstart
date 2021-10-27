@@ -26,7 +26,7 @@ curl "$SERVICE"
 
 # Eventing Tests
 kn broker list
-echo "creating cloudevents playuer"
+echo "creating cloudevents player"
 kn service create cloudevents-player --image ruromero/cloudevents-player:latest --env BROKER_URL=http://broker-ingress.knative-eventing.svc.cluster.local/default/example-broker
 PLAYER=$(kn service describe cloudevents-player -o url)
 
