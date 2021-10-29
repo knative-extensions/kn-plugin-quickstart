@@ -33,6 +33,8 @@ PLAYER=$(kn service describe cloudevents-player -o url)
 echo "posting event"
 curl -v "$PLAYER"   -H "Content-Type: application/json"   -H "Ce-Id: foo-1"   -H "Ce-Specversion: 1.0"   -H "Ce-Type: dev.example.events"   -H "Ce-Source: curl-source"   -d '{"msg":"Hello team!"}'
 
+curl -v "$PLAYER"/messages
+
 echo "creating trigger"
 kn trigger create cloudevents-trigger --sink cloudevents-player  --broker example-broker
 
