@@ -1,5 +1,7 @@
 # kn-plugin-quickstart
 
+**[This component is BETA](https://github.com/knative/community/tree/main/mechanics/MATURITY-LEVELS.md)**
+
 `kn-plugin-quickstart` is a plugin of the Knative Client, to enable users to quickly set up a local Knative environment from the command line.
 
 ## Getting Started
