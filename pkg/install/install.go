@@ -22,15 +22,15 @@ import (
 	"time"
 )
 
-var servingVersion = "0.26.0"
-var kourierVersion = "0.26.0"
-var eventingVersion = "0.26.0"
+var servingVersion = "1.0.0"
+var kourierVersion = "1.0.0"
+var eventingVersion = "1.0.0"
 
 // Kourier installs Kourier networking layer from Github YAML files
 func Kourier() error {
 	fmt.Println("🕸️ Installing Kourier networking layer v" + kourierVersion + " ...")
 
-	if err := retryingApply("https://github.com/knative-sandbox/net-kourier/releases/download/v" + kourierVersion + "/kourier.yaml"); err != nil {
+	if err := retryingApply("https://github.com/knative-sandbox/net-kourier/releases/download/knative-v" + kourierVersion + "/kourier.yaml"); err != nil {
 		return fmt.Errorf("wait: %w", err)
 	}
 	if err := waitForPodsReady("kourier-system"); err != nil {
@@ -95,7 +95,7 @@ spec:
 func KourierMinikube() error {
 	fmt.Println("🕸 Configuring Kourier for Minikube...")
 
-	if err := retryingApply("https://github.com/knative/serving/releases/download/v" + servingVersion + "/serving-default-domain.yaml"); err != nil {
+	if err := retryingApply("https://github.com/knative/serving/releases/download/knative-v" + servingVersion + "/serving-default-domain.yaml"); err != nil {
 		return fmt.Errorf("default domain: %w", err)
 	}
 	if err := waitForPodsReady("knative-serving"); err != nil {
@@ -122,7 +122,7 @@ func KourierMinikube() error {
 // Serving installs Knative Serving from Github YAML files
 func Serving() error {
 	fmt.Println("🍿 Installing Knative Serving v" + servingVersion + " ...")
-	baseURL := "https://github.com/knative/serving/releases/download/v" + servingVersion
+	baseURL := "https://github.com/knative/serving/releases/download/knative-v" + servingVersion
 
 	if err := retryingApply(baseURL + "/serving-crds.yaml"); err != nil {
 		return fmt.Errorf("wait: %w", err)
@@ -151,7 +151,7 @@ func Serving() error {
 // Eventing installs Knative Eventing from Github YAML files
 func Eventing() error {
 	fmt.Println("🔥 Installing Knative Eventing v" + eventingVersion + " ... ")
-	baseURL := "https://github.com/knative/eventing/releases/download/v" + eventingVersion
+	baseURL := "https://github.com/knative/eventing/releases/download/knative-v" + eventingVersion
 
 	if err := retryingApply(baseURL + "/eventing-crds.yaml"); err != nil {
 		return fmt.Errorf("wait: %w", err)
