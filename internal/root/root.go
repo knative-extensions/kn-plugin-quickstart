@@ -21,7 +21,6 @@ import (
 
 // NewRootCommand represents the plugin's entrypoint
 func NewRootCommand() *cobra.Command {
-
 	var rootCmd = &cobra.Command{
 		Use:   "kn-quickstart",
 		Short: "Get started quickly with Knative",

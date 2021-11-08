@@ -31,7 +31,9 @@ var clusterName = "knative"
 var kindVersion = 0.11
 
 // SetUp creates a local Kind cluster and installs all the relevant Knative components
-func SetUp() error {
+func SetUp(name string) error {
+	clusterName = name
+
 	start := time.Now()
 	if err := createKindCluster(); err != nil {
 		return fmt.Errorf("creating cluster: %w", err)
@@ -120,7 +122,7 @@ func checkForExistingCluster() error {
 		return fmt.Errorf("check cluster: %w", err)
 	}
 	// TODO Add tests for regex
-	r := regexp.MustCompile(`(?m)^knative\n`)
+	r := regexp.MustCompile(fmt.Sprintf(`(?m)^%s\n`, clusterName))
 	matches := r.Match(out)
 	if matches {
 		var resp string
