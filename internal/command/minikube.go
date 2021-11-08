@@ -22,14 +22,24 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var miniKClusterName string
+
 // NewMinikubeCommand implements 'kn quickstart minikube' command
 func NewMinikubeCommand() *cobra.Command {
-	return &cobra.Command{
+
+	var minikubeCmd = &cobra.Command{
 		Use:   "minikube",
 		Short: "Quickstart with Minikube",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			fmt.Println("Running Knative Quickstart using Minikube")
-			return minikube.SetUp()
+			return minikube.SetUp(miniKClusterName)
 		},
 	}
+	// Set minikubeCmd options
+	minikubeOptions(minikubeCmd)
+	return minikubeCmd
+}
+
+func minikubeOptions(targetCmd *cobra.Command) {
+	targetCmd.Flags().StringVarP(&miniKClusterName, "name", "n", "", "minikube cluster name to be used by kn-quickstart, config (default kind)")
 }

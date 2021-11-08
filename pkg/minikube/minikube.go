@@ -32,8 +32,9 @@ var kubernetesVersion = "1.22.2"
 var minikubeVersion = 1.23
 
 // SetUp creates a local Minikube cluster and installs all the relevant Knative components
-func SetUp() error {
+func SetUp(name string) error {
 	start := time.Now()
+	clusterName = name
 
 	if err := createMinikubeCluster(); err != nil {
 		return fmt.Errorf("creating cluster: %w", err)
