@@ -21,8 +21,6 @@ import (
 	"knative.dev/kn-plugin-quickstart/pkg/kind"
 )
 
-var kindClusterName string
-
 // NewKindCommand implements 'kn quickstart kind' command
 func NewKindCommand() *cobra.Command {
 	var kindCmd = &cobra.Command{
@@ -30,15 +28,11 @@ func NewKindCommand() *cobra.Command {
 		Short: "Quickstart with Kind",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			fmt.Println("Running Knative Quickstart using Kind")
-			return kind.SetUp(kindClusterName)
+			return kind.SetUp(name)
 		},
 	}
 	// Set kindCmd options
-	kindOptions(kindCmd)
+	clusterNameOption(kindCmd, "knative", "kind")
 
 	return kindCmd
-}
-
-func kindOptions(targetCmd *cobra.Command) {
-	targetCmd.Flags().StringVarP(&kindClusterName, "name", "n", "", "kind cluster name to be used by kn-quickstart, config (default kind)")
 }

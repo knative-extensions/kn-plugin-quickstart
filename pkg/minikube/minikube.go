@@ -27,7 +27,7 @@ import (
 	"knative.dev/kn-plugin-quickstart/pkg/install"
 )
 
-var clusterName = "minikube-knative"
+var clusterName string
 var kubernetesVersion = "1.22.2"
 var minikubeVersion = 1.23
 

@@ -27,14 +27,14 @@ import (
 )
 
 var kubernetesVersion = "v1.22.2@sha256:f638a08c1f68fe2a99e724ace6df233a546eaf6713019a0b310130a4f91ebe7f"
-var clusterName = "knative"
+var clusterName string
 var kindVersion = 0.11
 
 // SetUp creates a local Kind cluster and installs all the relevant Knative components
 func SetUp(name string) error {
+	start := time.Now()
 	clusterName = name
 
-	start := time.Now()
 	if err := createKindCluster(); err != nil {
 		return fmt.Errorf("creating cluster: %w", err)
 	}

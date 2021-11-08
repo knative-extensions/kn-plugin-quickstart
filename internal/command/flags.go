@@ -17,23 +17,17 @@ package command
 import (
 	"fmt"
 
-	"knative.dev/kn-plugin-quickstart/pkg/minikube"
-
 	"github.com/spf13/cobra"
 )
 
-// NewMinikubeCommand implements 'kn quickstart minikube' command
-func NewMinikubeCommand() *cobra.Command {
+var name string
 
-	var minikubeCmd = &cobra.Command{
-		Use:   "minikube",
-		Short: "Quickstart with Minikube",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			fmt.Println("Running Knative Quickstart using Minikube")
-			return minikube.SetUp(name)
-		},
-	}
-	// Set minikubeCmd options
-	clusterNameOption(minikubeCmd, "knative", "minikube")
-	return minikubeCmd
+func clusterNameOption(targetCmd *cobra.Command, flagDefault, commandName string) {
+	targetCmd.Flags().StringVarP(
+		&name,
+		"name",
+		"n",
+		flagDefault,
+		fmt.Sprintf("%s cluster name to be used by kn-quickstart (default %s)", commandName, flagDefault),
+	)
 }
