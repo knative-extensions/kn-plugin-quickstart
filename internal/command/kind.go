@@ -23,12 +23,16 @@ import (
 
 // NewKindCommand implements 'kn quickstart kind' command
 func NewKindCommand() *cobra.Command {
-	return &cobra.Command{
+	var kindCmd = &cobra.Command{
 		Use:   "kind",
 		Short: "Quickstart with Kind",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			fmt.Println("Running Knative Quickstart using Kind")
-			return kind.SetUp()
+			return kind.SetUp(name)
 		},
 	}
+	// Set kindCmd options
+	clusterNameOption(kindCmd, "knative", "kind")
+
+	return kindCmd
 }
