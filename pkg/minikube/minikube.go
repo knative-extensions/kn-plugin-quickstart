@@ -38,6 +38,13 @@ func SetUp() error {
 	if err := createMinikubeCluster(); err != nil {
 		return fmt.Errorf("creating cluster: %w", err)
 	}
+	if runtime.GOOS == "darwin" || runtime.GOOS == "windows" {
+		fmt.Print("\n")
+		fmt.Println("To finish setting up networking for minikube, run the following command in a separate terminal window:")
+		fmt.Println("    minikube tunnel --profile minikube-knative")
+		fmt.Println("\nPress the Enter key to continue")
+		fmt.Scanln()
+	}
 	if err := install.Serving(); err != nil {
 		return fmt.Errorf("install serving: %w", err)
 	}
@@ -54,12 +61,6 @@ func SetUp() error {
 	finish := time.Since(start).Round(time.Second)
 	fmt.Printf("🚀 Knative install took: %s \n", finish)
 	fmt.Println("🎉 Now have some fun with Serverless and Event Driven Apps!")
-
-	if runtime.GOOS == "darwin" || runtime.GOOS == "windows" {
-		fmt.Print("\n")
-		fmt.Println("To finish setting up networking for minikube, run the following command in a separate terminal window:")
-		fmt.Println("    minikube tunnel --profile minikube-knative")
-	}
 
 	return nil
 }
