@@ -26,7 +26,7 @@ import (
 	"knative.dev/kn-plugin-quickstart/pkg/install"
 )
 
-var kubernetesVersion = "v1.22.2@sha256:f638a08c1f68fe2a99e724ace6df233a546eaf6713019a0b310130a4f91ebe7f"
+var kubernetesVersion = "v1.22.4"
 var clusterName string
 var kindVersion = 0.11
 
