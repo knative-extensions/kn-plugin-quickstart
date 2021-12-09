@@ -108,7 +108,7 @@ func KourierMinikube() error {
 	// Instead, they will be directed to create one manually after
 	// the plugin finishes
 	if runtime.GOOS != "window" && runtime.GOOS != "darwin" {
-		tunnel := exec.Command("minikube", "tunnel", "--profile", "minikube-knative")
+		tunnel := exec.Command("minikube", "tunnel", "--profile", "knative")
 		if err := tunnel.Start(); err != nil {
 			return fmt.Errorf("tunnel: %w", err)
 		}
