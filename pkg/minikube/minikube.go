@@ -42,7 +42,7 @@ func SetUp(name string) error {
 	if runtime.GOOS == "darwin" || runtime.GOOS == "windows" {
 		fmt.Print("\n")
 		fmt.Println("To finish setting up networking for minikube, run the following command in a separate terminal window:")
-		fmt.Println("    minikube tunnel --profile minikube-knative")
+		fmt.Println("    minikube tunnel --profile knative")
 		fmt.Println("\nPress the Enter key to continue")
 		fmt.Scanln()
 	}
@@ -109,7 +109,6 @@ func checkMinikubeVersion() error {
 // the option of deleting the existing cluster and recreating it. If not, it proceeds to
 // creating a new cluster
 func checkForExistingCluster() error {
-
 	getClusters := exec.Command("minikube", "profile", "list")
 	out, err := getClusters.CombinedOutput()
 	if err != nil {
@@ -151,7 +150,6 @@ func checkForExistingCluster() error {
 
 // createNewCluster creates a new Minikube cluster
 func createNewCluster() error {
-
 	fmt.Println("☸ Creating Minikube cluster...")
 	fmt.Println("\nBy default, using the standard minikube driver for your system")
 	fmt.Println("If you wish to use a different driver, please configure minikube using")
