@@ -43,6 +43,7 @@ func SetUp(name string) error {
 		fmt.Print("\n")
 		fmt.Println("To finish setting up networking for minikube, run the following command in a separate terminal window:")
 		fmt.Println("    minikube tunnel --profile knative")
+		fmt.Println("The tunnel window must remain open until you are done with the quickstart environment.")
 		fmt.Println("\nPress the Enter key to continue")
 		fmt.Scanln()
 	}
