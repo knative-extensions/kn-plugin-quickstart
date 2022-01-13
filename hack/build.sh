@@ -349,6 +349,9 @@ if $(has_flag --debug); then
     set -x
 fi
 
+# Shared funcs from hack repo
+source $(basedir)/vendor/knative.dev/hack/library.sh
+
 # Shared funcs with CI
 source $(basedir)/hack/build-flags.sh
 
