@@ -32,7 +32,7 @@ func NewKindCommand() *cobra.Command {
 		},
 	}
 	// Set kindCmd options
-	clusterNameOption(kindCmd, "knative", "kind")
+	clusterNameOption(kindCmd, "knative")
 
 	return kindCmd
 }

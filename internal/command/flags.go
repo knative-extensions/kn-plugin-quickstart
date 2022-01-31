@@ -22,12 +22,12 @@ import (
 
 var name string
 
-func clusterNameOption(targetCmd *cobra.Command, flagDefault, commandName string) {
+func clusterNameOption(targetCmd *cobra.Command, flagDefault string) {
 	targetCmd.Flags().StringVarP(
 		&name,
 		"name",
 		"n",
 		flagDefault,
-		fmt.Sprintf("%s cluster name to be used by kn-quickstart (default %s)", commandName, flagDefault),
+		fmt.Sprintf("%s cluster name to be used by kn-quickstart (default %s)", targetCmd.Name(), flagDefault),
 	)
 }
