@@ -34,6 +34,6 @@ func NewMinikubeCommand() *cobra.Command {
 		},
 	}
 	// Set minikubeCmd options
-	clusterNameOption(minikubeCmd, "knative", "minikube")
+	clusterNameOption(minikubeCmd, "knative")
 	return minikubeCmd
 }
