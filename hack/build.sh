@@ -16,6 +16,7 @@
 
 set -o pipefail
 
+
 # =================================================
 # CUSTOMIZE ME:
 
@@ -41,6 +42,37 @@ else
 fi
 
 set -eu
+
+
+# Dir where this script is located
+basedir() {
+    # Default is current directory
+    local script=${BASH_SOURCE[0]}
+
+    # Resolve symbolic links
+    if [ -L $script ]; then
+        if readlink -f $script >/dev/null 2>&1; then
+            script=$(readlink -f $script)
+        elif readlink $script >/dev/null 2>&1; then
+            script=$(readlink $script)
+        elif realpath $script >/dev/null 2>&1; then
+            script=$(realpath $script)
+        else
+            echo "ERROR: Cannot resolve symbolic link $script"
+            exit 1
+        fi
+    fi
+
+    local dir=$(dirname "$script")
+    local full_dir=$(cd "${dir}/.." && pwd)
+    echo ${full_dir}
+}
+
+# Shared funcs from hack repo
+source $(basedir)/vendor/knative.dev/hack/library.sh
+
+# Shared funcs with CI
+source $(basedir)/hack/build-flags.sh
 
 # Run build
 run() {
@@ -110,7 +142,7 @@ codegen() {
   #TODO: Workaround to update go-licenses until prow-tests image is updated
   local temp_dir="$(mktemp -d)"
   pushd "${temp_dir}" > /dev/null 2>&1
-  GO111MODULE=on go get github.com/google/go-licenses@latest || return 1
+  GO111MODULE=on go install github.com/google/go-licenses@latest || return 1
   popd > /dev/null 2>&1
 
   # Update dependencies
@@ -130,7 +162,7 @@ run_go_tool() {
   if [ -z "$(which ${tool})" ]; then
     local temp_dir="$(mktemp -d)"
     pushd "${temp_dir}" > /dev/null 2>&1
-    GOFLAGS="" go get "$1" || install_failed=1
+    GOFLAGS="" go install "$1"@latest || install_failed=1
     popd > /dev/null 2>&1
     rm -rf "${temp_dir}"
   fi
@@ -232,29 +264,6 @@ watch() {
     fswatch $fswatch_opts | xargs -n1 -I{} sh -c "$command && echo 👌 OK"
 }
 
-# Dir where this script is located
-basedir() {
-    # Default is current directory
-    local script=${BASH_SOURCE[0]}
-
-    # Resolve symbolic links
-    if [ -L $script ]; then
-        if readlink -f $script >/dev/null 2>&1; then
-            script=$(readlink -f $script)
-        elif readlink $script >/dev/null 2>&1; then
-            script=$(readlink $script)
-        elif realpath $script >/dev/null 2>&1; then
-            script=$(realpath $script)
-        else
-            echo "ERROR: Cannot resolve symbolic link $script"
-            exit 1
-        fi
-    fi
-
-    local dir=$(dirname "$script")
-    local full_dir=$(cd "${dir}/.." && pwd)
-    echo ${full_dir}
-}
 
 # Checks if a flag is present in the arguments.
 has_flag() {
@@ -349,11 +358,6 @@ if $(has_flag --debug); then
     set -x
 fi
 
-# Shared funcs from hack repo
-source $(basedir)/vendor/knative.dev/hack/library.sh
-
-# Shared funcs with CI
-source $(basedir)/hack/build-flags.sh
 
 # Fixe emoji labels for certain terminals
 apply_emoji_fixes
