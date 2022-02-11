@@ -28,7 +28,7 @@ import (
 )
 
 var clusterName string
-var kubernetesVersion = "1.22.4"
+var kubernetesVersion = "1.23.3"
 var minikubeVersion = 1.23
 
 // SetUp creates a local Minikube cluster and installs all the relevant Knative components
@@ -155,6 +155,14 @@ func createNewCluster() error {
 	fmt.Println("\nBy default, using the standard minikube driver for your system")
 	fmt.Println("If you wish to use a different driver, please configure minikube using")
 	fmt.Print("    minikube config set driver <your-driver>\n\n")
+
+	// If minikube config kubernetes-version exists, use that instead of our default
+	getMinikubeVersion := exec.Command("minikube", "config", "get", "kubernetes-version")
+	out, err := getMinikubeVersion.Output()
+	// if the command returns a config, then use that for the kubernetes version
+	if err == nil {
+		kubernetesVersion = strings.TrimRight(string(out), "\n")
+	}
 
 	// create cluster and wait until ready
 	createCluster := exec.Command("minikube", "start", "--kubernetes-version", kubernetesVersion, "--cpus", "3", "--profile", clusterName, "--wait", "all")
