@@ -28,6 +28,6 @@ func clusterNameOption(targetCmd *cobra.Command, flagDefault string) {
 		"name",
 		"n",
 		flagDefault,
-		fmt.Sprintf("%s cluster name to be used by kn-quickstart (default %s)", targetCmd.Name(), flagDefault),
+		fmt.Sprintf("%s cluster name to be used by kn-quickstart", targetCmd.Name()),
 	)
 }
