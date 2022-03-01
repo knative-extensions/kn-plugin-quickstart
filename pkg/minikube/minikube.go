@@ -28,8 +28,8 @@ import (
 )
 
 var clusterName string
-var kubernetesVersion = "1.23.3"
-var minikubeVersion = 1.23
+var kubernetesVersion = "1.23.4"
+var minikubeVersion = 1.25
 
 // SetUp creates a local Minikube cluster and installs all the relevant Knative components
 func SetUp(name string) error {
