@@ -39,5 +39,5 @@ func kubernetesVersionOption(targetCmd *cobra.Command, flagDefault string) {
 		"kubernetes-version",
 		"k",
 		flagDefault,
-		fmt.Sprint("kubernetes version to use (1.x.y)"))
+		"kubernetes version to use (1.x.y)")
 }
