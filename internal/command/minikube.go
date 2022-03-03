@@ -30,10 +30,11 @@ func NewMinikubeCommand() *cobra.Command {
 		Short: "Quickstart with Minikube",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			fmt.Println("Running Knative Quickstart using Minikube")
-			return minikube.SetUp(name)
+			return minikube.SetUp(name, kubernetesVersion)
 		},
 	}
 	// Set minikubeCmd options
 	clusterNameOption(minikubeCmd, "knative")
+	kubernetesVersionOption(minikubeCmd, "")
 	return minikubeCmd
 }

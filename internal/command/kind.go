@@ -28,11 +28,12 @@ func NewKindCommand() *cobra.Command {
 		Short: "Quickstart with Kind",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			fmt.Println("Running Knative Quickstart using Kind")
-			return kind.SetUp(name)
+			return kind.SetUp(name, kubernetesVersion)
 		},
 	}
 	// Set kindCmd options
 	clusterNameOption(kindCmd, "knative")
+	kubernetesVersionOption(kindCmd, "")
 
 	return kindCmd
 }

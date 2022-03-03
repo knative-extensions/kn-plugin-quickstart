@@ -21,6 +21,7 @@ import (
 )
 
 var name string
+var kubernetesVersion string
 
 func clusterNameOption(targetCmd *cobra.Command, flagDefault string) {
 	targetCmd.Flags().StringVarP(
@@ -30,4 +31,13 @@ func clusterNameOption(targetCmd *cobra.Command, flagDefault string) {
 		flagDefault,
 		fmt.Sprintf("%s cluster name to be used by kn-quickstart", targetCmd.Name()),
 	)
+}
+
+func kubernetesVersionOption(targetCmd *cobra.Command, flagDefault string) {
+	targetCmd.Flags().StringVarP(
+		&kubernetesVersion,
+		"kubernetes-version",
+		"k",
+		flagDefault,
+		fmt.Sprintf("kubernetes version to use (1.x.y)"))
 }
