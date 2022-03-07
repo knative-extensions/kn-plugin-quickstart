@@ -31,9 +31,12 @@ var clusterName string
 var kindVersion = 0.11
 
 // SetUp creates a local Kind cluster and installs all the relevant Knative components
-func SetUp(name string) error {
+func SetUp(name, kVersion string) error {
 	start := time.Now()
 	clusterName = name
+	if kVersion != "" {
+		kubernetesVersion = "v" + kVersion
+	}
 
 	if err := createKindCluster(); err != nil {
 		return fmt.Errorf("creating cluster: %w", err)

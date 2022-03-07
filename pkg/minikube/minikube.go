@@ -29,12 +29,17 @@ import (
 
 var clusterName string
 var kubernetesVersion = "1.23.4"
+var clusterVersionOverride bool
 var minikubeVersion = 1.25
 
 // SetUp creates a local Minikube cluster and installs all the relevant Knative components
-func SetUp(name string) error {
+func SetUp(name, kVersion string) error {
 	start := time.Now()
 	clusterName = name
+	if kVersion != "" {
+		kubernetesVersion = kVersion
+		clusterVersionOverride = true
+	}
 
 	if err := createMinikubeCluster(); err != nil {
 		return fmt.Errorf("creating cluster: %w", err)
@@ -152,16 +157,19 @@ func checkForExistingCluster() error {
 // createNewCluster creates a new Minikube cluster
 func createNewCluster() error {
 	fmt.Println("☸ Creating Minikube cluster...")
-	fmt.Println("\nBy default, using the standard minikube driver for your system")
-	fmt.Println("If you wish to use a different driver, please configure minikube using")
-	fmt.Print("    minikube config set driver <your-driver>\n\n")
 
-	// If minikube config kubernetes-version exists, use that instead of our default
-	getMinikubeVersion := exec.Command("minikube", "config", "get", "kubernetes-version")
-	out, err := getMinikubeVersion.Output()
-	// if the command returns a config, then use that for the kubernetes version
-	if err == nil {
-		kubernetesVersion = strings.TrimRight(string(out), "\n")
+	if !clusterVersionOverride {
+		fmt.Println("\nUsing the standard minikube driver for your system")
+		fmt.Println("If you wish to use a different driver, please configure minikube using")
+		fmt.Print("    minikube config set driver <your-driver>\n\n")
+
+		// If minikube config kubernetes-version exists, use that instead of our default
+		getMinikubeVersion := exec.Command("minikube", "config", "get", "kubernetes-version")
+		out, err := getMinikubeVersion.Output()
+		// if the command returns a config, then use that for the kubernetes version
+		if err == nil {
+			kubernetesVersion = strings.TrimRight(string(out), "\n")
+		}
 	}
 
 	// create cluster and wait until ready
