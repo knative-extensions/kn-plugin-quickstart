@@ -33,7 +33,7 @@ func NewKindCommand() *cobra.Command {
 	}
 	// Set kindCmd options
 	clusterNameOption(kindCmd, "knative")
-	kubernetesVersionOption(kindCmd, "")
+	kubernetesVersionOption(kindCmd, "", "kubernetes version to use (1.x.y) or (kindest/node:v1.x.y)")
 
 	return kindCmd
 }

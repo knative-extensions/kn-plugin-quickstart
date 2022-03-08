@@ -33,11 +33,11 @@ func clusterNameOption(targetCmd *cobra.Command, flagDefault string) {
 	)
 }
 
-func kubernetesVersionOption(targetCmd *cobra.Command, flagDefault string) {
+func kubernetesVersionOption(targetCmd *cobra.Command, flagDefault string, usageText string) {
 	targetCmd.Flags().StringVarP(
 		&kubernetesVersion,
 		"kubernetes-version",
 		"k",
 		flagDefault,
-		"kubernetes version to use (1.x.y)")
+		usageText)
 }
