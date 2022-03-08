@@ -26,7 +26,7 @@ import (
 	"knative.dev/kn-plugin-quickstart/pkg/install"
 )
 
-var kubernetesVersion = "v1.23.3"
+var kubernetesVersion = "kindest/node:v1.23.3"
 var clusterName string
 var kindVersion = 0.11
 
@@ -35,7 +35,11 @@ func SetUp(name, kVersion string) error {
 	start := time.Now()
 	clusterName = name
 	if kVersion != "" {
-		kubernetesVersion = "v" + kVersion
+		if strings.Contains(kVersion, ":") {
+			kubernetesVersion = kVersion
+		} else {
+			kubernetesVersion = "kindest/node:v" + kVersion
+		}
 	}
 
 	if err := createKindCluster(); err != nil {
@@ -163,7 +167,7 @@ apiVersion: kind.x-k8s.io/v1alpha4
 name: %s
 nodes:
 - role: control-plane
-  image: kindest/node:%s
+  image: %s
   extraPortMappings:
   - containerPort: 31080
     listenAddress: 127.0.0.1

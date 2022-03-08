@@ -35,6 +35,6 @@ func NewMinikubeCommand() *cobra.Command {
 	}
 	// Set minikubeCmd options
 	clusterNameOption(minikubeCmd, "knative")
-	kubernetesVersionOption(minikubeCmd, "")
+	kubernetesVersionOption(minikubeCmd, "", "kubernetes version to use (1.x.y)")
 	return minikubeCmd
 }
