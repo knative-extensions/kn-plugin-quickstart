@@ -22,9 +22,9 @@ import (
 	"time"
 )
 
-var servingVersion = "1.2.0"
-var kourierVersion = "1.2.0"
-var eventingVersion = "1.2.0"
+var servingVersion = "1.3.0"
+var kourierVersion = "1.3.0"
+var eventingVersion = "1.3.0"
 
 // Kourier installs Kourier networking layer from Github YAML files
 func Kourier() error {
