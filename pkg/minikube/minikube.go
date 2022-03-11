@@ -35,6 +35,14 @@ var minikubeVersion = 1.25
 // SetUp creates a local Minikube cluster and installs all the relevant Knative components
 func SetUp(name, kVersion string) error {
 	start := time.Now()
+
+	// kubectl is required, fail if not found
+	if _, err := exec.LookPath("kubectl"); err != nil {
+		fmt.Println("ERROR: kubectl is required for quickstart")
+		fmt.Println("Download from https://kubectl.docs.kubernetes.io/installation/kubectl/")
+		os.Exit(1)
+	}
+
 	clusterName = name
 	if kVersion != "" {
 		kubernetesVersion = kVersion
