@@ -31,6 +31,8 @@ var clusterName string
 var kubernetesVersion = "1.23.4"
 var clusterVersionOverride bool
 var minikubeVersion = 1.25
+var cpus = "3"
+var memory = "3072"
 
 // SetUp creates a local Minikube cluster and installs all the relevant Knative components
 func SetUp(name, kVersion string) error {
@@ -164,16 +166,26 @@ func createNewCluster() error {
 		fmt.Print("    minikube config set driver <your-driver>\n\n")
 
 		// If minikube config kubernetes-version exists, use that instead of our default
-		getMinikubeVersion := exec.Command("minikube", "config", "get", "kubernetes-version")
-		out, err := getMinikubeVersion.Output()
-		// if the command returns a config, then use that for the kubernetes version
-		if err == nil {
-			kubernetesVersion = strings.TrimRight(string(out), "\n")
+		if config, ok := getMinikubeConfig("kubernetes-version"); ok {
+			kubernetesVersion = config
 		}
 	}
 
+	// get user configs for memory/cpus if they exist
+	if config, ok := getMinikubeConfig("cpus"); ok {
+		cpus = config
+	}
+	if config, ok := getMinikubeConfig("memory"); ok {
+		memory = config
+	}
+
 	// create cluster and wait until ready
-	createCluster := exec.Command("minikube", "start", "--kubernetes-version", kubernetesVersion, "--cpus", "3", "--profile", clusterName, "--wait", "all")
+	createCluster := exec.Command("minikube", "start",
+		"--kubernetes-version", kubernetesVersion,
+		"--cpus", cpus,
+		"--memory", memory,
+		"--profile", clusterName,
+		"--wait", "all")
 	if err := runCommandWithOutput(createCluster); err != nil {
 		return fmt.Errorf("minikube create: %w", err)
 	}
@@ -200,4 +212,14 @@ func parseMinikubeVersion(v string) (float64, error) {
 	}
 
 	return floatVersion, nil
+}
+
+func getMinikubeConfig(k string) (string, bool) {
+	var ok bool
+	getConfig := exec.Command("minikube", "config", "get", k)
+	v, err := getConfig.Output()
+	if err == nil {
+		ok = true
+	}
+	return strings.TrimRight(string(v), "\n"), ok
 }
