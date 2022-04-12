@@ -15,7 +15,7 @@ github.com/pkg/errors
 github.com/spf13/cobra
 # github.com/spf13/pflag v1.0.5
 github.com/spf13/pflag
-# gotest.tools/v3 v3.0.3
+# gotest.tools/v3 v3.1.0
 ## explicit
 gotest.tools/v3/assert
 gotest.tools/v3/assert/cmp
@@ -23,9 +23,9 @@ gotest.tools/v3/internal/assert
 gotest.tools/v3/internal/difflib
 gotest.tools/v3/internal/format
 gotest.tools/v3/internal/source
-# knative.dev/client v0.30.2-0.20220323165518-06c3202925e6
+# knative.dev/client v0.30.2-0.20220412171308-b4e95db7a3af
 ## explicit
 knative.dev/client/pkg/kn/plugin
-# knative.dev/hack v0.0.0-20220328133751-f06773764ce3
+# knative.dev/hack v0.0.0-20220411131823-6ffd8417de7c
 ## explicit
 knative.dev/hack
