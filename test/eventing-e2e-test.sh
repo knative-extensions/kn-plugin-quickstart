@@ -16,14 +16,6 @@
 
 set -euo pipefail
 
-# Serving Test
-echo "creating ksvc"
-kn service create hello --image gcr.io/knative-samples/helloworld-go --port 8080 --env TARGET=World --revision-name=world
-SERVICE=$(kn service describe hello -o url)
-
-echo "curling ksvc 'hello'"
-curl "$SERVICE"
-
 # Eventing Tests
 kn broker list
 echo "creating cloudevents player"
@@ -41,4 +33,4 @@ kn trigger create cloudevents-trigger --sink cloudevents-player  --broker exampl
 echo "posting trigger event"
 curl -v "$PLAYER"   -H "Content-Type: application/json"   -H "Ce-Id: foo-1"   -H "Ce-Specversion: 1.0"   -H "Ce-Type: dev.example.trigger"   -H "Ce-Source: curl-source"   -d '{"msg":"Hello team!"}'
 
-echo "minikube test finished"
+echo "test finished!"
