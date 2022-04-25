@@ -22,6 +22,8 @@ import (
 
 var name string
 var kubernetesVersion string
+var installServing bool
+var installEventing bool
 
 func clusterNameOption(targetCmd *cobra.Command, flagDefault string) {
 	targetCmd.Flags().StringVarP(
@@ -40,4 +42,12 @@ func kubernetesVersionOption(targetCmd *cobra.Command, flagDefault string, usage
 		"k",
 		flagDefault,
 		usageText)
+}
+
+func installServingOption(targetCmd *cobra.Command) {
+	targetCmd.Flags().BoolVar(&installServing, "install-serving", false, "install Serving on quickstart cluster")
+}
+
+func installEventingOption(targetCmd *cobra.Command) {
+	targetCmd.Flags().BoolVar(&installEventing, "install-eventing", false, "install Eventing on quickstart cluster")
 }
