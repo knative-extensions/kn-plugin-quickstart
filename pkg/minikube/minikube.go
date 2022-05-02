@@ -35,8 +35,15 @@ var cpus = "3"
 var memory = "3072"
 
 // SetUp creates a local Minikube cluster and installs all the relevant Knative components
-func SetUp(name, kVersion string) error {
+func SetUp(name, kVersion string, installServing, installEventing bool) error {
 	start := time.Now()
+
+	// if neither the "install-serving" or "install-eventing" flags are set,
+	// then we assume the user wants to install both serving and eventing
+	if !installServing && !installEventing {
+		installServing = true
+		installEventing = true
+	}
 
 	// kubectl is required, fail if not found
 	if _, err := exec.LookPath("kubectl"); err != nil {
@@ -62,17 +69,23 @@ func SetUp(name, kVersion string) error {
 		fmt.Println("\nPress the Enter key to continue")
 		fmt.Scanln()
 	}
-	if err := install.Serving(); err != nil {
-		return fmt.Errorf("install serving: %w", err)
+
+	if installServing {
+		if err := install.Serving(); err != nil {
+			return fmt.Errorf("install serving: %w", err)
+		}
+		if err := install.Kourier(); err != nil {
+			return fmt.Errorf("install kourier: %w", err)
+		}
+		if err := install.KourierMinikube(); err != nil {
+			return fmt.Errorf("configure kourier: %w", err)
+		}
 	}
-	if err := install.Kourier(); err != nil {
-		return fmt.Errorf("install kourier: %w", err)
-	}
-	if err := install.KourierMinikube(); err != nil {
-		return fmt.Errorf("configure kourier: %w", err)
-	}
-	if err := install.Eventing(); err != nil {
-		return fmt.Errorf("install eventing: %w", err)
+
+	if installEventing {
+		if err := install.Eventing(); err != nil {
+			return fmt.Errorf("install eventing: %w", err)
+		}
 	}
 
 	finish := time.Since(start).Round(time.Second)
