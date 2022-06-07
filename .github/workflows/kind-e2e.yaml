@@ -1,0 +1,63 @@
+name: e2e
+
+on:
+  pull_request:
+    branches: [ 'main', 'release-*' ]
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  # https://github.com/google/go-containerregistry/pull/125 allows insecure registry for
+  # '*.local' hostnames. This works both for `ko` and our own tag-to-digest resolution logic,
+  # thus allowing us to test without bypassing tag-to-digest resolution.
+  KIND_VERSION: 0.12.0
+  KNATIVE_VERSION: 1.5.0
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Go 1.17.x
+      uses: actions/setup-go@v3
+      with:
+        go-version: 1.17.x
+
+    - name: Build quickstart plugin
+      run: |
+        set -x
+        ./hack/build.sh
+        sudo mv kn-quickstart /usr/local/bin
+
+    - name: Install Dependencies
+      run: |
+        set -x
+        echo "::group:: install kind ${KIND_VERSION}"
+        curl -Lo ./kind https://github.com/kubernetes-sigs/kind/releases/download/v${KIND_VERSION}/kind-linux-amd64
+        chmod +x ./kind
+        sudo mv kind /usr/local/bin
+        echo "::endgroup::"
+
+        echo "::group:: install kn client ${KNATIVE_VERSION}"
+        curl -Lo ./kn https://github.com/knative/client/releases/download/knative-v${KNATIVE_VERSION}/kn-linux-amd64
+        chmod +x ./kn
+        sudo mv kn /usr/local/bin
+        echo "::endgroup::"
+
+    - name: Serving e2e Test
+      run: |
+        kn quickstart kind --install-serving
+        source ./vendor/knative.dev/hack/e2e-tests.sh
+        ./test/serving-e2e-test.sh || fail_test
+
+    - uses: chainguard-dev/actions/kind-diag@main
+      # Only upload logs on failure.
+      if: ${{ failure() }}
+      with:
+        cluster-resources: nodes,${{ matrix.cluster-resources || '' }}
+        namespace-resources: pods,svc,ksvc,route,configuration,revision,king,${{ matrix.namespace-resources || '' }}
+        artifact-name: logs-${{ matrix.k8s-version}}-${{ matrix.ingress }}-${{ matrix.test-suite }}
