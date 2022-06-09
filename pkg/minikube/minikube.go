@@ -19,7 +19,6 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
-	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -61,14 +60,12 @@ func SetUp(name, kVersion string, installServing, installEventing bool) error {
 	if err := createMinikubeCluster(); err != nil {
 		return fmt.Errorf("creating cluster: %w", err)
 	}
-	if runtime.GOOS == "darwin" || runtime.GOOS == "windows" {
-		fmt.Print("\n")
-		fmt.Println("To finish setting up networking for minikube, run the following command in a separate terminal window:")
-		fmt.Println("    minikube tunnel --profile knative")
-		fmt.Println("The tunnel command must be running in a terminal window any time when using the knative quickstart environment.")
-		fmt.Println("\nPress the Enter key to continue")
-		fmt.Scanln()
-	}
+	fmt.Print("\n")
+	fmt.Println("To finish setting up networking for minikube, run the following command in a separate terminal window:")
+	fmt.Println("    minikube tunnel --profile knative")
+	fmt.Println("The tunnel command must be running in a terminal window any time when using the knative quickstart environment.")
+	fmt.Println("\nPress the Enter key to continue")
+	fmt.Scanln()
 
 	if installServing {
 		if err := install.Serving(); err != nil {
