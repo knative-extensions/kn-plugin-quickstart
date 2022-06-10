@@ -17,7 +17,6 @@ package install
 import (
 	"fmt"
 	"os/exec"
-	"runtime"
 	"strings"
 	"time"
 )
@@ -103,17 +102,6 @@ func KourierMinikube() error {
 	}
 
 	fmt.Println("    Domain DNS set up...")
-
-	// For windows and mac users, do not automatically spawn a tunnel
-	// Instead, they will be directed to create one manually after
-	// the plugin finishes
-	if runtime.GOOS != "window" && runtime.GOOS != "darwin" {
-		tunnel := exec.Command("minikube", "tunnel", "--profile", "knative")
-		if err := tunnel.Start(); err != nil {
-			return fmt.Errorf("tunnel: %w", err)
-		}
-		fmt.Println("    Minikube tunnel...")
-	}
 
 	fmt.Println("    Finished configuring Kourier")
 	return nil
