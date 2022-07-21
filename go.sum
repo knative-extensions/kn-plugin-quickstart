@@ -2166,12 +2166,13 @@ k8s.io/utils v0.0.0-20211116205334-6203023598ed/go.mod h1:jPW/WVKK9YHAvNhRxK0md/
 k8s.io/utils v0.0.0-20220210201930-3a6ce19ff2f9 h1:HNSDgDCrr/6Ly3WEGKZftiE7IY19Vz2GdbOCyI4qqhc=
 k8s.io/utils v0.0.0-20220210201930-3a6ce19ff2f9/go.mod h1:jPW/WVKK9YHAvNhRxK0md/EJ228hCsBRufyofKtW8HA=
 knative.dev/caching v0.0.0-20220705144806-9c3c19ff990f/go.mod h1:CzXCnbJPjvA+wbBCy8b5YtnoqTLxcH2WqnV8fBNvX6E=
-knative.dev/client v0.33.0 h1:qbarOBwzQ5RYgfA5KGCrObTct6vA1rw2daJ87BdNXlU=
-knative.dev/client v0.33.0/go.mod h1:LCtPVdwa6ntuZ/pejRB5qgO4x4DpOATjKc5zhiSG7tU=
+knative.dev/client v0.33.1-0.20220721130420-452863fb540e h1:MaJigqSM8HPWs1n6yVbRKoFKyArZORzYM7zOZqHZlaY=
+knative.dev/client v0.33.1-0.20220721130420-452863fb540e/go.mod h1:LCtPVdwa6ntuZ/pejRB5qgO4x4DpOATjKc5zhiSG7tU=
 knative.dev/control-protocol v0.0.0-20220705161107-827b25dce9b8/go.mod h1:yKqKLbEEsVfwE7eEladw/1bqk8+Ai+6sghLGpWtjK90=
 knative.dev/eventing v0.33.0/go.mod h1:rxI/ijzHbAYenRZpGapYlJHwGEfdUcWjJh4N1bP9+zQ=
-knative.dev/hack v0.0.0-20220701014203-65c463ac8c98 h1:kAwcKZOwYU0QCGEwvZrgnLrynFCWnXetwR/+a4W9R70=
 knative.dev/hack v0.0.0-20220701014203-65c463ac8c98/go.mod h1:PHt8x8yX5Z9pPquBEfIj0X66f8iWkWfR0S/sarACJrI=
+knative.dev/hack v0.0.0-20220721014222-a6450400b5f1 h1:t6jYBtJwVhyx+48cidFj1ckYAlMesS0yCnAlW2BJyNo=
+knative.dev/hack v0.0.0-20220721014222-a6450400b5f1/go.mod h1:PHt8x8yX5Z9pPquBEfIj0X66f8iWkWfR0S/sarACJrI=
 knative.dev/hack/schema v0.0.0-20220701014203-65c463ac8c98/go.mod h1:ffjwmdcrH5vN3mPhO8RrF2KfNnbHeCE2C60A+2cv3U0=
 knative.dev/networking v0.0.0-20220705142707-f087178076e4/go.mod h1:Z+EvJIWmVXA/qQjq4xRMtCjhVgyxw43y/hvkIb//bTc=
 knative.dev/pkg v0.0.0-20220705130606-e60d250dc637 h1:wvz8Y/b2Ubox0pbTLAbKags19UC72Ik+b/tIW2QP9/E=
