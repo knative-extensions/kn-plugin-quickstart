@@ -77,3 +77,13 @@ cd kn-plugin-quickstart
 ./hack/build.sh
 ```
 
+## Using the Nightlies
+
+You can grab the latest nightly binary executable for:
+
+- [macOS](https://storage.googleapis.com/knative-nightly/kn-plugin-quickstart/latest/kn-quickstart-darwin-amd64)
+- [Linux](https://storage.googleapis.com/knative-nightly/kn-plugin-quickstart/latest/kn-quickstart-linux-amd64)
+- [Windows](https://storage.googleapis.com/knative-nightly/kn-plugin-quickstart/latest/kn-quickstart-windows-amd64.exe)
+
+Add the binary to the system PATH and ensure that it is executable.
+
