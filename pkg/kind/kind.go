@@ -26,9 +26,9 @@ import (
 	"knative.dev/kn-plugin-quickstart/pkg/install"
 )
 
-var kubernetesVersion = "kindest/node:v1.23.3"
+var kubernetesVersion = "kindest/node:v1.24.3"
 var clusterName string
-var kindVersion = 0.11
+var kindVersion = 0.14
 
 // SetUp creates a local Kind cluster and installs all the relevant Knative components
 func SetUp(name, kVersion string, installServing, installEventing bool) error {
