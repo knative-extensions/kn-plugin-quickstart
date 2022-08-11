@@ -27,9 +27,9 @@ import (
 )
 
 var clusterName string
-var kubernetesVersion = "1.23.4"
+var kubernetesVersion = "1.24.3"
 var clusterVersionOverride bool
-var minikubeVersion = 1.25
+var minikubeVersion = 1.26
 var cpus = "3"
 var memory = "3072"
 
@@ -118,7 +118,7 @@ func checkMinikubeVersion() error {
 	}
 	if userMinikubeVersion < minikubeVersion {
 		var resp string
-		fmt.Printf("WARNING: We require at least Minikube v%.2f, while you are using v%.2f\n", minikubeVersion, userMinikubeVersion)
+		fmt.Printf("WARNING: We recommend at least Minikube v%.2f, while you are using v%.2f\n", minikubeVersion, userMinikubeVersion)
 		fmt.Println("You can download a newer version from https://github.com/kubernetes/minikube/releases/")
 		fmt.Print("Continue anyway? (not recommended) [y/N]: ")
 		fmt.Scanf("%s", &resp)
