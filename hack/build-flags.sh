@@ -24,6 +24,12 @@ function build_flags() {
     [[ -n "${commit}" ]] || (echo "error getting the current commit" && exit 1)
     version="v$(date +%Y%m%d)-local-${commit}"
   fi
+  # Knative component versions
+  local branch="`git branch --show-current | cut -d '-' f2`"
+  local serving="`git ls-remote --tags --ref https://github.com/knative/serving.git | grep -F "${branch}" | cut -d '-' -f2 | cut -d 'v' -f2 | sort -Vr | head -n 1`"
+  local kourier="`git ls-remote --tags --ref https://github.com/knative-sandbox/net-kourier.git | grep -F "${branch}" | cut -d '-' -f2 | cut -d 'v' -f2 | sort -Vr | head -n 1`"
+  local eventing="`git ls-remote --tags --ref https://github.com/knative/eventing.git | grep -F "${branch}" | cut -d '-' -f2 | cut -d 'v' -f2 | sort -Vr | head -n 1`"
 
-  echo "-X '${VERSION_PACKAGE}.BuildDate=${now}' -X ${VERSION_PACKAGE}.Version=${version} -X ${VERSION_PACKAGE}.GitRevision=${rev}"
+
+  echo "-X '${VERSION_PACKAGE}.BuildDate=${now}' -X ${VERSION_PACKAGE}.Version=${version} -X ${VERSION_PACKAGE}.GitRevision=${rev} -X ${COMPONENT_PACKAGE}.ServingVersion=${serving} -X ${COMPONENT_PACKAGE}.KourierVersion=${kourier} -X ${COMPONENT_PACKAGE}.EventingVersion=${eventing}"
 }
