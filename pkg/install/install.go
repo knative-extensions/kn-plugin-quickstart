@@ -21,15 +21,16 @@ import (
 	"time"
 )
 
-var servingVersion = "1.7.1"
-var kourierVersion = "1.7.0"
-var eventingVersion = "1.7.1"
+// Component versions are generated at buildtime via the hack/build.sh script
+var ServingVersion string
+var KourierVersion string
+var EventingVersion string
 
 // Kourier installs Kourier networking layer from Github YAML files
 func Kourier() error {
-	fmt.Println("🕸️ Installing Kourier networking layer v" + kourierVersion + " ...")
+	fmt.Println("🕸️ Installing Kourier networking layer v" + KourierVersion + " ...")
 
-	if err := retryingApply("https://github.com/knative-sandbox/net-kourier/releases/download/knative-v" + kourierVersion + "/kourier.yaml"); err != nil {
+	if err := retryingApply("https://github.com/knative-sandbox/net-kourier/releases/download/knative-v" + KourierVersion + "/kourier.yaml"); err != nil {
 		return fmt.Errorf("wait: %w", err)
 	}
 	if err := waitForPodsReady("kourier-system"); err != nil {
@@ -94,7 +95,7 @@ spec:
 func KourierMinikube() error {
 	fmt.Println("🕸 Configuring Kourier for Minikube...")
 
-	if err := retryingApply("https://github.com/knative/serving/releases/download/knative-v" + servingVersion + "/serving-default-domain.yaml"); err != nil {
+	if err := retryingApply("https://github.com/knative/serving/releases/download/knative-v" + ServingVersion + "/serving-default-domain.yaml"); err != nil {
 		return fmt.Errorf("default domain: %w", err)
 	}
 	if err := waitForPodsReady("knative-serving"); err != nil {
@@ -109,8 +110,8 @@ func KourierMinikube() error {
 
 // Serving installs Knative Serving from Github YAML files
 func Serving() error {
-	fmt.Println("🍿 Installing Knative Serving v" + servingVersion + " ...")
-	baseURL := "https://github.com/knative/serving/releases/download/knative-v" + servingVersion
+	fmt.Println("🍿 Installing Knative Serving v" + ServingVersion + " ...")
+	baseURL := "https://github.com/knative/serving/releases/download/knative-v" + ServingVersion
 
 	if err := retryingApply(baseURL + "/serving-crds.yaml"); err != nil {
 		return fmt.Errorf("wait: %w", err)
@@ -138,8 +139,8 @@ func Serving() error {
 
 // Eventing installs Knative Eventing from Github YAML files
 func Eventing() error {
-	fmt.Println("🔥 Installing Knative Eventing v" + eventingVersion + " ... ")
-	baseURL := "https://github.com/knative/eventing/releases/download/knative-v" + eventingVersion
+	fmt.Println("🔥 Installing Knative Eventing v" + EventingVersion + " ... ")
+	baseURL := "https://github.com/knative/eventing/releases/download/knative-v" + EventingVersion
 
 	if err := retryingApply(baseURL + "/eventing-crds.yaml"); err != nil {
 		return fmt.Errorf("wait: %w", err)

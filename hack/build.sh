@@ -31,6 +31,9 @@ MAIN_SOURCE_DIR="cmd"
 # Package which holds the version variables
 VERSION_PACKAGE="knative.dev/kn-plugin-quickstart/internal/command"
 
+# Package which holds the component variables
+COMPONENT_PACKAGE="knative.dev/kn-plugin-quickstart/pkg/install"
+
 # =================================================
 
 # Store for later
