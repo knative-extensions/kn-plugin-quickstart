@@ -14,7 +14,7 @@ github.com/mitchellh/go-homedir
 # github.com/pkg/errors v0.9.1
 ## explicit
 github.com/pkg/errors
-# github.com/spf13/cobra v1.3.0
+# github.com/spf13/cobra v1.4.0
 ## explicit; go 1.15
 github.com/spf13/cobra
 # github.com/spf13/pflag v1.0.5
@@ -28,7 +28,7 @@ gotest.tools/v3/internal/assert
 gotest.tools/v3/internal/difflib
 gotest.tools/v3/internal/format
 gotest.tools/v3/internal/source
-# knative.dev/client v0.34.1-0.20220906114442-59948bb3723d
+# knative.dev/client v0.34.1-0.20220919093209-9bbef97106bc
 ## explicit; go 1.18
 knative.dev/client/pkg/kn/plugin
 # knative.dev/hack v0.0.0-20220914183605-d1317b08c0c3

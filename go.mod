@@ -3,9 +3,9 @@ module knative.dev/kn-plugin-quickstart
 go 1.17
 
 require (
-	github.com/spf13/cobra v1.3.0
+	github.com/spf13/cobra v1.4.0
 	gotest.tools/v3 v3.1.0
-	knative.dev/client v0.34.1-0.20220906114442-59948bb3723d
+	knative.dev/client v0.34.1-0.20220919093209-9bbef97106bc
 	knative.dev/hack v0.0.0-20220914183605-d1317b08c0c3
 
 )
