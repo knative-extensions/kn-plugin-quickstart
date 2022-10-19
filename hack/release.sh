@@ -19,15 +19,18 @@
 
 PLUGIN="kn-quickstart"
 VERSION_PACKAGE="knative.dev/kn-plugin-quickstart/internal/command"
+COMPONENT_PACKAGE="knative.dev/kn-plugin-quickstart/pkg/install"
 
 source $(dirname $0)/../vendor/knative.dev/hack/release.sh
-source $(dirname $0)/build-flags.sh
 
 function build_release() {
+  source $(dirname $0)/build-flags.sh
   local ld_flags="$(build_flags $(dirname $0)/..)"
   local version="${TAG}"
   # Use vYYYYMMDD-<hash>-local for the version string, if not passed.
   [[ -z "${version}" ]] && version="v${BUILD_TAG}-local"
+  echo "Building version: $version"
+  echo "Using flags: $ld_flags"
 
   export GO111MODULE=on
   export CGO_ENABLED=0
