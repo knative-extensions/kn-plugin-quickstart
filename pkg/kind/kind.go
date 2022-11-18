@@ -26,9 +26,9 @@ import (
 	"knative.dev/kn-plugin-quickstart/pkg/install"
 )
 
-var kubernetesVersion = "kindest/node:v1.24.3"
+var kubernetesVersion = "kindest/node:v1.25.3"
 var clusterName string
-var kindVersion = 0.14
+var kindVersion = 0.16
 var container_reg_name = "kind-registry"
 var container_reg_port = "5001"
 
@@ -172,9 +172,9 @@ func checkKindVersion() error {
 	}
 	if userKindVersion < kindVersion {
 		var resp string
-		fmt.Printf("WARNING: Please make sure you are using Kind version %.2f or later", kindVersion)
-		fmt.Println("Download from https://github.com/kubernetes-sigs/kind/releases")
-		fmt.Print("Do you want to continue at your own risk [Y/n]: ")
+		fmt.Printf("WARNING: We recommend at least Kind v%.2f, while you are using v%.2f\n", kindVersion, userKindVersion)
+		fmt.Println("You can download a newer version from https://github.com/kubernetes-sigs/kind/releases")
+		fmt.Print("Continue anyway? (not recommended) [y/N]: ")
 		fmt.Scanf("%s", &resp)
 		if resp == "n" || resp == "N" {
 			fmt.Println("Installation stopped. Please upgrade kind and run again")
