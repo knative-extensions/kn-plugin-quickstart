@@ -29,6 +29,8 @@ import (
 var kubernetesVersion = "kindest/node:v1.24.3"
 var clusterName string
 var kindVersion = 0.14
+var container_reg_name = "kind-registry"
+var container_reg_port = "5001"
 
 // SetUp creates a local Kind cluster and installs all the relevant Knative components
 func SetUp(name, kVersion string, installServing, installEventing bool) error {
@@ -90,6 +92,9 @@ func createKindCluster() error {
 	if err := checkDocker(); err != nil {
 		return fmt.Errorf("%w", err)
 	}
+	if err := createLocalRegistry(); err != nil {
+		return fmt.Errorf("%w", err)
+	}
 	fmt.Println("✅ Checking dependencies...")
 	if err := checkKindVersion(); err != nil {
 		return fmt.Errorf("kind version: %w", err)
@@ -106,6 +111,23 @@ func checkDocker() error {
 	dockerCheck := exec.Command("docker", "stats", "--no-stream")
 	if err := dockerCheck.Run(); err != nil {
 		return fmt.Errorf("docker not running")
+	}
+	return nil
+}
+
+func createLocalRegistry() error {
+	fmt.Println("./hack/kind/local-registry.sh", container_reg_name, container_reg_port)
+	localRegCheck := exec.Command("./hack/kind/local-registry.sh", container_reg_name, container_reg_port)
+	if err := localRegCheck.Run(); err != nil {
+		return fmt.Errorf("failed to create local registry container: %s", err.Error())
+	}
+	return nil
+}
+
+func connectLocalRegistry() error {
+	connectLocalRegistry := exec.Command("./hack/kind/connect-local-registry.sh", container_reg_name, container_reg_port)
+	if err := connectLocalRegistry.Run(); err != nil {
+		return fmt.Errorf("failed to connect local registry to kind cluster")
 	}
 	return nil
 }
@@ -163,8 +185,15 @@ func checkForExistingCluster() error {
 			if err := deleteCluster.Run(); err != nil {
 				return fmt.Errorf("delete cluster: %w", err)
 			}
+			deleteContainerRegistry := exec.Command("docker", "stop", container_reg_name, "&&", "docker", "rm", container_reg_name)
+			if err := deleteContainerRegistry.Run(); err != nil {
+				return fmt.Errorf("delete container registry: %w", err)
+			}
 			if err := createNewCluster(); err != nil {
 				return fmt.Errorf("new cluster: %w", err)
+			}
+			if err := connectLocalRegistry(); err != nil {
+				return fmt.Errorf("local-registry: %w", err)
 			}
 		} else {
 			fmt.Println("\n    Installation skipped")
@@ -187,13 +216,17 @@ func createNewCluster() error {
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 name: %s
+containerdConfigPatches:
+- |-
+  [plugins."io.containerd.grpc.v1.cri".registry.mirrors."localhost:%s"]
+    endpoint = ["http://%s:5000"]
 nodes:
 - role: control-plane
   image: %s
   extraPortMappings:
   - containerPort: 31080
     listenAddress: 127.0.0.1
-    hostPort: 80`, clusterName, kubernetesVersion)
+    hostPort: 80`, clusterName, container_reg_port, container_reg_name, kubernetesVersion)
 
 	createCluster := exec.Command("kind", "create", "cluster", "--wait=120s", "--config=-")
 	createCluster.Stdin = strings.NewReader(config)
