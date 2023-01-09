@@ -178,6 +178,16 @@ func checkForExistingCluster() error {
 			}
 		} else {
 			fmt.Println("\n    Installation skipped")
+			checkKnativeNamespace := exec.Command("kubectl", "get", "namespaces")
+			output, err := checkKnativeNamespace.CombinedOutput()
+			namespaces := string(output)
+			if err != nil {
+				fmt.Println(string(output))
+				return fmt.Errorf("check existing cluster: %w", err)
+			}
+			if strings.Contains(namespaces, "knative") {
+				return fmt.Errorf("knative installation already exists, aborting")
+			}
 			return nil
 		}
 	} else {
