@@ -29,6 +29,8 @@ import (
 var kubernetesVersion = "kindest/node:v1.24.3"
 var clusterName string
 var kindVersion = 0.14
+var container_reg_name = "kind-registry"
+var container_reg_port = "5001"
 
 // SetUp creates a local Kind cluster and installs all the relevant Knative components
 func SetUp(name, kVersion string, installServing, installEventing bool) error {
@@ -90,6 +92,9 @@ func createKindCluster() error {
 	if err := checkDocker(); err != nil {
 		return fmt.Errorf("%w", err)
 	}
+	if err := createLocalRegistry(); err != nil {
+		return fmt.Errorf("%w", err)
+	}
 	fmt.Println("✅ Checking dependencies...")
 	if err := checkKindVersion(); err != nil {
 		return fmt.Errorf("kind version: %w", err)
@@ -106,6 +111,51 @@ func checkDocker() error {
 	dockerCheck := exec.Command("docker", "stats", "--no-stream")
 	if err := dockerCheck.Run(); err != nil {
 		return fmt.Errorf("docker not running")
+	}
+	return nil
+}
+
+func createLocalRegistry() error {
+	deleteContainerRegistry := deleteContainerRegistry()
+	if err := deleteContainerRegistry.Run(); err != nil {
+		return fmt.Errorf("failed to delete local registry: %w", err)
+	}
+	localRegCheck := exec.Command(
+		"docker", "run", "-d", "--restart=always", "-p", "127.0.0.1:"+container_reg_port+":5000",
+		"--name", container_reg_name, "registry:2",
+	)
+	if err := localRegCheck.Run(); err != nil {
+		return fmt.Errorf("failed to create local registry container: %s", err.Error())
+	}
+	return nil
+}
+
+func connectLocalRegistry() error {
+	checkKindDockerNetwork := exec.Command("docker", "network", "rm", container_reg_name, "||", "true")
+	_, err := checkKindDockerNetwork.Output()
+	if err != nil {
+		return fmt.Errorf("failed to check local registry: %w", err)
+	}
+	connectLocalRegistry := exec.Command("docker", "network", "connect", "kind", container_reg_name)
+	if err := connectLocalRegistry.Run(); err != nil {
+		return fmt.Errorf("failed to connect local registry to kind cluster")
+	}
+	configMap := fmt.Sprintf(`
+apiVersion: v1
+kind: ConfigMap
+metadata:
+	name: local-registry-hosting
+	namespace: kube-public
+data:
+	localRegistryHosting.v1: |
+	host: "localhost:%s"
+	help: "https://kind.sigs.k8s.io/docs/user/local-registry/"
+	`, container_reg_port)
+
+	createLocalRegistryConfigMap := exec.Command("kubectl", "apply", "-f", "-")
+	createLocalRegistryConfigMap.Stdin = strings.NewReader(configMap)
+	if err := createLocalRegistryConfigMap.Run(); err != nil {
+		return fmt.Errorf("failed to create local registry config map: %w", err)
 	}
 	return nil
 }
@@ -163,8 +213,15 @@ func checkForExistingCluster() error {
 			if err := deleteCluster.Run(); err != nil {
 				return fmt.Errorf("delete cluster: %w", err)
 			}
+			deleteContainerRegistry := deleteContainerRegistry()
+			if err := deleteContainerRegistry.Run(); err != nil {
+				return fmt.Errorf("delete container registry: %w", err)
+			}
 			if err := createNewCluster(); err != nil {
 				return fmt.Errorf("new cluster: %w", err)
+			}
+			if err := connectLocalRegistry(); err != nil {
+				return fmt.Errorf("local-registry: %w", err)
 			}
 		} else {
 			fmt.Println("\n    Installation skipped")
@@ -187,13 +244,17 @@ func createNewCluster() error {
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 name: %s
+containerdConfigPatches:
+- |-
+  [plugins."io.containerd.grpc.v1.cri".registry.mirrors."localhost:%s"]
+    endpoint = ["http://%s:5000"]
 nodes:
 - role: control-plane
   image: %s
   extraPortMappings:
   - containerPort: 31080
     listenAddress: 127.0.0.1
-    hostPort: 80`, clusterName, kubernetesVersion)
+    hostPort: 80`, clusterName, container_reg_port, container_reg_name, kubernetesVersion)
 
 	createCluster := exec.Command("kind", "create", "cluster", "--wait=120s", "--config=-")
 	createCluster.Stdin = strings.NewReader(config)
@@ -222,4 +283,8 @@ func parseKindVersion(v string) (float64, error) {
 		return 0, err
 	}
 	return floatVersion, nil
+}
+
+func deleteContainerRegistry() *exec.Cmd {
+	return exec.Command("docker", "rm", "-f", container_reg_name, "&&", "||", "true")
 }
