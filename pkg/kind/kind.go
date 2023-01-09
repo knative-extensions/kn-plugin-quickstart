@@ -116,8 +116,14 @@ func checkDocker() error {
 }
 
 func createLocalRegistry() error {
-	fmt.Println("./hack/kind/local-registry.sh", container_reg_name, container_reg_port)
-	localRegCheck := exec.Command("./hack/kind/local-registry.sh", container_reg_name, container_reg_port)
+	deleteContainerRegistry := deleteContainerRegistry()
+	if err := deleteContainerRegistry.Run(); err != nil {
+		return fmt.Errorf("failed to delete local registry: %w", err)
+	}
+	localRegCheck := exec.Command(
+		"docker", "run", "-d", "--restart=always", "-p", "127.0.0.1:"+container_reg_port+":5000",
+		"--name", container_reg_name, "registry:2",
+	)
 	if err := localRegCheck.Run(); err != nil {
 		return fmt.Errorf("failed to create local registry container: %s", err.Error())
 	}
@@ -125,9 +131,31 @@ func createLocalRegistry() error {
 }
 
 func connectLocalRegistry() error {
-	connectLocalRegistry := exec.Command("./hack/kind/connect-local-registry.sh", container_reg_name, container_reg_port)
+	checkKindDockerNetwork := exec.Command("docker", "network", "rm", container_reg_name, "||", "true")
+	_, err := checkKindDockerNetwork.Output()
+	if err != nil {
+		return fmt.Errorf("failed to check local registry: %w", err)
+	}
+	connectLocalRegistry := exec.Command("docker", "network", "connect", "kind", container_reg_name)
 	if err := connectLocalRegistry.Run(); err != nil {
 		return fmt.Errorf("failed to connect local registry to kind cluster")
+	}
+	configMap := fmt.Sprintf(`
+apiVersion: v1
+kind: ConfigMap
+metadata:
+	name: local-registry-hosting
+	namespace: kube-public
+data:
+	localRegistryHosting.v1: |
+	host: "localhost:%s"
+	help: "https://kind.sigs.k8s.io/docs/user/local-registry/"
+	`, container_reg_port)
+
+	createLocalRegistryConfigMap := exec.Command("kubectl", "apply", "-f", "-")
+	createLocalRegistryConfigMap.Stdin = strings.NewReader(configMap)
+	if err := createLocalRegistryConfigMap.Run(); err != nil {
+		return fmt.Errorf("failed to create local registry config map: %w", err)
 	}
 	return nil
 }
@@ -185,7 +213,7 @@ func checkForExistingCluster() error {
 			if err := deleteCluster.Run(); err != nil {
 				return fmt.Errorf("delete cluster: %w", err)
 			}
-			deleteContainerRegistry := exec.Command("docker", "stop", container_reg_name, "&&", "docker", "rm", container_reg_name)
+			deleteContainerRegistry := deleteContainerRegistry()
 			if err := deleteContainerRegistry.Run(); err != nil {
 				return fmt.Errorf("delete container registry: %w", err)
 			}
@@ -255,4 +283,8 @@ func parseKindVersion(v string) (float64, error) {
 		return 0, err
 	}
 	return floatVersion, nil
+}
+
+func deleteContainerRegistry() *exec.Cmd {
+	return exec.Command("docker", "rm", "-f", container_reg_name, "&&", "||", "true")
 }
