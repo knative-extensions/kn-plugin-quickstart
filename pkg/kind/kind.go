@@ -131,29 +131,24 @@ func createLocalRegistry() error {
 }
 
 func connectLocalRegistry() error {
-	checkKindDockerNetwork := exec.Command("docker", "network", "rm", container_reg_name, "||", "true")
-	_, err := checkKindDockerNetwork.Output()
-	if err != nil {
-		return fmt.Errorf("failed to check local registry: %w", err)
-	}
 	connectLocalRegistry := exec.Command("docker", "network", "connect", "kind", container_reg_name)
 	if err := connectLocalRegistry.Run(); err != nil {
 		return fmt.Errorf("failed to connect local registry to kind cluster")
 	}
-	configMap := fmt.Sprintf(`
+	cm := fmt.Sprintf(`
 apiVersion: v1
 kind: ConfigMap
 metadata:
-	name: local-registry-hosting
-	namespace: kube-public
+  name: local-registry-hosting
+  namespace: kube-public
 data:
-	localRegistryHosting.v1: |
-	host: "localhost:%s"
-	help: "https://kind.sigs.k8s.io/docs/user/local-registry/"
-	`, container_reg_port)
-
+  localRegistryHosting.v1: |
+    host: "localhost:%s"
+    help: "https://kind.sigs.k8s.io/docs/user/local-registry/"`, container_reg_port)
 	createLocalRegistryConfigMap := exec.Command("kubectl", "apply", "-f", "-")
-	createLocalRegistryConfigMap.Stdin = strings.NewReader(configMap)
+
+	createLocalRegistryConfigMap.Stdin = strings.NewReader(cm)
+	// }
 	if err := createLocalRegistryConfigMap.Run(); err != nil {
 		return fmt.Errorf("failed to create local registry config map: %w", err)
 	}
@@ -230,6 +225,9 @@ func checkForExistingCluster() error {
 	} else {
 		if err := createNewCluster(); err != nil {
 			return fmt.Errorf("new cluster: %w", err)
+		}
+		if err := connectLocalRegistry(); err != nil {
+			return fmt.Errorf("local-registry: %w", err)
 		}
 	}
 
