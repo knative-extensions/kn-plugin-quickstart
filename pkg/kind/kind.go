@@ -29,6 +29,7 @@ import (
 var kubernetesVersion = "kindest/node:v1.25.3"
 var clusterName string
 var kindVersion = 0.14
+var installKnative = true
 
 // SetUp creates a local Kind cluster and installs all the relevant Knative components
 func SetUp(name, kVersion string, installServing, installEventing bool) error {
@@ -57,25 +58,26 @@ func SetUp(name, kVersion string, installServing, installEventing bool) error {
 		}
 	}
 
-	if err := createKindCluster(); err != nil {
+	if err := createKindCluster(installKnative); err != nil {
 		return fmt.Errorf("creating cluster: %w", err)
 	}
+	if installKnative {
+		if installServing {
+			if err := install.Serving(); err != nil {
+				return fmt.Errorf("install serving: %w", err)
+			}
+			if err := install.Kourier(); err != nil {
+				return fmt.Errorf("install kourier: %w", err)
+			}
+			if err := install.KourierKind(); err != nil {
+				return fmt.Errorf("configure kourier: %w", err)
+			}
+		}
 
-	if installServing {
-		if err := install.Serving(); err != nil {
-			return fmt.Errorf("install serving: %w", err)
-		}
-		if err := install.Kourier(); err != nil {
-			return fmt.Errorf("install kourier: %w", err)
-		}
-		if err := install.KourierKind(); err != nil {
-			return fmt.Errorf("configure kourier: %w", err)
-		}
-	}
-
-	if installEventing {
-		if err := install.Eventing(); err != nil {
-			return fmt.Errorf("install eventing: %w", err)
+		if installEventing {
+			if err := install.Eventing(); err != nil {
+				return fmt.Errorf("install eventing: %w", err)
+			}
 		}
 	}
 
@@ -85,7 +87,7 @@ func SetUp(name, kVersion string, installServing, installEventing bool) error {
 	return nil
 }
 
-func createKindCluster() error {
+func createKindCluster(installKnative bool) error {
 
 	if err := checkDocker(); err != nil {
 		return fmt.Errorf("%w", err)
@@ -97,7 +99,7 @@ func createKindCluster() error {
 	if err := checkKindVersion(); err != nil {
 		return fmt.Errorf("kind version: %w", err)
 	}
-	if err := checkForExistingCluster(); err != nil {
+	if err := checkForExistingCluster(installKnative); err != nil {
 		return fmt.Errorf("existing cluster: %w", err)
 	}
 
@@ -146,7 +148,7 @@ func checkKindVersion() error {
 // checkForExistingCluster checks if the user already has a Kind cluster. If so, it provides
 // the option of deleting the existing cluster and recreating it. If not, it proceeds to
 // creating a new cluster
-func checkForExistingCluster() error {
+func checkForExistingCluster(installKnative bool) error {
 
 	getClusters := exec.Command("kind", "get", "clusters", "-q")
 	out, err := getClusters.CombinedOutput()
@@ -161,16 +163,7 @@ func checkForExistingCluster() error {
 		fmt.Print("Knative Cluster kind-" + clusterName + " already installed.\nDelete and recreate [y/N]: ")
 		fmt.Scanf("%s", &resp)
 		if resp == "y" || resp == "Y" {
-			fmt.Println("\n    Deleting cluster...")
-			deleteCluster := exec.Command("kind", "delete", "cluster", "--name", clusterName)
-			if err := deleteCluster.Run(); err != nil {
-				return fmt.Errorf("delete cluster: %w", err)
-			}
-			deleteContainerRegistry := deleteContainerRegistry()
-			if err := deleteContainerRegistry.Run(); err != nil {
-				return fmt.Errorf("delete container registry: %w", err)
-			}
-			if err := createNewCluster(); err != nil {
+			if err := recreateCluster(); err != nil {
 				return fmt.Errorf("new cluster: %w", err)
 			}
 			if err := connectLocalRegistry(); err != nil {
@@ -186,7 +179,17 @@ func checkForExistingCluster() error {
 				return fmt.Errorf("check existing cluster: %w", err)
 			}
 			if strings.Contains(namespaces, "knative") {
-				return fmt.Errorf("knative installation already exists, aborting")
+				fmt.Print("Knative installation already exists.\nIt is advised to delete and recreate the cluster [y/N]: ")
+				fmt.Scanf("%s", &resp)
+				if resp == "y" || resp == "Y" {
+					if err := recreateCluster(); err != nil {
+						return fmt.Errorf("new cluster: %w", err)
+					}
+				} else {
+					fmt.Println("Skipping installation")
+					installKnative = false
+					return nil
+				}
 			}
 			return nil
 		}
@@ -199,6 +202,18 @@ func checkForExistingCluster() error {
 		}
 	}
 
+	return nil
+}
+
+func recreateCluster() error {
+	fmt.Println("\n    Deleting cluster...")
+	deleteCluster := exec.Command("kind", "delete", "cluster", "--name", clusterName)
+	if err := deleteCluster.Run(); err != nil {
+		return fmt.Errorf("delete cluster: %w", err)
+	}
+	if err := createNewCluster(); err != nil {
+		return fmt.Errorf("new cluster: %w", err)
+	}
 	return nil
 }
 

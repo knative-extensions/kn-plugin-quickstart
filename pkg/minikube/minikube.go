@@ -32,6 +32,7 @@ var clusterVersionOverride bool
 var minikubeVersion = 1.28
 var cpus = "3"
 var memory = "3072"
+var installKnative = true
 
 // SetUp creates a local Minikube cluster and installs all the relevant Knative components
 func SetUp(name, kVersion string, installServing, installEventing bool) error {
@@ -66,25 +67,25 @@ func SetUp(name, kVersion string, installServing, installEventing bool) error {
 	fmt.Println("The tunnel command must be running in a terminal window any time when using the knative quickstart environment.")
 	fmt.Println("\nPress the Enter key to continue")
 	fmt.Scanln()
+	if installKnative {
+		if installServing {
+			if err := install.Serving(); err != nil {
+				return fmt.Errorf("install serving: %w", err)
+			}
+			if err := install.Kourier(); err != nil {
+				return fmt.Errorf("install kourier: %w", err)
+			}
+			if err := install.KourierMinikube(); err != nil {
+				return fmt.Errorf("configure kourier: %w", err)
+			}
+		}
 
-	if installServing {
-		if err := install.Serving(); err != nil {
-			return fmt.Errorf("install serving: %w", err)
-		}
-		if err := install.Kourier(); err != nil {
-			return fmt.Errorf("install kourier: %w", err)
-		}
-		if err := install.KourierMinikube(); err != nil {
-			return fmt.Errorf("configure kourier: %w", err)
+		if installEventing {
+			if err := install.Eventing(); err != nil {
+				return fmt.Errorf("install eventing: %w", err)
+			}
 		}
 	}
-
-	if installEventing {
-		if err := install.Eventing(); err != nil {
-			return fmt.Errorf("install eventing: %w", err)
-		}
-	}
-
 	finish := time.Since(start).Round(time.Second)
 	fmt.Printf("🚀 Knative install took: %s \n", finish)
 	fmt.Println("🎉 Now have some fun with Serverless and Event Driven Apps!")
@@ -162,7 +163,13 @@ func checkForExistingCluster() error {
 				return fmt.Errorf("check existing cluster: %w", err)
 			}
 			if strings.Contains(namespaces, "knative") {
-				return fmt.Errorf("knative installation already exists, aborting")
+				fmt.Print("Knative installation already exists.\nIt is advised to delete and recreate the cluster [y/N]: ")
+				fmt.Scanf("%s", &resp)
+				if strings.ToLower(resp) != "y" {
+					fmt.Println("Skipping installation")
+					installKnative = false
+					return nil
+				}
 			}
 			return nil
 		}
