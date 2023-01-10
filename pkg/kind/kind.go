@@ -125,7 +125,7 @@ func createLocalRegistry() error {
 		"--name", container_reg_name, "registry:2",
 	)
 	if err := localRegCheck.Run(); err != nil {
-		return fmt.Errorf("failed to create local registry container: %s", err.Error())
+		return fmt.Errorf("failed to create local registry container: %w", err.Error())
 	}
 	return nil
 }
