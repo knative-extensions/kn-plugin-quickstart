@@ -204,7 +204,8 @@ func createNewCluster() error {
 		"--memory", memory,
 		"--profile", clusterName,
 		"--wait", "all",
-		"--insecure-registry", "10.0.0.0/24")
+		"--insecure-registry", "10.0.0.0/24",
+		"--addons=registry")
 	if err := runCommandWithOutput(createCluster); err != nil {
 		return fmt.Errorf("minikube create: %w", err)
 	}
