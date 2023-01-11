@@ -157,7 +157,7 @@ func checkForExistingCluster() error {
 			return nil
 		}
 		fmt.Println("deleting cluster...")
-		deleteCluster := exec.Command("minikube", "delete", "--profile", clusterName)
+		deleteCluster := exec.Command("minikube", "delete", "--profile", "--insecure-registry", clusterName)
 		if err := deleteCluster.Run(); err != nil {
 			return fmt.Errorf("delete cluster: %w", err)
 		}
@@ -203,7 +203,9 @@ func createNewCluster() error {
 		"--cpus", cpus,
 		"--memory", memory,
 		"--profile", clusterName,
-		"--wait", "all")
+		"--wait", "all",
+		"--insecure-registry", "10.0.0.0/24",
+		"--addons=registry")
 	if err := runCommandWithOutput(createCluster); err != nil {
 		return fmt.Errorf("minikube create: %w", err)
 	}
