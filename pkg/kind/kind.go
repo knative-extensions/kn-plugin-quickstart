@@ -26,11 +26,9 @@ import (
 	"knative.dev/kn-plugin-quickstart/pkg/install"
 )
 
-var kubernetesVersion = "kindest/node:v1.24.3"
+var kubernetesVersion = "kindest/node:v1.25.3"
 var clusterName string
 var kindVersion = 0.14
-var container_reg_name = "kind-registry"
-var container_reg_port = "5001"
 
 // SetUp creates a local Kind cluster and installs all the relevant Knative components
 func SetUp(name, kVersion string, installServing, installEventing bool) error {
@@ -115,46 +113,6 @@ func checkDocker() error {
 	return nil
 }
 
-func createLocalRegistry() error {
-	deleteContainerRegistry := deleteContainerRegistry()
-	if err := deleteContainerRegistry.Run(); err != nil {
-		return fmt.Errorf("failed to delete local registry: %w", err)
-	}
-	localRegCheck := exec.Command(
-		"docker", "run", "-d", "--restart=always", "-p", "127.0.0.1:"+container_reg_port+":5000",
-		"--name", container_reg_name, "registry:2",
-	)
-	if err := localRegCheck.Run(); err != nil {
-		return fmt.Errorf("failed to create local registry container: %s", err.Error())
-	}
-	return nil
-}
-
-func connectLocalRegistry() error {
-	connectLocalRegistry := exec.Command("docker", "network", "connect", "kind", container_reg_name)
-	if err := connectLocalRegistry.Run(); err != nil {
-		return fmt.Errorf("failed to connect local registry to kind cluster")
-	}
-	cm := fmt.Sprintf(`
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: local-registry-hosting
-  namespace: kube-public
-data:
-  localRegistryHosting.v1: |
-    host: "localhost:%s"
-    help: "https://kind.sigs.k8s.io/docs/user/local-registry/"`, container_reg_port)
-	createLocalRegistryConfigMap := exec.Command("kubectl", "apply", "-f", "-")
-
-	createLocalRegistryConfigMap.Stdin = strings.NewReader(cm)
-	// }
-	if err := createLocalRegistryConfigMap.Run(); err != nil {
-		return fmt.Errorf("failed to create local registry config map: %w", err)
-	}
-	return nil
-}
-
 // checkKindVersion validates that the user has the correct version of Kind installed.
 // If not, it prompts the user to download a newer version before continuing.
 func checkKindVersion() error {
@@ -172,9 +130,9 @@ func checkKindVersion() error {
 	}
 	if userKindVersion < kindVersion {
 		var resp string
-		fmt.Printf("WARNING: Please make sure you are using Kind version %.2f or later", kindVersion)
-		fmt.Println("Download from https://github.com/kubernetes-sigs/kind/releases")
-		fmt.Print("Do you want to continue at your own risk [Y/n]: ")
+		fmt.Printf("WARNING: We recommend at least Kind v%.2f, while you are using v%.2f\n", kindVersion, userKindVersion)
+		fmt.Println("You can download a newer version from https://github.com/kubernetes-sigs/kind/releases")
+		fmt.Print("Continue anyway? (not recommended) [y/N]: ")
 		fmt.Scanf("%s", &resp)
 		if resp == "n" || resp == "N" {
 			fmt.Println("Installation stopped. Please upgrade kind and run again")

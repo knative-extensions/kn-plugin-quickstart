@@ -27,9 +27,9 @@ import (
 )
 
 var clusterName string
-var kubernetesVersion = "1.24.3"
+var kubernetesVersion = "1.25.3"
 var clusterVersionOverride bool
-var minikubeVersion = 1.26
+var minikubeVersion = 1.28
 var cpus = "3"
 var memory = "3072"
 
