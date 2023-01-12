@@ -32,6 +32,7 @@ var clusterVersionOverride bool
 var minikubeVersion = 1.28
 var cpus = "3"
 var memory = "3072"
+var installKnative = true
 
 // SetUp creates a local Minikube cluster and installs all the relevant Knative components
 func SetUp(name, kVersion string, installServing, installEventing bool) error {
@@ -66,23 +67,24 @@ func SetUp(name, kVersion string, installServing, installEventing bool) error {
 	fmt.Println("The tunnel command must be running in a terminal window any time when using the knative quickstart environment.")
 	fmt.Println("\nPress the Enter key to continue")
 	fmt.Scanln()
-
-	if installServing {
-		if err := install.Serving(); err != nil {
-			return fmt.Errorf("install serving: %w", err)
+	if installKnative {
+		if installServing {
+			if err := install.Serving(); err != nil {
+				return fmt.Errorf("install serving: %w", err)
+			}
+			if err := install.Kourier(); err != nil {
+				return fmt.Errorf("install kourier: %w", err)
+			}
+			if err := install.KourierMinikube(); err != nil {
+				return fmt.Errorf("configure kourier: %w", err)
+			}
 		}
-		if err := install.Kourier(); err != nil {
-			return fmt.Errorf("install kourier: %w", err)
-		}
-		if err := install.KourierMinikube(); err != nil {
-			return fmt.Errorf("configure kourier: %w", err)
-		}
-	}
-
-	if installEventing {
-		if err := install.Eventing(); err != nil {
-			return fmt.Errorf("install eventing: %w", err)
-		}
+	
+		if installEventing {
+			if err := install.Eventing(); err != nil {
+				return fmt.Errorf("install eventing: %w", err)
+			}
+		}		
 	}
 
 	finish := time.Since(start).Round(time.Second)
@@ -154,6 +156,16 @@ func checkForExistingCluster() error {
 		fmt.Scanf("%s", &resp)
 		if strings.ToLower(resp) != "y" {
 			fmt.Println("Installation skipped")
+			checkKnativeNamespace := exec.Command("kubectl", "get", "namespaces")
+			output, err := checkKnativeNamespace.CombinedOutput()
+			namespaces := string(output)
+			if err != nil {
+				fmt.Println(string(output))
+				return fmt.Errorf("check existing cluster: %w", err)
+			}
+			if strings.Contains(namespaces, "knative") {
+				return fmt.Errorf("knative installation already exists, aborting")
+			}
 			return nil
 		}
 		fmt.Println("deleting cluster...")
