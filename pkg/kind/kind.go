@@ -58,7 +58,7 @@ func SetUp(name, kVersion string, installServing, installEventing bool) error {
 		}
 	}
 
-	if err := createKindCluster(installKnative); err != nil {
+	if err := createKindCluster(); err != nil {
 		return fmt.Errorf("creating cluster: %w", err)
 	}
 	if installKnative {
@@ -87,7 +87,7 @@ func SetUp(name, kVersion string, installServing, installEventing bool) error {
 	return nil
 }
 
-func createKindCluster(installKnative bool) error {
+func createKindCluster() error {
 
 	if err := checkDocker(); err != nil {
 		return fmt.Errorf("%w", err)
@@ -99,7 +99,7 @@ func createKindCluster(installKnative bool) error {
 	if err := checkKindVersion(); err != nil {
 		return fmt.Errorf("kind version: %w", err)
 	}
-	if err := checkForExistingCluster(installKnative); err != nil {
+	if err := checkForExistingCluster(); err != nil {
 		return fmt.Errorf("existing cluster: %w", err)
 	}
 
@@ -148,7 +148,7 @@ func checkKindVersion() error {
 // checkForExistingCluster checks if the user already has a Kind cluster. If so, it provides
 // the option of deleting the existing cluster and recreating it. If not, it proceeds to
 // creating a new cluster
-func checkForExistingCluster(installKnative bool) error {
+func checkForExistingCluster() error {
 
 	getClusters := exec.Command("kind", "get", "clusters", "-q")
 	out, err := getClusters.CombinedOutput()
