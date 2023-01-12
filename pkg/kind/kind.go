@@ -217,6 +217,17 @@ func checkForExistingCluster() error {
 				return fmt.Errorf("check existing cluster: %w", err)
 			}
 			if strings.Contains(namespaces, "knative") {
+				fmt.Print("Knative installation already exists.\nIt is advised to delete and recreate the cluster [y/N]: ")
+				fmt.Scanf("%s", &resp)
+				if resp == "y" || resp == "Y" {
+					if err := recreateCluster(); err != nil {
+						return fmt.Errorf("new cluster: %w", err)
+					}
+				} else {
+					fmt.Println("Skipping installation")
+					installKnative = false
+					return nil
+				}
 			}
 			return nil
 		}
