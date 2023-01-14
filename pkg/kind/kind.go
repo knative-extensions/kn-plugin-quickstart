@@ -217,7 +217,7 @@ func checkForExistingCluster() error {
 				return fmt.Errorf("check existing cluster: %w", err)
 			}
 			if strings.Contains(namespaces, "knative") {
-				fmt.Print("Knative installation already exists.\nIt is advised to delete and recreate the cluster [y/N]: ")
+				fmt.Print("Knative installation already exists.\nDelete and recreate the cluster [y/N]: ")
 				fmt.Scanf("%s", &resp)
 				if resp == "y" || resp == "Y" {
 					if err := recreateCluster(); err != nil {
@@ -256,6 +256,9 @@ func recreateCluster() error {
 	}
 	if err := createNewCluster(); err != nil {
 		return fmt.Errorf("new cluster: %w", err)
+	}
+	if err := createLocalRegistry(); err != nil {
+		return fmt.Errorf("%w", err)
 	}
 	if err := connectLocalRegistry(); err != nil {
 		return fmt.Errorf("local-registry: %w", err)

@@ -163,11 +163,21 @@ func checkForExistingCluster() error {
 				return fmt.Errorf("check existing cluster: %w", err)
 			}
 			if strings.Contains(namespaces, "knative") {
-				fmt.Print("Knative installation already exists.\nIt is advised to delete and recreate the cluster [y/N]: ")
+				fmt.Print("Knative installation already exists.\nDelete and recreate the cluster [y/N]: ")
 				fmt.Scanf("%s", &resp)
 				if strings.ToLower(resp) != "y" {
 					fmt.Println("Skipping installation")
 					installKnative = false
+					return nil
+				} else {
+					fmt.Println("deleting cluster...")
+					deleteCluster := exec.Command("minikube", "delete", "--profile", "--insecure-registry", clusterName)
+					if err := deleteCluster.Run(); err != nil {
+						return fmt.Errorf("delete cluster: %w", err)
+					}
+					if err := createNewCluster(); err != nil {
+						return fmt.Errorf("new cluster: %w", err)
+					}
 					return nil
 				}
 			}
