@@ -19,7 +19,7 @@ import (
 
 	"knative.dev/kn-plugin-quickstart/internal/root"
 
-	knplugin "knative.dev/client/pkg/kn/plugin"
+	knplugin "knative.dev/client-pkg/pkg/kn/plugin"
 )
 
 func init() {
