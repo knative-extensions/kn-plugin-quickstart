@@ -170,26 +170,15 @@ func checkForExistingCluster() error {
 					installKnative = false
 					return nil
 				} else {
-					fmt.Println("deleting cluster...")
-					deleteCluster := exec.Command("minikube", "delete", "--profile", clusterName)
-					if err := deleteCluster.Run(); err != nil {
-						return fmt.Errorf("delete cluster: %w", err)
+					if err := recreateCluster(); err != nil {
+						return fmt.Errorf("failed recreating cluster: %w", err)
 					}
-					if err := createNewCluster(); err != nil {
-						return fmt.Errorf("new cluster: %w", err)
-					}
-					return nil
 				}
 			}
 			return nil
 		}
-		fmt.Println("deleting cluster...")
-		deleteCluster := exec.Command("minikube", "delete", "--profile", "--insecure-registry", clusterName)
-		if err := deleteCluster.Run(); err != nil {
-			return fmt.Errorf("delete cluster: %w", err)
-		}
-		if err := createNewCluster(); err != nil {
-			return fmt.Errorf("new cluster: %w", err)
+		if err := recreateCluster(); err != nil {
+			return fmt.Errorf("failed recreating cluster: %w", err)
 		}
 		return nil
 	}
@@ -269,4 +258,16 @@ func getMinikubeConfig(k string) (string, bool) {
 		ok = true
 	}
 	return strings.TrimRight(string(v), "\n"), ok
+}
+
+func recreateCluster() error {
+	fmt.Println("deleting cluster...")
+	deleteCluster := exec.Command("minikube", "delete", "--profile", clusterName)
+	if err := deleteCluster.Run(); err != nil {
+		return fmt.Errorf("delete cluster: %w", err)
+	}
+	if err := createNewCluster(); err != nil {
+		return fmt.Errorf("new cluster: %w", err)
+	}
+	return nil
 }
