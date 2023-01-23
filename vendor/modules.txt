@@ -8,9 +8,6 @@ github.com/google/go-cmp/cmp/internal/value
 # github.com/inconshreveable/mousetrap v1.0.1
 ## explicit; go 1.18
 github.com/inconshreveable/mousetrap
-# github.com/mitchellh/go-homedir v1.1.0
-## explicit
-github.com/mitchellh/go-homedir
 # github.com/spf13/cobra v1.6.0
 ## explicit; go 1.15
 github.com/spf13/cobra
@@ -25,9 +22,9 @@ gotest.tools/v3/internal/assert
 gotest.tools/v3/internal/difflib
 gotest.tools/v3/internal/format
 gotest.tools/v3/internal/source
-# knative.dev/client v0.34.1-0.20230110014447-2593aa6dbcab
+# knative.dev/client-pkg v0.0.0-20230120062501-d4ab4e492526
 ## explicit; go 1.18
-knative.dev/client/pkg/kn/plugin
-# knative.dev/hack v0.0.0-20230110013548-af8745e34e08
+knative.dev/client-pkg/pkg/kn/plugin
+# knative.dev/hack v0.0.0-20230113013652-c7cfcb062de9
 ## explicit; go 1.18
 knative.dev/hack
