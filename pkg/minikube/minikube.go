@@ -32,6 +32,7 @@ var clusterVersionOverride bool
 var minikubeVersion = 1.28
 var cpus = "3"
 var memory = "3072"
+var installKnative = true
 
 // SetUp creates a local Minikube cluster and installs all the relevant Knative components
 func SetUp(name, kVersion string, installServing, installEventing bool) error {
@@ -66,22 +67,22 @@ func SetUp(name, kVersion string, installServing, installEventing bool) error {
 	fmt.Println("The tunnel command must be running in a terminal window any time when using the knative quickstart environment.")
 	fmt.Println("\nPress the Enter key to continue")
 	fmt.Scanln()
-
-	if installServing {
-		if err := install.Serving(); err != nil {
-			return fmt.Errorf("install serving: %w", err)
+	if installKnative {
+		if installServing {
+			if err := install.Serving(); err != nil {
+				return fmt.Errorf("install serving: %w", err)
+			}
+			if err := install.Kourier(); err != nil {
+				return fmt.Errorf("install kourier: %w", err)
+			}
+			if err := install.KourierMinikube(); err != nil {
+				return fmt.Errorf("configure kourier: %w", err)
+			}
 		}
-		if err := install.Kourier(); err != nil {
-			return fmt.Errorf("install kourier: %w", err)
-		}
-		if err := install.KourierMinikube(); err != nil {
-			return fmt.Errorf("configure kourier: %w", err)
-		}
-	}
-
-	if installEventing {
-		if err := install.Eventing(); err != nil {
-			return fmt.Errorf("install eventing: %w", err)
+		if installEventing {
+			if err := install.Eventing(); err != nil {
+				return fmt.Errorf("install eventing: %w", err)
+			}
 		}
 	}
 
@@ -154,15 +155,30 @@ func checkForExistingCluster() error {
 		fmt.Scanf("%s", &resp)
 		if strings.ToLower(resp) != "y" {
 			fmt.Println("Installation skipped")
+			checkKnativeNamespace := exec.Command("kubectl", "get", "namespaces")
+			output, err := checkKnativeNamespace.CombinedOutput()
+			namespaces := string(output)
+			if err != nil {
+				fmt.Println(string(output))
+				return fmt.Errorf("check existing cluster: %w", err)
+			}
+			if strings.Contains(namespaces, "knative") {
+				fmt.Print("Knative installation already exists.\nDelete and recreate the cluster [y/N]: ")
+				fmt.Scanf("%s", &resp)
+				if strings.ToLower(resp) != "y" {
+					fmt.Println("Skipping installation")
+					installKnative = false
+					return nil
+				} else {
+					if err := recreateCluster(); err != nil {
+						return fmt.Errorf("failed recreating cluster: %w", err)
+					}
+				}
+			}
 			return nil
 		}
-		fmt.Println("deleting cluster...")
-		deleteCluster := exec.Command("minikube", "delete", "--profile", "--insecure-registry", clusterName)
-		if err := deleteCluster.Run(); err != nil {
-			return fmt.Errorf("delete cluster: %w", err)
-		}
-		if err := createNewCluster(); err != nil {
-			return fmt.Errorf("new cluster: %w", err)
+		if err := recreateCluster(); err != nil {
+			return fmt.Errorf("failed recreating cluster: %w", err)
 		}
 		return nil
 	}
@@ -242,4 +258,16 @@ func getMinikubeConfig(k string) (string, bool) {
 		ok = true
 	}
 	return strings.TrimRight(string(v), "\n"), ok
+}
+
+func recreateCluster() error {
+	fmt.Println("deleting cluster...")
+	deleteCluster := exec.Command("minikube", "delete", "--profile", clusterName)
+	if err := deleteCluster.Run(); err != nil {
+		return fmt.Errorf("delete cluster: %w", err)
+	}
+	if err := createNewCluster(); err != nil {
+		return fmt.Errorf("new cluster: %w", err)
+	}
+	return nil
 }
