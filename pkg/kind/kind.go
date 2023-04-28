@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -32,6 +33,13 @@ var kindVersion = 0.16
 var container_reg_name = "kind-registry"
 var container_reg_port = "5001"
 var installKnative = true
+var container_engine = ""
+
+type ContainerEngineNotFound struct{}
+
+func (c *ContainerEngineNotFound) Error() string {
+	return "Either podman or docker are required for quickstart"
+}
 
 // SetUp creates a local Kind cluster and installs all the relevant Knative components
 func SetUp(name, kVersion string, installServing, installEventing bool) error {
@@ -42,6 +50,13 @@ func SetUp(name, kVersion string, installServing, installEventing bool) error {
 	if !installServing && !installEventing {
 		installServing = true
 		installEventing = true
+	}
+
+	if cengine, err := getInstalledContainerEngine(); err != nil {
+		container_engine = cengine
+	} else {
+		fmt.Println(err)
+		os.Exit(1)
 	}
 
 	// kubectl is required, fail if not found
@@ -90,7 +105,7 @@ func SetUp(name, kVersion string, installServing, installEventing bool) error {
 
 func createKindCluster() error {
 
-	if err := checkDocker(); err != nil {
+	if err := checkContainerEngine(); err != nil {
 		return fmt.Errorf("%w", err)
 	}
 	if err := createLocalRegistry(); err != nil {
@@ -107,11 +122,28 @@ func createKindCluster() error {
 	return nil
 }
 
+// check if docker or podman are installed
+func getInstalledContainerEngine() (string, error) {
+	if fname, err := exec.LookPath("docker"); err == nil {
+		if fpath, err := filepath.Abs(fname); err == nil {
+			return fpath, nil
+		}
+	}
+
+	if fname, err := exec.LookPath("podman"); err == nil {
+		if fpath, err := filepath.Abs(fname); err == nil {
+			return fpath, nil
+		}
+	}
+
+	return "", &ContainerEngineNotFound{}
+}
+
 // checkDocker checks that Docker is running on the users local system.
-func checkDocker() error {
-	dockerCheck := exec.Command("docker", "stats", "--no-stream")
-	if err := dockerCheck.Run(); err != nil {
-		return fmt.Errorf("docker not running")
+func checkContainerEngine() error {
+	containerEngineCheck := exec.Command(container_engine, "stats", "--no-stream")
+	if err := containerEngineCheck.Run(); err != nil {
+		return fmt.Errorf("%s not running", container_engine)
 	}
 	return nil
 }
@@ -132,7 +164,7 @@ func createLocalRegistry() error {
 }
 
 func connectLocalRegistry() error {
-	connectLocalRegistry := exec.Command("docker", "network", "connect", "kind", container_reg_name)
+	connectLocalRegistry := exec.Command(container_engine, "network", "connect", "kind", container_reg_name)
 	if err := connectLocalRegistry.Run(); err != nil {
 		return fmt.Errorf("failed to connect local registry to kind cluster")
 	}
@@ -316,5 +348,5 @@ func parseKindVersion(v string) (float64, error) {
 }
 
 func deleteContainerRegistry() *exec.Cmd {
-	return exec.Command("docker", "rm", "-f", container_reg_name, "&&", "||", "true")
+	return exec.Command(container_engine, "rm", "-f", container_reg_name, "&&", "||", "true")
 }
