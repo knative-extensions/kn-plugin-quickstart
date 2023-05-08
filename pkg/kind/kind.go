@@ -35,11 +35,6 @@ var container_reg_port = "5001"
 var installKnative = true
 var container_engine = ""
 
-type ContainerEngineNotFound struct{}
-
-func (c *ContainerEngineNotFound) Error() string {
-	return "Either podman or docker are required for quickstart"
-}
 
 // SetUp creates a local Kind cluster and installs all the relevant Knative components
 func SetUp(name, kVersion string, installServing, installEventing bool) error {
@@ -136,7 +131,7 @@ func getInstalledContainerEngine() (string, error) {
 		}
 	}
 
-	return "", &ContainerEngineNotFound{}
+	return "", fmt.Errorf("ERROR: either podman or docker are required for quickstart")
 }
 
 // checkDocker checks that Docker is running on the users local system.
