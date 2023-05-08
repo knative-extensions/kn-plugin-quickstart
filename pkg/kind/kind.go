@@ -47,9 +47,10 @@ func SetUp(name, kVersion string, installServing, installEventing bool) error {
 		installEventing = true
 	}
 
-	if cengine, err := getInstalledContainerEngine(); err != nil {
-		container_engine = cengine
-	} else {
+	cengine, err := getInstalledContainerEngine()
+	container_engine = cengine
+	
+	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
