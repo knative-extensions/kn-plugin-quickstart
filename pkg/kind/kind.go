@@ -35,7 +35,6 @@ var container_reg_port = "5001"
 var installKnative = true
 var container_engine = ""
 
-
 // SetUp creates a local Kind cluster and installs all the relevant Knative components
 func SetUp(name, kVersion string, installServing, installEventing bool) error {
 	start := time.Now()
@@ -49,7 +48,7 @@ func SetUp(name, kVersion string, installServing, installEventing bool) error {
 
 	cengine, err := getInstalledContainerEngine()
 	container_engine = cengine
-	
+
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
