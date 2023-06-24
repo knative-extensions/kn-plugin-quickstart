@@ -122,7 +122,7 @@ func createLocalRegistry() error {
 		return fmt.Errorf("failed to delete local registry: %w", err)
 	}
 	localRegCheck := exec.Command(
-		"docker", "run", "-d", "--restart=always", "-p", "127.0.0.1:"+container_reg_port+":5000",
+		"docker", "run", "-d", "--restart=always", "-p", "0.0.0.0:"+container_reg_port+":5000",
 		"--name", container_reg_name, "registry:2",
 	)
 	if err := localRegCheck.Run(); err != nil {
@@ -283,7 +283,7 @@ nodes:
   image: %s
   extraPortMappings:
   - containerPort: 31080
-    listenAddress: 127.0.0.1
+    listenAddress: 0.0.0.0
     hostPort: 80`, clusterName, container_reg_port, container_reg_name, kubernetesVersion)
 
 	createCluster := exec.Command("kind", "create", "cluster", "--wait=120s", "--config=-")
