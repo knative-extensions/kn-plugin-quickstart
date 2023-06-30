@@ -343,5 +343,5 @@ func parseKindVersion(v string) (float64, error) {
 }
 
 func deleteContainerRegistry() *exec.Cmd {
-	return exec.Command(container_engine, "rm", "-f", container_reg_name, "&&", "||", "true")
+	return exec.Command(container_engine, "rm", "-f", container_reg_name)
 }
