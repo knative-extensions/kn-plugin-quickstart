@@ -161,7 +161,7 @@ func createLocalRegistry() error {
 func connectLocalRegistry() error {
 	connectLocalRegistry := exec.Command(container_engine, "network", "connect", "kind", container_reg_name)
 	if err := connectLocalRegistry.Run(); err != nil {
-		return fmt.Errorf("failed to connect local registry to kind cluster")
+		return fmt.Errorf("failed to connect local registry to kind cluster: %w", err)
 	}
 	cm := fmt.Sprintf(`
 apiVersion: v1
