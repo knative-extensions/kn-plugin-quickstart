@@ -26,7 +26,7 @@ import (
 	"knative.dev/kn-plugin-quickstart/pkg/install"
 )
 
-var kubernetesVersion = "kindest/node:v1.25.3"
+var kubernetesVersion = "kindest/node:v1.26.6"
 var clusterName string
 var kindVersion = 0.16
 var container_reg_name = "kind-registry"
@@ -34,7 +34,7 @@ var container_reg_port = "5001"
 var installKnative = true
 
 // SetUp creates a local Kind cluster and installs all the relevant Knative components
-func SetUp(name, kVersion string, installServing, installEventing bool) error {
+func SetUp(name, kVersion string, installServing, installEventing, installKindRegistry bool) error {
 	start := time.Now()
 
 	// if neither the "install-serving" or "install-eventing" flags are set,
@@ -60,7 +60,7 @@ func SetUp(name, kVersion string, installServing, installEventing bool) error {
 		}
 	}
 
-	if err := createKindCluster(); err != nil {
+	if err := createKindCluster(installKindRegistry); err != nil {
 		return fmt.Errorf("creating cluster: %w", err)
 	}
 	if installKnative {
@@ -88,18 +88,22 @@ func SetUp(name, kVersion string, installServing, installEventing bool) error {
 	return nil
 }
 
-func createKindCluster() error {
+func createKindCluster(registry bool) error {
 
 	if err := checkDocker(); err != nil {
-		return fmt.Errorf("%w", err)
-	}
-	if err := createLocalRegistry(); err != nil {
 		return fmt.Errorf("%w", err)
 	}
 	fmt.Println("✅ Checking dependencies...")
 	if err := checkKindVersion(); err != nil {
 		return fmt.Errorf("kind version: %w", err)
 	}
+	if registry {
+		fmt.Println("💽 Installing local registry...")
+		if err := createLocalRegistry(); err != nil {
+			return fmt.Errorf("%w", err)
+		}
+	}
+
 	if err := checkForExistingCluster(); err != nil {
 		return fmt.Errorf("existing cluster: %w", err)
 	}
@@ -165,7 +169,7 @@ func checkKindVersion() error {
 	if err != nil {
 		return fmt.Errorf("kind version: %w", err)
 	}
-	fmt.Printf("    Kind version is: %s\n", string(out))
+	fmt.Printf("    Kind version is: %s", string(out))
 
 	userKindVersion, err := parseKindVersion(string(out))
 	if err != nil {
@@ -201,7 +205,7 @@ func checkForExistingCluster() error {
 	matches := r.Match(out)
 	if matches {
 		var resp string
-		fmt.Print("Knative Cluster kind-" + clusterName + " already installed.\nDelete and recreate [y/N]: ")
+		fmt.Print("\nKnative Cluster kind-" + clusterName + " already installed.\nDelete and recreate [y/N]: ")
 		fmt.Scanf("%s", &resp)
 		if resp == "y" || resp == "Y" {
 			if err := recreateCluster(); err != nil {
