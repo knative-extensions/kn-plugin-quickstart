@@ -54,5 +54,5 @@ func installEventingOption(targetCmd *cobra.Command) {
 }
 
 func installKindRegistryOption(targetCmd *cobra.Command) {
-	targetCmd.Flags().BoolVar(&installKindRegistry, "registry", false, "install registry for kind quickstart cluster")
+	targetCmd.Flags().BoolVar(&installKindRegistry, "registry", false, "install registry for Kind quickstart cluster")
 }
