@@ -102,6 +102,11 @@ func createKindCluster(registry bool) error {
 		if err := createLocalRegistry(); err != nil {
 			return fmt.Errorf("%w", err)
 		}
+	} else {
+		// temporary warning that registry creation is now opt-in
+		// remove in v1.12
+		fmt.Println("\nA local registry is no longer created by default.")
+		fmt.Println("    To create a local registry, use the --registry flag.")
 	}
 
 	if err := checkForExistingCluster(); err != nil {
