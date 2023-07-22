@@ -55,7 +55,7 @@ jobs:
     
     - name: Serving e2e Test
       run: |
-        kn quickstart kind --install-serving
+        kn quickstart kind --install-serving --registry
         source ./vendor/knative.dev/hack/e2e-tests.sh
         ./test/serving-e2e-test.sh || fail_test
     
