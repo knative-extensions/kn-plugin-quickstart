@@ -12,8 +12,8 @@ env:
   # https://github.com/google/go-containerregistry/pull/125 allows insecure registry for
   # '*.local' hostnames. This works both for `ko` and our own tag-to-digest resolution logic,
   # thus allowing us to test without bypassing tag-to-digest resolution.
-  KIND_VERSION: 0.14.0
-  KNATIVE_VERSION: 1.6.0
+  KIND_VERSION: 0.20.0
+  KNATIVE_VERSION: 1.10.2
 
 jobs:
   build:
