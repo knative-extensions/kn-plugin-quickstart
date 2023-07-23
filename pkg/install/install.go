@@ -126,6 +126,10 @@ func Serving() error {
 		return fmt.Errorf("wait: %w", err)
 	}
 
+	if err := reduceResources(); err != nil {
+		return fmt.Errorf("reduce: %w", err)
+	}
+
 	if err := waitForPodsReady("knative-serving"); err != nil {
 		return fmt.Errorf("core: %w", err)
 	}
@@ -216,6 +220,21 @@ func retryingApply(path string) error {
 		}
 		time.Sleep(10 * time.Second)
 	}
+	return err
+}
+
+func reduceResources() error {
+	var err error
+	err = runCommand(exec.Command("kubectl", "set", "resources", "deployment", "activator", "--requests=cpu=150m,memory=30Mi", "--limits=cpu=500m,memory=300Mi", "-n", "knative-serving"))
+
+	deployments := []string{"autoscaler", "controller", "webhook", "domainmapping-webhook", "default-domain"}
+	for i, deploy := range deployments {
+		err = runCommand(exec.Command("kubectl", "set", "resources", "deployment", deploy, "--requests=cpu=50m,memory=50Mi", "--limits=cpu=500m,memory=500Mi", "-n", "knative-serving"))
+		if err != nil {
+			fmt.Println(string(i))
+		}
+	}
+
 	return err
 }
 
