@@ -227,7 +227,7 @@ func reduceResources() error {
 	var err error
 	err = runCommand(exec.Command("kubectl", "set", "resources", "deployment", "activator", "--requests=cpu=150m,memory=30Mi", "--limits=cpu=500m,memory=300Mi", "-n", "knative-serving"))
 
-	deployments := []string{"autoscaler", "controller", "webhook", "domainmapping-webhook", "default-domain"}
+	deployments := []string{"autoscaler", "controller", "webhook", "domainmapping-webhook"}
 	for i, deploy := range deployments {
 		err = runCommand(exec.Command("kubectl", "set", "resources", "deployment", deploy, "--requests=cpu=50m,memory=50Mi", "--limits=cpu=500m,memory=500Mi", "-n", "knative-serving"))
 		if err != nil {
