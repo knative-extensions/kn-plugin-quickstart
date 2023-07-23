@@ -231,7 +231,7 @@ func reduceResources() error {
 	for i, deploy := range deployments {
 		err = runCommand(exec.Command("kubectl", "set", "resources", "deployment", deploy, "--requests=cpu=50m,memory=50Mi", "--limits=cpu=500m,memory=500Mi", "-n", "knative-serving"))
 		if err != nil {
-			fmt.Println(string(i))
+			fmt.Println(i)
 		}
 	}
 
