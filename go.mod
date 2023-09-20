@@ -5,8 +5,8 @@ go 1.17
 require (
 	github.com/spf13/cobra v1.6.0
 	gotest.tools/v3 v3.3.0
-	knative.dev/client-pkg v0.0.0-20230815131440-5abd12981b4b
-	knative.dev/hack v0.0.0-20230906172513-760813ad2706
+	knative.dev/client-pkg v0.0.0-20230914131734-b21a925efce6
+	knative.dev/hack v0.0.0-20230919151801-38316f28f0bf
 
 )
 
