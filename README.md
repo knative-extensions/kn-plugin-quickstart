@@ -50,6 +50,11 @@ Set up a local Knative cluster using [KinD](https://kind.sigs.k8s.io/):
 ``` bash
 kn quickstart kind
 ```
+For [KinD](https://kind.sigs.k8s.io/), a local registry will no longer be created by default. Users will need to pass the `--registry` flag if they wish to create a local registry:
+
+```bash
+kn quickstart kind --registry
+```
 
 ### Quickstart with Minikube
 
