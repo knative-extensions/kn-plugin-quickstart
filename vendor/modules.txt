@@ -25,6 +25,6 @@ gotest.tools/v3/internal/source
 # knative.dev/client-pkg v0.0.0-20230922151304-9574adcd11f4
 ## explicit; go 1.18
 knative.dev/client-pkg/pkg/kn/plugin
-# knative.dev/hack v0.0.0-20230925132200-74aa02a8beeb
+# knative.dev/hack v0.0.0-20230926181829-f2f9b6f91263
 ## explicit; go 1.18
 knative.dev/hack
