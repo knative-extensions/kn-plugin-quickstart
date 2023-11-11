@@ -69,7 +69,7 @@ func SetUp(name, kVersion string, installServing, installEventing bool) error {
 	fmt.Scanln()
 	if installKnative {
 		if installServing {
-			if err := install.Serving(); err != nil {
+			if err := install.Serving(""); err != nil {
 				return fmt.Errorf("install serving: %w", err)
 			}
 			if err := install.Kourier(); err != nil {
