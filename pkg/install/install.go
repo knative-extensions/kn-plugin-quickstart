@@ -82,7 +82,7 @@ spec:
 	fmt.Println("    Kourier service installed...")
 
 	domainDns := exec.Command("kubectl", "patch", "configmap", "-n", "knative-serving", "config-domain", "-p", "{\"data\": {\"127.0.0.1.sslip.io\": \"\"}}")
-	if err := domainDns.Run(); err != nil {
+	if err := runCommand(domainDns); err != nil {
 		return fmt.Errorf("domain dns: %w", err)
 	}
 	fmt.Println("    Domain DNS set up...")
@@ -109,7 +109,7 @@ func KourierMinikube() error {
 }
 
 // Serving installs Knative Serving from Github YAML files
-func Serving() error {
+func Serving(registries string) error {
 	fmt.Println("🍿 Installing Knative Serving v" + ServingVersion + " ...")
 	baseURL := "https://github.com/knative/serving/releases/download/knative-v" + ServingVersion
 
@@ -131,6 +131,15 @@ func Serving() error {
 	}
 
 	fmt.Println("    Core installed...")
+
+	if registries != "" {
+		configPatch := fmt.Sprintf(`{"data":{"registries-skipping-tag-resolving":"%s"}}`, registries)
+		ignoreRegistry := exec.Command("kubectl", "patch", "configmap", "-n", "knative-serving", "config-deployment", "-p", configPatch)
+		if err := runCommand(ignoreRegistry); err != nil {
+			return fmt.Errorf("tag resolving configuration: %w", err)
+		}
+		fmt.Println("    Tag resolving configuration patched...")
+	}
 
 	fmt.Println("    Finished installing Knative Serving")
 
