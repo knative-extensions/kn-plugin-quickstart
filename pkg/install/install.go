@@ -138,7 +138,7 @@ func Serving(registries string) error {
 		if err := runCommand(ignoreRegistry); err != nil {
 			return fmt.Errorf("tag resolving configuration: %w", err)
 		}
-		fmt.Println("    Tag resolving configuration patched...")
+		fmt.Println("    Enabled local registry deployment...")
 	}
 
 	fmt.Println("    Finished installing Knative Serving")
