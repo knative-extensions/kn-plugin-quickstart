@@ -65,7 +65,14 @@ func SetUp(name, kVersion string, installServing, installEventing, installKindRe
 	}
 	if installKnative {
 		if installServing {
-			if err := install.Serving(); err != nil {
+			// Disable tag resolution for localhost registry, since there's no
+			// way to redirect Knative Serving to use the kind-registry name.
+			// See https://github.com/knative-extensions/kn-plugin-quickstart/issues/467
+			registries := ""
+			if installKindRegistry {
+				registries = fmt.Sprintf("localhost:%s", container_reg_port)
+			}
+			if err := install.Serving(registries); err != nil {
 				return fmt.Errorf("install serving: %w", err)
 			}
 			if err := install.Kourier(); err != nil {
