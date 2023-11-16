@@ -1,0 +1,41 @@
+Final KDE PROJECT to work on:
+-------------------------------------------------
+1. Kalendar(2)
+Tech stack (Major)
+1. C++
+2. QML
+
+2. Okular - Okular is a universal document viewer developed by KDE(ALL)
+Tech stack (Major)
+1. C++
+2. QML
+
+3. digiKam - digiKam is an advanced open-source digital photo management application
+Tech stack (Major)
+1. C++
+2. GUI
+3. CMake
+
+4.Krita - Krita is a digital painting application, used by millions of people all over the world.(ALL)
+Tech stack (Major)
+1. C++ 
+2. Qt 
+3.CMake
+
+5. KStars - KStars is free, open source, cross-platform Astronomy Software.(4)
+Tech stack (Major)
+1. C++ 
+2. Qt
+
+6. GCompris - GCompris is a high quality educational software suite, including a large number of activities for children aged 2 to 10.(4)
+Tech stack (Major)
+1. C++ 
+2. Qt
+3.JavaScript
+
+7. KDE Connect - KDE Connect is a series of apps for a wide range of platforms that provides inter-device integration such as file and clipboard sharing, remote control, battery status sharing, and more.(ALL)
+Tech stack (Major)
+1. C++ 
+
+
+
