@@ -56,7 +56,7 @@ Kind can be configured with a [local container image registry](https://kind.sigs
 kn quickstart kind --registry
 ```
 
-Note: we automatically configure tag resolution for the local registry when this flag is passed.
+Note: we automatically configure tag resolution for the local registry when this flag is passed
 
 ### Quickstart with Minikube
 
