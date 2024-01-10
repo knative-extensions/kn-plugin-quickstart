@@ -2,7 +2,7 @@ module knative.dev/kn-plugin-quickstart
 
 go 1.21
 
-toolchain go1.21.6
+toolchain default
 
 require (
 	github.com/spf13/cobra v1.7.0
