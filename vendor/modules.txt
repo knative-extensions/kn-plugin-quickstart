@@ -5,10 +5,10 @@ github.com/google/go-cmp/cmp/internal/diff
 github.com/google/go-cmp/cmp/internal/flags
 github.com/google/go-cmp/cmp/internal/function
 github.com/google/go-cmp/cmp/internal/value
-# github.com/inconshreveable/mousetrap v1.0.1
+# github.com/inconshreveable/mousetrap v1.1.0
 ## explicit; go 1.18
 github.com/inconshreveable/mousetrap
-# github.com/spf13/cobra v1.6.0
+# github.com/spf13/cobra v1.7.0
 ## explicit; go 1.15
 github.com/spf13/cobra
 # github.com/spf13/pflag v1.0.5
@@ -22,9 +22,9 @@ gotest.tools/v3/internal/assert
 gotest.tools/v3/internal/difflib
 gotest.tools/v3/internal/format
 gotest.tools/v3/internal/source
-# knative.dev/client-pkg v0.0.0-20240108132123-b72da8d70020
-## explicit; go 1.18
+# knative.dev/client-pkg v0.0.0-20240111015105-b261efbe56e4
+## explicit; go 1.21
 knative.dev/client-pkg/pkg/kn/plugin
-# knative.dev/hack v0.0.0-20240108153050-3ea694d6dad7
+# knative.dev/hack v0.0.0-20240111013919-e89096d74d85
 ## explicit; go 1.18
 knative.dev/hack
