@@ -34,7 +34,7 @@ var container_reg_port = "5001"
 var installKnative = true
 
 // SetUp creates a local Kind cluster and installs all the relevant Knative components
-func SetUp(name, kVersion string, installServing, installEventing, installKindRegistry bool) error {
+func SetUp(name, kVersion string, installServing, installEventing bool) error {
 	start := time.Now()
 
 	// if neither the "install-serving" or "install-eventing" flags are set,
@@ -60,7 +60,7 @@ func SetUp(name, kVersion string, installServing, installEventing, installKindRe
 		}
 	}
 
-	if err := createKindCluster(installKindRegistry); err != nil {
+	if err := createKindCluster(); err != nil {
 		return fmt.Errorf("creating cluster: %w", err)
 	}
 	if installKnative {
@@ -68,10 +68,7 @@ func SetUp(name, kVersion string, installServing, installEventing, installKindRe
 			// Disable tag resolution for localhost registry, since there's no
 			// way to redirect Knative Serving to use the kind-registry name.
 			// See https://github.com/knative-extensions/kn-plugin-quickstart/issues/467
-			registries := ""
-			if installKindRegistry {
-				registries = fmt.Sprintf("localhost:%s", container_reg_port)
-			}
+			registries := fmt.Sprintf("localhost:%s", container_reg_port)
 			if err := install.Serving(registries); err != nil {
 				return fmt.Errorf("install serving: %w", err)
 			}
@@ -95,7 +92,7 @@ func SetUp(name, kVersion string, installServing, installEventing, installKindRe
 	return nil
 }
 
-func createKindCluster(registry bool) error {
+func createKindCluster() error {
 
 	if err := checkDocker(); err != nil {
 		return fmt.Errorf("%w", err)
@@ -104,16 +101,9 @@ func createKindCluster(registry bool) error {
 	if err := checkKindVersion(); err != nil {
 		return fmt.Errorf("kind version: %w", err)
 	}
-	if registry {
-		fmt.Println("💽 Installing local registry...")
-		if err := createLocalRegistry(); err != nil {
-			return fmt.Errorf("%w", err)
-		}
-	} else {
-		// temporary warning that registry creation is now opt-in
-		// remove in v1.12
-		fmt.Println("\nA local registry is no longer created by default.")
-		fmt.Println("    To create a local registry, use the --registry flag.")
+	fmt.Println("💽 Installing local registry...")
+	if err := createLocalRegistry(); err != nil {
+		return fmt.Errorf("%w", err)
 	}
 
 	if err := checkForExistingCluster(); err != nil {
