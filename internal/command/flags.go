@@ -24,7 +24,6 @@ var name string
 var kubernetesVersion string
 var installServing bool
 var installEventing bool
-var installKindRegistry bool
 
 func clusterNameOption(targetCmd *cobra.Command, flagDefault string) {
 	targetCmd.Flags().StringVarP(
@@ -51,8 +50,4 @@ func installServingOption(targetCmd *cobra.Command) {
 
 func installEventingOption(targetCmd *cobra.Command) {
 	targetCmd.Flags().BoolVar(&installEventing, "install-eventing", false, "install Eventing on quickstart cluster")
-}
-
-func installKindRegistryOption(targetCmd *cobra.Command) {
-	targetCmd.Flags().BoolVar(&installKindRegistry, "registry", false, "install registry for Kind quickstart cluster")
 }

@@ -50,13 +50,6 @@ Set up a local Knative cluster using [KinD](https://kind.sigs.k8s.io/):
 ``` bash
 kn quickstart kind
 ```
-Kind can be configured with a [local container image registry](https://kind.sigs.k8s.io/docs/user/local-registry/) by passing the `--registry` flag:
-
-```bash
-kn quickstart kind --registry
-```
-
-Note: we automatically configure tag resolution for the local registry when this flag is passed
 
 ### Quickstart with Minikube
 
