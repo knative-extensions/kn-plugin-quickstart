@@ -113,10 +113,10 @@ func createKindCluster(registry bool) error {
 		// temporary warning that registry creation is now opt-in
 		// remove in v1.12
 		fmt.Println("\nA local registry is no longer created by default.")
-		fmt.Println("    To create a local registry, use the --registry flag.")
+		fmt.Print("    To create a local registry, use the --registry flag.\n\n")
 	}
 
-	if err := checkForExistingCluster(); err != nil {
+	if err := checkForExistingCluster(registry); err != nil {
 		return fmt.Errorf("existing cluster: %w", err)
 	}
 
@@ -205,7 +205,7 @@ func checkKindVersion() error {
 // checkForExistingCluster checks if the user already has a Kind cluster. If so, it provides
 // the option of deleting the existing cluster and recreating it. If not, it proceeds to
 // creating a new cluster
-func checkForExistingCluster() error {
+func checkForExistingCluster(registry bool) error {
 
 	getClusters := exec.Command("kind", "get", "clusters", "-q")
 	out, err := getClusters.CombinedOutput()
@@ -220,7 +220,7 @@ func checkForExistingCluster() error {
 		fmt.Print("\nKnative Cluster kind-" + clusterName + " already installed.\nDelete and recreate [y/N]: ")
 		fmt.Scanf("%s", &resp)
 		if resp == "y" || resp == "Y" {
-			if err := recreateCluster(); err != nil {
+			if err := recreateCluster(registry); err != nil {
 				return fmt.Errorf("new cluster: %w", err)
 			}
 		} else {
@@ -236,7 +236,7 @@ func checkForExistingCluster() error {
 				fmt.Print("Knative installation already exists.\nDelete and recreate the cluster [y/N]: ")
 				fmt.Scanf("%s", &resp)
 				if resp == "y" || resp == "Y" {
-					if err := recreateCluster(); err != nil {
+					if err := recreateCluster(registry); err != nil {
 						return fmt.Errorf("new cluster: %w", err)
 					}
 				} else {
@@ -251,8 +251,13 @@ func checkForExistingCluster() error {
 		if err := createNewCluster(); err != nil {
 			return fmt.Errorf("new cluster: %w", err)
 		}
-		if err := connectLocalRegistry(); err != nil {
-			return fmt.Errorf("local-registry: %w", err)
+		if registry {
+			if err := createLocalRegistry(); err != nil {
+				return fmt.Errorf("%w", err)
+			}
+			if err := connectLocalRegistry(); err != nil {
+				return fmt.Errorf("local-registry: %w", err)
+			}
 		}
 	}
 
@@ -260,7 +265,7 @@ func checkForExistingCluster() error {
 }
 
 // recreateCluster recreates a Kind cluster
-func recreateCluster() error {
+func recreateCluster(registry bool) error {
 	fmt.Println("\n    Deleting cluster...")
 	deleteCluster := exec.Command("kind", "delete", "cluster", "--name", clusterName)
 	if err := deleteCluster.Run(); err != nil {
@@ -273,11 +278,13 @@ func recreateCluster() error {
 	if err := createNewCluster(); err != nil {
 		return fmt.Errorf("new cluster: %w", err)
 	}
-	if err := createLocalRegistry(); err != nil {
-		return fmt.Errorf("%w", err)
-	}
-	if err := connectLocalRegistry(); err != nil {
-		return fmt.Errorf("local-registry: %w", err)
+	if registry {
+		if err := createLocalRegistry(); err != nil {
+			return fmt.Errorf("%w", err)
+		}
+		if err := connectLocalRegistry(); err != nil {
+			return fmt.Errorf("local-registry: %w", err)
+		}
 	}
 	return nil
 }
