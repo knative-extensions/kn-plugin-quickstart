@@ -37,7 +37,7 @@ gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8
 gopkg.in/yaml.v3 v3.0.1/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
 gotest.tools/v3 v3.3.0 h1:MfDY1b1/0xN1CyMlQDac0ziEy9zJQd9CXBRRDHw2jJo=
 gotest.tools/v3 v3.3.0/go.mod h1:Mcr9QNxkg0uMvy/YElmo4SpXgJKWgQvYrT7Kw5RzJ1A=
-knative.dev/client-pkg v0.0.0-20240228142006-ae3b85247576 h1:f9l+n/ssLsRgxJhsUZfSuF3NmQXy9Cgk2SPR+sp2l3k=
-knative.dev/client-pkg v0.0.0-20240228142006-ae3b85247576/go.mod h1:BPEInNe0294A551vGaoa6Qis+T26/yxytq11qyq4RrA=
-knative.dev/hack v0.0.0-20240302114326-e6dedc74dc47 h1:ob3nmyZw8vJbvnHQdnDTG/5RDeUKBj5erjTdef/Mpew=
-knative.dev/hack v0.0.0-20240302114326-e6dedc74dc47/go.mod h1:yk2OjGDsbEnQjfxdm0/HJKS2WqTLEFg/N6nUs6Rqx3Q=
+knative.dev/client-pkg v0.0.0-20240313113642-ca457df5ea78 h1:Dyk9poFb3XsKle6bgI3+XoyBZRpKkPXNuZmaw6BcWfE=
+knative.dev/client-pkg v0.0.0-20240313113642-ca457df5ea78/go.mod h1:CODwMfQexBzzgB2fv9hYF1+FZfrYc9TF3B26GxW69zQ=
+knative.dev/hack v0.0.0-20240313135155-b9f6bf0b323b h1:u2D/mdleFeMwjlnMG4ni7vIcaWio8NeYWYtBJe8C6xE=
+knative.dev/hack v0.0.0-20240313135155-b9f6bf0b323b/go.mod h1:yk2OjGDsbEnQjfxdm0/HJKS2WqTLEFg/N6nUs6Rqx3Q=
