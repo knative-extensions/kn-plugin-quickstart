@@ -27,9 +27,9 @@ import (
 )
 
 var clusterName string
-var kubernetesVersion = "1.27.3"
+var kubernetesVersion = "1.28.3"
 var clusterVersionOverride bool
-var minikubeVersion = 1.31
+var minikubeVersion = 1.32
 var cpus = "3"
 var memory = "3072"
 var installKnative = true
