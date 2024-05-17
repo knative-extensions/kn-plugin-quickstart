@@ -1,4 +1,6 @@
 # kn-plugin-quickstart
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fknative-extensions%2Fkn-plugin-quickstart.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fknative-extensions%2Fkn-plugin-quickstart?ref=badge_shield)
+
 
 **[This component is BETA](https://github.com/knative/community/tree/main/mechanics/MATURITY-LEVELS.md)**
 
@@ -94,3 +96,7 @@ You can grab the latest nightly binary executable for:
 
 Add the binary to the system PATH and ensure that it is executable.
 
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fknative-extensions%2Fkn-plugin-quickstart.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fknative-extensions%2Fkn-plugin-quickstart?ref=badge_large)
