@@ -24,6 +24,7 @@ var name string
 var kubernetesVersion string
 var installServing bool
 var installEventing bool
+var installCamel bool
 var installKindRegistry bool
 var installKindExtraMountHostPath string
 var installKindExtraMountContainerPath string
@@ -53,6 +54,10 @@ func installServingOption(targetCmd *cobra.Command) {
 
 func installEventingOption(targetCmd *cobra.Command) {
 	targetCmd.Flags().BoolVar(&installEventing, "install-eventing", false, "install Eventing on quickstart cluster")
+}
+
+func installCamelOption(targetCmd *cobra.Command) {
+	targetCmd.Flags().BoolVar(&installCamel, "install-camel", false, "install Apache Camel K on quickstart cluster")
 }
 
 func installKindRegistryOption(targetCmd *cobra.Command) {

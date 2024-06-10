@@ -35,7 +35,7 @@ var memory = "3072"
 var installKnative = true
 
 // SetUp creates a local Minikube cluster and installs all the relevant Knative components
-func SetUp(name, kVersion string, installServing, installEventing bool) error {
+func SetUp(name, kVersion string, installServing, installEventing, installCamel bool) error {
 	start := time.Now()
 
 	// if neither the "install-serving" or "install-eventing" flags are set,
@@ -82,6 +82,19 @@ func SetUp(name, kVersion string, installServing, installEventing bool) error {
 		if installEventing {
 			if err := install.Eventing(); err != nil {
 				return fmt.Errorf("install eventing: %w", err)
+			}
+
+			if installCamel {
+
+				registryAddress, err := getMinikubeRegistryAddress()
+				if err != nil {
+					fmt.Printf("Error: %v\n", err)
+					return err
+				}
+
+				if err := install.CamelK(registryAddress); err != nil {
+					return fmt.Errorf("install Apache Camel K: %w", err)
+				}
 			}
 		}
 	}
@@ -270,4 +283,14 @@ func recreateCluster() error {
 		return fmt.Errorf("new cluster: %w", err)
 	}
 	return nil
+}
+
+func getMinikubeRegistryAddress() (string, error) {
+	cmd := exec.Command("kubectl", "-n", "kube-system", "get", "service", "registry", "-o", "jsonpath={.spec.clusterIP}")
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("failed to get registry address: %w", err)
+	}
+	address := strings.TrimSpace(string(out))
+	return address, nil
 }
