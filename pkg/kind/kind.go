@@ -304,6 +304,9 @@ containerdConfigPatches:
 nodes:
 - role: control-plane
   image: %s
+  extraMounts:
+  - hostPath: /home/daniel/poly/poly-alpha/server-functions
+    containerPath: /poly
   extraPortMappings:
   - containerPort: 31080
     listenAddress: 0.0.0.0
