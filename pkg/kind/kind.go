@@ -299,7 +299,12 @@ func createNewCluster(extraMountHostPath string, extraMountContainerPath string)
     containerPath: %s`, extraMountHostPath, extraMountContainerPath)
 	}
 
-	fmt.Println("☸ Creating Kind cluster...")
+	if extraMount == "" {
+		fmt.Println("☸ Creating Kind cluster...")
+	} else {
+		fmt.Println("☸ Creating Kind cluster with extraMounts...")
+	}
+
 	config := fmt.Sprintf(`
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
