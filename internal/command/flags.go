@@ -25,6 +25,8 @@ var kubernetesVersion string
 var installServing bool
 var installEventing bool
 var installKindRegistry bool
+var installKindExtraMountHostPath string
+var installKindExtraMountContainerPath string
 
 func clusterNameOption(targetCmd *cobra.Command, flagDefault string) {
 	targetCmd.Flags().StringVarP(
@@ -55,4 +57,12 @@ func installEventingOption(targetCmd *cobra.Command) {
 
 func installKindRegistryOption(targetCmd *cobra.Command) {
 	targetCmd.Flags().BoolVar(&installKindRegistry, "registry", false, "install registry for Kind quickstart cluster")
+}
+
+func installKindExtraMountHostPathOption(targetCmd *cobra.Command) {
+	targetCmd.Flags().StringVarP(&installKindExtraMountHostPath, "extraMountHostPath", "", "", "set the extraMount hostPath on Kind quickstart cluster")
+}
+
+func installKindExtraMountContainerPathOption(targetCmd *cobra.Command) {
+	targetCmd.Flags().StringVarP(&installKindExtraMountContainerPath, "extraMountContainerPath", "", "", "set the extraMount containerPath on Kind quickstart cluster")
 }

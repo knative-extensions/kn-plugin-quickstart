@@ -58,6 +58,13 @@ kn quickstart kind --registry
 
 Note: we automatically configure tag resolution for the local registry when this flag is passed
 
+Kind can also be configured with an [extra mount](https://kind.sigs.k8s.io/docs/user/configuration#extra-mounts) so your containers can access files on your local machine.
+
+```bash
+kn quickstart kind --extraMountHostPath /home/myname/foo --extraMountContainerPath /foo
+```
+
+
 ### Quickstart with Minikube
 
 Set up a local Knative cluster using [Minikube](https://minikube.sigs.k8s.io/):
