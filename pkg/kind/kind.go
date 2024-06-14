@@ -34,7 +34,7 @@ var container_reg_port = "5001"
 var installKnative = true
 
 // SetUp creates a local Kind cluster and installs all the relevant Knative components
-func SetUp(name, kVersion string, installServing, installEventing, installKindRegistry bool) error {
+func SetUp(name, kVersion string, installServing, installEventing, installKindRegistry bool, installKindExtraMountHostPath string, installKindExtraMountContainerPath string) error {
 	start := time.Now()
 
 	// if neither the "install-serving" or "install-eventing" flags are set,
@@ -60,7 +60,7 @@ func SetUp(name, kVersion string, installServing, installEventing, installKindRe
 		}
 	}
 
-	if err := createKindCluster(installKindRegistry); err != nil {
+	if err := createKindCluster(installKindRegistry, installKindExtraMountHostPath, installKindExtraMountContainerPath); err != nil {
 		return fmt.Errorf("creating cluster: %w", err)
 	}
 	if installKnative {
@@ -95,7 +95,7 @@ func SetUp(name, kVersion string, installServing, installEventing, installKindRe
 	return nil
 }
 
-func createKindCluster(registry bool) error {
+func createKindCluster(registry bool, extraMountHostPath string, extraMountContainerPath string) error {
 
 	if err := checkDocker(); err != nil {
 		return fmt.Errorf("%w", err)
@@ -116,7 +116,7 @@ func createKindCluster(registry bool) error {
 		fmt.Print("    To create a local registry, use the --registry flag.\n\n")
 	}
 
-	if err := checkForExistingCluster(registry); err != nil {
+	if err := checkForExistingCluster(registry, extraMountHostPath, extraMountContainerPath); err != nil {
 		return fmt.Errorf("existing cluster: %w", err)
 	}
 
@@ -205,7 +205,7 @@ func checkKindVersion() error {
 // checkForExistingCluster checks if the user already has a Kind cluster. If so, it provides
 // the option of deleting the existing cluster and recreating it. If not, it proceeds to
 // creating a new cluster
-func checkForExistingCluster(registry bool) error {
+func checkForExistingCluster(registry bool, extraMountHostPath string, extraMountContainerPath string) error {
 
 	getClusters := exec.Command("kind", "get", "clusters", "-q")
 	out, err := getClusters.CombinedOutput()
@@ -220,7 +220,7 @@ func checkForExistingCluster(registry bool) error {
 		fmt.Print("\nKnative Cluster kind-" + clusterName + " already installed.\nDelete and recreate [y/N]: ")
 		fmt.Scanf("%s", &resp)
 		if resp == "y" || resp == "Y" {
-			if err := recreateCluster(registry); err != nil {
+			if err := recreateCluster(registry, extraMountHostPath, extraMountContainerPath); err != nil {
 				return fmt.Errorf("new cluster: %w", err)
 			}
 		} else {
@@ -236,7 +236,7 @@ func checkForExistingCluster(registry bool) error {
 				fmt.Print("Knative installation already exists.\nDelete and recreate the cluster [y/N]: ")
 				fmt.Scanf("%s", &resp)
 				if resp == "y" || resp == "Y" {
-					if err := recreateCluster(registry); err != nil {
+					if err := recreateCluster(registry, extraMountHostPath, extraMountContainerPath); err != nil {
 						return fmt.Errorf("new cluster: %w", err)
 					}
 				} else {
@@ -248,7 +248,7 @@ func checkForExistingCluster(registry bool) error {
 			return nil
 		}
 	} else {
-		if err := createNewCluster(); err != nil {
+		if err := createNewCluster(extraMountHostPath, extraMountContainerPath); err != nil {
 			return fmt.Errorf("new cluster: %w", err)
 		}
 		if registry {
@@ -265,7 +265,7 @@ func checkForExistingCluster(registry bool) error {
 }
 
 // recreateCluster recreates a Kind cluster
-func recreateCluster(registry bool) error {
+func recreateCluster(registry bool, extraMountHostPath string, extraMountContainerPath string) error {
 	fmt.Println("\n    Deleting cluster...")
 	deleteCluster := exec.Command("kind", "delete", "cluster", "--name", clusterName)
 	if err := deleteCluster.Run(); err != nil {
@@ -275,7 +275,7 @@ func recreateCluster(registry bool) error {
 	if err := deleteContainerRegistry.Run(); err != nil {
 		return fmt.Errorf("delete container registry: %w", err)
 	}
-	if err := createNewCluster(); err != nil {
+	if err := createNewCluster(extraMountHostPath, extraMountContainerPath); err != nil {
 		return fmt.Errorf("new cluster: %w", err)
 	}
 	if registry {
@@ -290,7 +290,14 @@ func recreateCluster(registry bool) error {
 }
 
 // createNewCluster creates a new Kind cluster
-func createNewCluster() error {
+func createNewCluster(extraMountHostPath string, extraMountContainerPath string) error {
+	extraMount := ""
+	if extraMountHostPath != "" && extraMountContainerPath != "" {
+		extraMount = fmt.Sprintf(`
+  extraMounts:
+  - hostPath: %s
+    containerPath: %s`, extraMountHostPath, extraMountContainerPath)
+	}
 
 	fmt.Println("☸ Creating Kind cluster...")
 	config := fmt.Sprintf(`
@@ -303,14 +310,11 @@ containerdConfigPatches:
     endpoint = ["http://%s:5000"]
 nodes:
 - role: control-plane
-  image: %s
-  extraMounts:
-  - hostPath: /home/daniel/poly/poly-alpha/server-functions
-    containerPath: /poly
+  image: %s %s
   extraPortMappings:
   - containerPort: 31080
     listenAddress: 0.0.0.0
-    hostPort: 80`, clusterName, container_reg_port, container_reg_name, kubernetesVersion)
+    hostPort: 80`, clusterName, container_reg_port, container_reg_name, kubernetesVersion, extraMount)
 
 	createCluster := exec.Command("kind", "create", "cluster", "--wait=120s", "--config=-")
 	createCluster.Stdin = strings.NewReader(config)
