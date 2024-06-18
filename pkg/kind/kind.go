@@ -139,7 +139,7 @@ func createLocalRegistry() error {
 	}
 	localRegCheck := exec.Command(
 		"docker", "run", "-d", "--restart=always", "-p", "0.0.0.0:"+container_reg_port+":5000",
-		"--name", container_reg_name, "registry:2",
+		"--network", "bridge", "--name", container_reg_name, "registry:2",
 	)
 	if err := localRegCheck.Run(); err != nil {
 		return fmt.Errorf("failed to create local registry container: %w", err)
