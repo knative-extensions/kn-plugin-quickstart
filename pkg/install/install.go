@@ -205,6 +205,34 @@ metadata:
 	return nil
 }
 
+func CamelK(registryAddress string) error {
+	fmt.Println("🐪 Installing Apache Camel K  ... ")
+
+	if err := addHelmRepo(); err != nil {
+		fmt.Printf("Error adding Helm repo: %v\n", err)
+		return err
+	}
+	fmt.Println("Helm repo added successfully")
+
+	// Run the Helm install command
+	if err := runHelmInstall(registryAddress); err != nil {
+		fmt.Printf("Error: %v\n", err)
+		return err
+	}
+
+	if err := waitForCRDsEstablished(); err != nil {
+		return fmt.Errorf("crds: %w", err)
+	}
+	fmt.Println("    CRDs installed...")
+
+	if err := waitForPodsReady("default"); err != nil {
+		return fmt.Errorf("core: %w", err)
+	}
+	fmt.Println("    Apache Camel K installed...")
+
+	return nil
+}
+
 func runCommand(c *exec.Cmd) error {
 	if out, err := c.CombinedOutput(); err != nil {
 		fmt.Println(string(out))
@@ -236,4 +264,38 @@ func waitForCRDsEstablished() error {
 // waitForPodsReady waits for all pods in the given namespace to be ready.
 func waitForPodsReady(ns string) error {
 	return runCommand(exec.Command("kubectl", "wait", "pod", "--timeout=10m", "--for=condition=Ready", "-l", "!job-name", "-n", ns))
+}
+
+//nolint:gosec // avoid linter warnings
+func runHelmInstall(registryAddress string) error {
+
+	// Check if helm CLI is installed
+	if _, err := exec.LookPath("helm"); err != nil {
+		return fmt.Errorf("Please install helm CLI")
+	}
+
+	cmd := exec.Command("helm", "install",
+		"--generate-name",
+		"--set", fmt.Sprintf("platform.build.registry.address=%s", registryAddress),
+		"--set", "platform.build.registry.insecure=true",
+		"camel-k/camel-k")
+
+	cmd.Stdout = cmd.Stderr
+
+	if out, err := cmd.CombinedOutput(); err != nil {
+		fmt.Println(string(out))
+		return fmt.Errorf("failed to run helm install: %w", err)
+	}
+	return nil
+}
+
+func addHelmRepo() error {
+	cmd := exec.Command("helm", "repo", "add", "camel-k", "https://apache.github.io/camel-k/charts/")
+	cmd.Stdout = cmd.Stderr
+
+	if out, err := cmd.CombinedOutput(); err != nil {
+		fmt.Println(string(out))
+		return fmt.Errorf("failed to add helm repo: %w", err)
+	}
+	return nil
 }
