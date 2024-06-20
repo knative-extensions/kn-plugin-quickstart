@@ -34,7 +34,7 @@ var container_reg_port = "5001"
 var installKnative = true
 
 // SetUp creates a local Kind cluster and installs all the relevant Knative components
-func SetUp(name, kVersion string, installServing, installEventing, installKindRegistry bool, installKindExtraMountHostPath string, installKindExtraMountContainerPath string) error {
+func SetUp(name, kVersion string, installServing, installEventing, installKindRegistry, installCamel bool, installKindExtraMountHostPath string, installKindExtraMountContainerPath string) error {
 	start := time.Now()
 
 	// if neither the "install-serving" or "install-eventing" flags are set,
@@ -86,6 +86,13 @@ func SetUp(name, kVersion string, installServing, installEventing, installKindRe
 			if err := install.Eventing(); err != nil {
 				return fmt.Errorf("install eventing: %w", err)
 			}
+
+			if installCamel {
+				if err := install.CamelK("kind-registry:5000"); err != nil {
+					return fmt.Errorf("install Apache Camel K: %w", err)
+				}
+			}
+
 		}
 	}
 
