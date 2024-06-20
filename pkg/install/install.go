@@ -266,7 +266,14 @@ func waitForPodsReady(ns string) error {
 	return runCommand(exec.Command("kubectl", "wait", "pod", "--timeout=10m", "--for=condition=Ready", "-l", "!job-name", "-n", ns))
 }
 
+//nolint:gosec // avoid linter warnings
 func runHelmInstall(registryAddress string) error {
+
+	// Check if helm CLI is installed
+	if _, err := exec.LookPath("helm"); err != nil {
+		return fmt.Errorf("Please install helm CLI")
+	}
+
 	cmd := exec.Command("helm", "install",
 		"--generate-name",
 		"--set", fmt.Sprintf("platform.build.registry.address=%s", registryAddress),
