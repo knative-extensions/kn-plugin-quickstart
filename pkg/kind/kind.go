@@ -113,6 +113,9 @@ func createKindCluster(registry bool, extraMountHostPath string, extraMountConta
 	}
 	if registry {
 		fmt.Println("💽 Installing local registry...")
+		if err := pullLocalRegistryImage(dcli); err != nil {
+			return fmt.Errorf("%w", err)
+		}
 		if err := createLocalRegistry(dcli); err != nil {
 			return fmt.Errorf("%w", err)
 		}
@@ -144,11 +147,7 @@ func checkDocker() (*dclient.Client, error) {
 	return dcli, nil
 }
 
-func createLocalRegistry(dcli *dclient.Client) error {
-	if err := deleteContainerRegistry(dcli); err != nil {
-		return fmt.Errorf("failed to delete local registry: %w", err)
-	}
-
+func pullLocalRegistryImage(dcli *dclient.Client) error {
 	ctx := context.Background()
 	iorc, err := dcli.ImagePull(ctx, "docker.io/library/registry:2", image.PullOptions{})
 	if err != nil {
@@ -166,8 +165,15 @@ func createLocalRegistry(dcli *dclient.Client) error {
 	if err := scanner.Err(); err != nil {
 		return fmt.Errorf("failed to read image pull response: %w", err)
 	}
+	return nil
+}
 
-	resp, err := dcli.ContainerCreate(ctx, &container.Config{
+func createLocalRegistry(dcli *dclient.Client) error {
+	if err := deleteContainerRegistry(dcli); err != nil {
+		return fmt.Errorf("failed to delete local registry: %w", err)
+	}
+
+	resp, err := dcli.ContainerCreate(context.Background(), &container.Config{
 		Image: "registry:2",
 	}, &container.HostConfig{
 		RestartPolicy: container.RestartPolicy{
