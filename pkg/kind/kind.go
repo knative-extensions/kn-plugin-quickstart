@@ -194,7 +194,12 @@ func createLocalRegistry(dcli *dclient.Client) error {
 }
 
 func connectLocalRegistry(dcli *dclient.Client) error {
-	err := dcli.NetworkConnect(context.Background(), "kind", container_reg_name, nil)
+	err := patchKindNodes()
+	if err != nil {
+		return fmt.Errorf("failed to patch kind nodes: %w", err)
+	}
+
+	err = dcli.NetworkConnect(context.Background(), "kind", container_reg_name, nil)
 	if err != nil {
 		return fmt.Errorf("failed to connect local registry to kind network: %w", err)
 	}
@@ -367,15 +372,15 @@ apiVersion: kind.x-k8s.io/v1alpha4
 name: %s
 containerdConfigPatches:
 - |-
-  [plugins."io.containerd.grpc.v1.cri".registry.mirrors."localhost:%s"]
-    endpoint = ["http://%s:5000"]
+  [plugins."io.containerd.grpc.v1.cri".registry]
+    config_path = "/etc/containerd/certs.d/"
 nodes:
 - role: control-plane
   image: %s %s
   extraPortMappings:
   - containerPort: 31080
     listenAddress: 0.0.0.0
-    hostPort: 80`, clusterName, container_reg_port, container_reg_name, kubernetesVersion, extraMount)
+    hostPort: 80`, clusterName, kubernetesVersion, extraMount)
 
 	createCluster := exec.Command("kind", "create", "cluster", "--wait=120s", "--config=-")
 	createCluster.Stdin = strings.NewReader(config)
@@ -383,6 +388,43 @@ nodes:
 		return fmt.Errorf("kind create: %w", err)
 	}
 
+	return nil
+}
+
+func patchKindNodes() error {
+	getNodes := exec.Command("kind", "get", "nodes", "--name", clusterName)
+	out, err := getNodes.Output()
+	if err != nil {
+		return fmt.Errorf("failed to get kind nodes: %w", err)
+	}
+
+	nodes := strings.Split(strings.TrimSpace(string(out)), "\n")
+	dcli, err := dclient.NewClientWithOpts(dclient.FromEnv, dclient.WithAPIVersionNegotiation())
+	if err != nil {
+		return fmt.Errorf("failed to create Docker client: %w", err)
+	}
+
+	for _, node := range nodes {
+		fmt.Println("🔗 Patching node: " + node) // DEBUG
+		reg_config_dir := fmt.Sprintf("/etc/containerd/certs.d/localhost:%s/", container_reg_port)
+		execOpts := container.ExecOptions{
+			Cmd:    []string{"sh", "-c", fmt.Sprintf(`mkdir -p %s && echo '[host."http://%s:5000"]' > %shosts.toml`, reg_config_dir, container_reg_name, reg_config_dir)},
+			Detach: true,
+			Tty:    false,
+		}
+
+		execIDResp, err := dcli.ContainerExecCreate(context.Background(), node, execOpts)
+		if err != nil {
+			return fmt.Errorf("failed to create exec instance on node %s: %w", node, err)
+		}
+
+		if err := dcli.ContainerExecStart(context.Background(), execIDResp.ID, container.ExecStartOptions{
+			Detach: true,
+			Tty:    false,
+		}); err != nil {
+			return fmt.Errorf("failed to start exec instance on node %s: %w", node, err)
+		}
+	}
 	return nil
 }
 
