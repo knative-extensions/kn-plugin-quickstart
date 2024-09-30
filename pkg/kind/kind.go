@@ -456,7 +456,7 @@ func parseKindVersion(v string) (float64, error) {
 
 func deleteContainerRegistry(dcli *dclient.Client) error {
 	if err := dcli.ContainerRemove(context.Background(), container_reg_name, container.RemoveOptions{Force: true}); err != nil {
-		if strings.Contains(err.Error(), ": no such container") {
+		if strings.Contains(strings.ToLower(err.Error()), ": no such container") {
 			return nil
 		}
 		return fmt.Errorf("failed remove registry container: %w", err)
