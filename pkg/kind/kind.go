@@ -15,6 +15,9 @@
 package kind
 
 import (
+	"bufio"
+	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -23,6 +26,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/image"
+	dclient "github.com/docker/docker/client"
+	"github.com/docker/go-connections/nat"
 	"knative.dev/kn-plugin-quickstart/pkg/install"
 )
 
@@ -96,9 +103,9 @@ func SetUp(name, kVersion string, installServing, installEventing, installKindRe
 }
 
 func createKindCluster(registry bool, extraMountHostPath string, extraMountContainerPath string) error {
-
-	if err := checkDocker(); err != nil {
-		return fmt.Errorf("%w", err)
+	dcli, err := checkDocker()
+	if err != nil {
+		return err
 	}
 	fmt.Println("✅ Checking dependencies...")
 	if err := checkKindVersion(); err != nil {
@@ -106,7 +113,10 @@ func createKindCluster(registry bool, extraMountHostPath string, extraMountConta
 	}
 	if registry {
 		fmt.Println("💽 Installing local registry...")
-		if err := createLocalRegistry(); err != nil {
+		if err := pullLocalRegistryImage(dcli); err != nil {
+			return fmt.Errorf("%w", err)
+		}
+		if err := createLocalRegistry(dcli); err != nil {
 			return fmt.Errorf("%w", err)
 		}
 	} else {
@@ -124,34 +134,82 @@ func createKindCluster(registry bool, extraMountHostPath string, extraMountConta
 }
 
 // checkDocker checks that Docker is running on the users local system.
-func checkDocker() error {
-	dockerCheck := exec.Command("docker", "stats", "--no-stream")
-	if err := dockerCheck.Run(); err != nil {
-		return fmt.Errorf("docker not running")
+func checkDocker() (*dclient.Client, error) {
+	dcli, err := dclient.NewClientWithOpts(dclient.FromEnv, dclient.WithAPIVersionNegotiation())
+	if err != nil {
+		return nil, fmt.Errorf("failed to create Docker client: %w", err)
 	}
-	return nil
+
+	if _, err := dcli.Info(context.Background()); err != nil {
+		return nil, fmt.Errorf("failed to get Docker info: %w", err)
+	}
+
+	return dcli, nil
 }
 
-func createLocalRegistry() error {
-	deleteContainerRegistry := deleteContainerRegistry()
-	if err := deleteContainerRegistry.Run(); err != nil {
-		return fmt.Errorf("failed to delete local registry: %w", err)
-	}
-	localRegCheck := exec.Command(
-		"docker", "run", "-d", "--restart=always", "-p", "0.0.0.0:"+container_reg_port+":5000",
-		"--network", "bridge", "--name", container_reg_name, "registry:2",
-	)
-	if err := localRegCheck.Run(); err != nil {
+func pullLocalRegistryImage(dcli *dclient.Client) error {
+	ctx := context.Background()
+	iorc, err := dcli.ImagePull(ctx, "docker.io/library/registry:2", image.PullOptions{})
+	if err != nil {
 		return fmt.Errorf("failed to create local registry container: %w", err)
 	}
+
+	scanner := bufio.NewScanner(iorc)
+	for scanner.Scan() {
+		var jsonData map[string]interface{}
+		if err := json.Unmarshal([]byte(scanner.Text()), &jsonData); err != nil {
+			break
+		}
+		fmt.Printf("%s: %s\n", jsonData["status"], jsonData["id"])
+	}
+	if err := scanner.Err(); err != nil {
+		return fmt.Errorf("failed to read image pull response: %w", err)
+	}
 	return nil
 }
 
-func connectLocalRegistry() error {
-	connectLocalRegistry := exec.Command("docker", "network", "connect", "kind", container_reg_name)
-	if err := connectLocalRegistry.Run(); err != nil {
-		return fmt.Errorf("failed to connect local registry to kind cluster")
+func createLocalRegistry(dcli *dclient.Client) error {
+	if err := deleteContainerRegistry(dcli); err != nil {
+		return fmt.Errorf("failed to delete local registry: %w", err)
 	}
+
+	resp, err := dcli.ContainerCreate(context.Background(), &container.Config{
+		Image: "registry:2",
+	}, &container.HostConfig{
+		RestartPolicy: container.RestartPolicy{
+			Name: "always",
+		},
+		PortBindings: nat.PortMap{
+			"5000/tcp": []nat.PortBinding{
+				{
+					HostIP:   "0.0.0.0",
+					HostPort: container_reg_port,
+				},
+			},
+		},
+		NetworkMode: "bridge",
+	}, nil, nil, container_reg_name)
+	if err != nil {
+		return fmt.Errorf("failed to create local registry container: %w", err)
+	}
+
+	if err := dcli.ContainerStart(context.Background(), resp.ID, container.StartOptions{}); err != nil {
+		return fmt.Errorf("failed to start local registry container: %w", err)
+	}
+	return nil
+}
+
+func connectLocalRegistry(dcli *dclient.Client) error {
+	err := patchKindNodes()
+	if err != nil {
+		return fmt.Errorf("failed to patch kind nodes: %w", err)
+	}
+
+	err = dcli.NetworkConnect(context.Background(), "kind", container_reg_name, nil)
+	if err != nil {
+		return fmt.Errorf("failed to connect local registry to kind network: %w", err)
+	}
+
 	cm := fmt.Sprintf(`
 apiVersion: v1
 kind: ConfigMap
@@ -206,7 +264,6 @@ func checkKindVersion() error {
 // the option of deleting the existing cluster and recreating it. If not, it proceeds to
 // creating a new cluster
 func checkForExistingCluster(registry bool, extraMountHostPath string, extraMountContainerPath string) error {
-
 	getClusters := exec.Command("kind", "get", "clusters", "-q")
 	out, err := getClusters.CombinedOutput()
 	if err != nil {
@@ -248,14 +305,19 @@ func checkForExistingCluster(registry bool, extraMountHostPath string, extraMoun
 			return nil
 		}
 	} else {
+		dcli, err := dclient.NewClientWithOpts(dclient.FromEnv, dclient.WithAPIVersionNegotiation())
+		if err != nil {
+			return fmt.Errorf("new cluster: %w", err)
+		}
+
 		if err := createNewCluster(extraMountHostPath, extraMountContainerPath); err != nil {
 			return fmt.Errorf("new cluster: %w", err)
 		}
 		if registry {
-			if err := createLocalRegistry(); err != nil {
+			if err := createLocalRegistry(dcli); err != nil {
 				return fmt.Errorf("%w", err)
 			}
-			if err := connectLocalRegistry(); err != nil {
+			if err := connectLocalRegistry(dcli); err != nil {
 				return fmt.Errorf("local-registry: %w", err)
 			}
 		}
@@ -267,22 +329,27 @@ func checkForExistingCluster(registry bool, extraMountHostPath string, extraMoun
 // recreateCluster recreates a Kind cluster
 func recreateCluster(registry bool, extraMountHostPath string, extraMountContainerPath string) error {
 	fmt.Println("\n    Deleting cluster...")
+
+	dcli, err := dclient.NewClientWithOpts(dclient.FromEnv, dclient.WithAPIVersionNegotiation())
+	if err != nil {
+		return fmt.Errorf("delete cluster: %w", err)
+	}
+
 	deleteCluster := exec.Command("kind", "delete", "cluster", "--name", clusterName)
 	if err := deleteCluster.Run(); err != nil {
 		return fmt.Errorf("delete cluster: %w", err)
 	}
-	deleteContainerRegistry := deleteContainerRegistry()
-	if err := deleteContainerRegistry.Run(); err != nil {
+	if err := deleteContainerRegistry(dcli); err != nil {
 		return fmt.Errorf("delete container registry: %w", err)
 	}
 	if err := createNewCluster(extraMountHostPath, extraMountContainerPath); err != nil {
 		return fmt.Errorf("new cluster: %w", err)
 	}
 	if registry {
-		if err := createLocalRegistry(); err != nil {
+		if err := createLocalRegistry(dcli); err != nil {
 			return fmt.Errorf("%w", err)
 		}
-		if err := connectLocalRegistry(); err != nil {
+		if err := connectLocalRegistry(dcli); err != nil {
 			return fmt.Errorf("local-registry: %w", err)
 		}
 	}
@@ -311,15 +378,15 @@ apiVersion: kind.x-k8s.io/v1alpha4
 name: %s
 containerdConfigPatches:
 - |-
-  [plugins."io.containerd.grpc.v1.cri".registry.mirrors."localhost:%s"]
-    endpoint = ["http://%s:5000"]
+  [plugins."io.containerd.grpc.v1.cri".registry]
+    config_path = "/etc/containerd/certs.d/"
 nodes:
 - role: control-plane
   image: %s %s
   extraPortMappings:
   - containerPort: 31080
     listenAddress: 0.0.0.0
-    hostPort: 80`, clusterName, container_reg_port, container_reg_name, kubernetesVersion, extraMount)
+    hostPort: 80`, clusterName, kubernetesVersion, extraMount)
 
 	createCluster := exec.Command("kind", "create", "cluster", "--wait=120s", "--config=-")
 	createCluster.Stdin = strings.NewReader(config)
@@ -327,6 +394,43 @@ nodes:
 		return fmt.Errorf("kind create: %w", err)
 	}
 
+	return nil
+}
+
+func patchKindNodes() error {
+	getNodes := exec.Command("kind", "get", "nodes", "--name", clusterName)
+	out, err := getNodes.Output()
+	if err != nil {
+		return fmt.Errorf("failed to get kind nodes: %w", err)
+	}
+
+	nodes := strings.Split(strings.TrimSpace(string(out)), "\n")
+	dcli, err := dclient.NewClientWithOpts(dclient.FromEnv, dclient.WithAPIVersionNegotiation())
+	if err != nil {
+		return fmt.Errorf("failed to create Docker client: %w", err)
+	}
+
+	for _, node := range nodes {
+		fmt.Println("🔗 Patching node: " + node) // DEBUG
+		reg_config_dir := fmt.Sprintf("/etc/containerd/certs.d/localhost:%s/", container_reg_port)
+		execOpts := container.ExecOptions{
+			Cmd:    []string{"sh", "-c", fmt.Sprintf(`mkdir -p %s && echo '[host."http://%s:5000"]' > %shosts.toml`, reg_config_dir, container_reg_name, reg_config_dir)},
+			Detach: true,
+			Tty:    false,
+		}
+
+		execIDResp, err := dcli.ContainerExecCreate(context.Background(), node, execOpts)
+		if err != nil {
+			return fmt.Errorf("failed to create exec instance on node %s: %w", node, err)
+		}
+
+		if err := dcli.ContainerExecStart(context.Background(), execIDResp.ID, container.ExecStartOptions{
+			Detach: true,
+			Tty:    false,
+		}); err != nil {
+			return fmt.Errorf("failed to start exec instance on node %s: %w", node, err)
+		}
+	}
 	return nil
 }
 
@@ -350,6 +454,12 @@ func parseKindVersion(v string) (float64, error) {
 	return floatVersion, nil
 }
 
-func deleteContainerRegistry() *exec.Cmd {
-	return exec.Command("docker", "rm", "-f", container_reg_name, "&&", "||", "true")
+func deleteContainerRegistry(dcli *dclient.Client) error {
+	if err := dcli.ContainerRemove(context.Background(), container_reg_name, container.RemoveOptions{Force: true}); err != nil {
+		if strings.Contains(strings.ToLower(err.Error()), ": no such container") {
+			return nil
+		}
+		return fmt.Errorf("failed remove registry container: %w", err)
+	}
+	return nil
 }
