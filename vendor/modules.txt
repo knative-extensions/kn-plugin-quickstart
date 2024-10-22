@@ -117,7 +117,7 @@ go.opentelemetry.io/otel/metric/noop
 ## explicit; go 1.22
 go.opentelemetry.io/otel/trace
 go.opentelemetry.io/otel/trace/embedded
-# golang.org/x/sys v0.25.0
+# golang.org/x/sys v0.26.0
 ## explicit; go 1.18
 golang.org/x/sys/windows
 # gotest.tools/v3 v3.3.0
@@ -128,8 +128,8 @@ gotest.tools/v3/internal/assert
 gotest.tools/v3/internal/difflib
 gotest.tools/v3/internal/format
 gotest.tools/v3/internal/source
-# knative.dev/client-pkg v0.0.0-20241016014421-f465a765de1b
-## explicit; go 1.22
+# knative.dev/client-pkg v0.0.0-20241022130700-7b4bb48ac250
+## explicit; go 1.22.0
 knative.dev/client-pkg/pkg/plugin
 # knative.dev/hack v0.0.0-20241010131451-05b2fb30cb4d
 ## explicit; go 1.21

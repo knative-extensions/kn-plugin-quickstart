@@ -1,13 +1,13 @@
 module knative.dev/kn-plugin-quickstart
 
-go 1.22
+go 1.22.0
 
 require (
 	github.com/docker/docker v27.2.1+incompatible
 	github.com/docker/go-connections v0.5.0
 	github.com/spf13/cobra v1.7.0
 	gotest.tools/v3 v3.3.0
-	knative.dev/client-pkg v0.0.0-20241016014421-f465a765de1b
+	knative.dev/client-pkg v0.0.0-20241022130700-7b4bb48ac250
 	knative.dev/hack v0.0.0-20241010131451-05b2fb30cb4d
 
 )
@@ -36,5 +36,5 @@ require (
 	go.opentelemetry.io/otel/metric v1.30.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.30.0 // indirect
 	go.opentelemetry.io/otel/trace v1.30.0 // indirect
-	golang.org/x/sys v0.25.0 // indirect
+	golang.org/x/sys v0.26.0 // indirect
 )
