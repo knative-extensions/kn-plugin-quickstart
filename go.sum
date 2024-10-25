@@ -165,8 +165,8 @@ k8s.io/utils v0.0.0-20240711033017-18e509b52bc8 h1:pUdcCO1Lk/tbT5ztQWOBi5HBgbBP1
 k8s.io/utils v0.0.0-20240711033017-18e509b52bc8/go.mod h1:OLgZIPagt7ERELqWJFomSt595RzquPNLL48iOWgYOg0=
 knative.dev/client-pkg v0.0.0-20241022130700-7b4bb48ac250 h1:hxR3hLPdJ9N+qC0ULT2vxTqXyzX8o/0W9ZfUmZ+XBBE=
 knative.dev/client-pkg v0.0.0-20241022130700-7b4bb48ac250/go.mod h1:1Wp8+rz7JT3c17r0+2IdxWjkNvEZ/4/AHywaV12nq3I=
-knative.dev/hack v0.0.0-20241016013844-21914567fbb4 h1:+hdbDCWjRmkbDghA9/ZLKSjSIG138dPV3K2exX4uxMA=
-knative.dev/hack v0.0.0-20241016013844-21914567fbb4/go.mod h1:R0ritgYtjLDO9527h5vb5X6gfvt5LCrJ55BNbVDsWiY=
+knative.dev/hack v0.0.0-20241025103803-ef6e7e983a60 h1:LjBbosBvW/9/qjzIJtGpehPsbNWVvy1Fz8yZvMbFWe4=
+knative.dev/hack v0.0.0-20241025103803-ef6e7e983a60/go.mod h1:R0ritgYtjLDO9527h5vb5X6gfvt5LCrJ55BNbVDsWiY=
 knative.dev/pkg v0.0.0-20241021183759-9b9d535af5ad h1:Nrjtr2H168rJeamH4QdyLMV1lEKHejNhaj1ymgQMfLk=
 knative.dev/pkg v0.0.0-20241021183759-9b9d535af5ad/go.mod h1:StJI72GWcm/iErmk4RqFJiOo8RLbVqPbHxUqeVwAzeo=
 sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd h1:EDPBXCAspyGV4jQlpZSudPeMmr1bNJefnuqLsRAsHZo=
