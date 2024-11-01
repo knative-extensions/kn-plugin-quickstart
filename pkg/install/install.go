@@ -54,7 +54,7 @@ func Kourier() error {
 
 // KourierKind runs the kind-specific setup for Kourier
 func KourierKind() error {
-	fmt.Println("🕸 Configuring Kourier for Kind...")
+	fmt.Println("🕸️ Configuring Kourier for Kind...")
 
 	config := `apiVersion: v1
 kind: Service
@@ -93,7 +93,7 @@ spec:
 
 // KourierMinikube runs the minikube-specific setup for Kourier
 func KourierMinikube() error {
-	fmt.Println("🕸 Configuring Kourier for Minikube...")
+	fmt.Println("🕸️ Configuring Kourier for Minikube...")
 
 	if err := retryingApply("https://github.com/knative/serving/releases/download/knative-v" + ServingVersion + "/serving-default-domain.yaml"); err != nil {
 		return fmt.Errorf("default domain: %w", err)
