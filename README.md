@@ -6,7 +6,7 @@
 
 ## Getting Started
 
-Note: In order to use the `quickstart` plugin, you must install the [Kubernetes CLI `kubectl`](https://kubernetes.io/docs/tasks/tools/install-kubectl) and either [`kind`](https://kind.sigs.k8s.io/docs/user/quick-start) or [`minikube`](https://minikube.sigs.k8s.io/docs/start/). If you want to install the Apache Camel K option you also need the [`helm`](https://helm.sh/) CLI.
+Note: In order to use the `quickstart` plugin, you must install the [Kubernetes CLI `kubectl`](https://kubernetes.io/docs/tasks/tools/install-kubectl) and either [`kind`](https://kind.sigs.k8s.io/docs/user/quick-start) or [`minikube`](https://minikube.sigs.k8s.io/docs/start/).
 
 ### Installation
 
