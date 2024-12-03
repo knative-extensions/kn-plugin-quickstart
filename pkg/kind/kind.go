@@ -342,7 +342,7 @@ func recreateCluster(registry bool, extraMountHostPath string, extraMountContain
 	if err := deleteContainerRegistry(dcli); err != nil {
 		return fmt.Errorf("delete container registry: %w", err)
 	}
-	if err := createNewCluster(extraMountHostPath, extraMountContainerPath); err != nil {
+	if err := createNewCluster(registry, extraMountHostPath, extraMountContainerPath); err != nil {
 		return fmt.Errorf("new cluster: %w", err)
 	}
 	if registry {
@@ -357,7 +357,18 @@ func recreateCluster(registry bool, extraMountHostPath string, extraMountContain
 }
 
 // createNewCluster creates a new Kind cluster
-func createNewCluster(extraMountHostPath string, extraMountContainerPath string) error {
+func createNewCluster(registry bool, extraMountHostPath string, extraMountContainerPath string) error {
+	insecureRegistry := ""
+	if registry {
+		insecureRegistry = `
+    [plugins."io.containerd.grpc.v1.cri".registry.mirrors]
+      [plugins."io.containerd.grpc.v1.cri".registry.mirrors."kind-registry:5000"]
+        endpoint = ["http://kind-registry:5000"]
+    [plugins."io.containerd.grpc.v1.cri".registry.configs]
+      [plugins."io.containerd.grpc.v1.cri".registry.configs."kind-registry:5000".tls]
+        insecure_skip_verify = true`
+	}
+
 	extraMount := ""
 	if extraMountHostPath != "" && extraMountContainerPath != "" {
 		extraMount = fmt.Sprintf(`
@@ -379,14 +390,14 @@ name: %s
 containerdConfigPatches:
 - |-
   [plugins."io.containerd.grpc.v1.cri".registry]
-    config_path = "/etc/containerd/certs.d/"
+    config_path = "/etc/containerd/certs.d/" %s
 nodes:
 - role: control-plane
   image: %s %s
   extraPortMappings:
   - containerPort: 31080
     listenAddress: 0.0.0.0
-    hostPort: 80`, clusterName, kubernetesVersion, extraMount)
+    hostPort: 80`, clusterName, insecureRegistry, kubernetesVersion, extraMount)
 
 	createCluster := exec.Command("kind", "create", "cluster", "--wait=120s", "--config=-")
 	createCluster.Stdin = strings.NewReader(config)
