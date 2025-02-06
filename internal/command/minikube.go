@@ -53,7 +53,7 @@ func NewMinikubeCommand() *cobra.Command {
 
 	minikubeCmd.Flags().StringVar(
 		&registryPort,
-		"registry-port",
+		"registryPort",
 		"",
 		"Local registry port to expose inside Minikube",
 	)
