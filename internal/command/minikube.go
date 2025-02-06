@@ -67,7 +67,7 @@ func NewMinikubeCommand() *cobra.Command {
 		&extraMountContainerPath,
 		"extraMountContainerPath",
 		"",
-		"Container path inside Minikube for the extra mount (e.g. /poly)",
+		"Container path inside Minikube for the extra mount (e.g. /foo)",
 	)
 
 	return minikubeCmd
