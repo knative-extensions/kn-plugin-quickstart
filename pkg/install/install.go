@@ -30,13 +30,13 @@ var EventingVersion string
 func Kourier() error {
 	fmt.Println("🕸️ Installing Kourier networking layer v" + KourierVersion + " ...")
 
-	if err := retryingApply("https://github.com/knative-sandbox/net-kourier/releases/download/knative-v" + KourierVersion + "/kourier.yaml"); err != nil {
+	if err := RetryingApply("https://github.com/knative-sandbox/net-kourier/releases/download/knative-v" + KourierVersion + "/kourier.yaml"); err != nil {
 		return fmt.Errorf("wait: %w", err)
 	}
-	if err := waitForPodsReady("kourier-system"); err != nil {
+	if err := WaitForPodsReady("kourier-system"); err != nil {
 		return fmt.Errorf("kourier: %w", err)
 	}
-	if err := waitForPodsReady("knative-serving"); err != nil {
+	if err := WaitForPodsReady("knative-serving"); err != nil {
 		return fmt.Errorf("serving: %w", err)
 	}
 	fmt.Println("    Kourier installed...")
@@ -95,10 +95,10 @@ spec:
 func KourierMinikube() error {
 	fmt.Println("🕸 Configuring Kourier for Minikube...")
 
-	if err := retryingApply("https://github.com/knative/serving/releases/download/knative-v" + ServingVersion + "/serving-default-domain.yaml"); err != nil {
+	if err := RetryingApply("https://github.com/knative/serving/releases/download/knative-v" + ServingVersion + "/serving-default-domain.yaml"); err != nil {
 		return fmt.Errorf("default domain: %w", err)
 	}
-	if err := waitForPodsReady("knative-serving"); err != nil {
+	if err := WaitForPodsReady("knative-serving"); err != nil {
 		return fmt.Errorf("core: %w", err)
 	}
 
@@ -108,12 +108,14 @@ func KourierMinikube() error {
 	return nil
 }
 
+// https://github.com/knative/serving/releases/download/knative-v1.16.0/serving-default-domain.yaml
+
 // Serving installs Knative Serving from Github YAML files
 func Serving(registries string) error {
 	fmt.Println("🍿 Installing Knative Serving v" + ServingVersion + " ...")
 	baseURL := "https://github.com/knative/serving/releases/download/knative-v" + ServingVersion
 
-	if err := retryingApply(baseURL + "/serving-crds.yaml"); err != nil {
+	if err := RetryingApply(baseURL + "/serving-crds.yaml"); err != nil {
 		return fmt.Errorf("wait: %w", err)
 	}
 
@@ -122,11 +124,11 @@ func Serving(registries string) error {
 	}
 	fmt.Println("    CRDs installed...")
 
-	if err := retryingApply(baseURL + "/serving-core.yaml"); err != nil {
+	if err := RetryingApply(baseURL + "/serving-core.yaml"); err != nil {
 		return fmt.Errorf("wait: %w", err)
 	}
 
-	if err := waitForPodsReady("knative-serving"); err != nil {
+	if err := WaitForPodsReady("knative-serving"); err != nil {
 		return fmt.Errorf("core: %w", err)
 	}
 
@@ -151,7 +153,7 @@ func Eventing() error {
 	fmt.Println("🔥 Installing Knative Eventing v" + EventingVersion + " ... ")
 	baseURL := "https://github.com/knative/eventing/releases/download/knative-v" + EventingVersion
 
-	if err := retryingApply(baseURL + "/eventing-crds.yaml"); err != nil {
+	if err := RetryingApply(baseURL + "/eventing-crds.yaml"); err != nil {
 		return fmt.Errorf("wait: %w", err)
 	}
 
@@ -160,29 +162,29 @@ func Eventing() error {
 	}
 	fmt.Println("    CRDs installed...")
 
-	if err := retryingApply(baseURL + "/eventing-core.yaml"); err != nil {
+	if err := RetryingApply(baseURL + "/eventing-core.yaml"); err != nil {
 		return fmt.Errorf("wait: %w", err)
 	}
 
-	if err := waitForPodsReady("knative-eventing"); err != nil {
+	if err := WaitForPodsReady("knative-eventing"); err != nil {
 		return fmt.Errorf("core: %w", err)
 	}
 	fmt.Println("    Core installed...")
 
-	if err := retryingApply(baseURL + "/in-memory-channel.yaml"); err != nil {
+	if err := RetryingApply(baseURL + "/in-memory-channel.yaml"); err != nil {
 		return fmt.Errorf("wait: %w", err)
 	}
 
-	if err := waitForPodsReady("knative-eventing"); err != nil {
+	if err := WaitForPodsReady("knative-eventing"); err != nil {
 		return fmt.Errorf("channel: %w", err)
 	}
 	fmt.Println("    In-memory channel installed...")
 
-	if err := retryingApply(baseURL + "/mt-channel-broker.yaml"); err != nil {
+	if err := RetryingApply(baseURL + "/mt-channel-broker.yaml"); err != nil {
 		return fmt.Errorf("wait: %w", err)
 	}
 
-	if err := waitForPodsReady("knative-eventing"); err != nil {
+	if err := WaitForPodsReady("knative-eventing"); err != nil {
 		return fmt.Errorf("broker: %w", err)
 	}
 	fmt.Println("    Mt-channel broker installed...")
@@ -213,9 +215,9 @@ func runCommand(c *exec.Cmd) error {
 	return nil
 }
 
-// retryingApply retries a kubectl apply call with the given path 3 times, sleeping
+// RetryingApply retries a kubectl apply call with the given path 3 times, sleeping
 // for 10s between each try.
-func retryingApply(path string) error {
+func RetryingApply(path string) error {
 	cmd := exec.Command("kubectl", "apply", "-f", path)
 	var err error
 	for i := 0; i < 3; i++ {
@@ -233,7 +235,7 @@ func waitForCRDsEstablished() error {
 	return runCommand(exec.Command("kubectl", "wait", "--for=condition=Established", "--all", "crd"))
 }
 
-// waitForPodsReady waits for all pods in the given namespace to be ready.
-func waitForPodsReady(ns string) error {
+// WaitForPodsReady waits for all pods in the given namespace to be ready.
+func WaitForPodsReady(ns string) error {
 	return runCommand(exec.Command("kubectl", "wait", "pod", "--timeout=10m", "--for=condition=Ready", "-l", "!job-name", "-n", ns))
 }

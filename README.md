@@ -71,6 +71,9 @@ Set up a local Knative cluster using [Minikube](https://minikube.sigs.k8s.io/):
 
 ```bash
 kn quickstart minikube
+
+# OR with extra mount
+kn-quickstart minikube --extraMountHostPath /home/myname/foo --extraMountContainerPath /foo
 ```
 
 Note: for Windows/Mac users, after the above command completes, you will need to run the following in a separate terminal window:

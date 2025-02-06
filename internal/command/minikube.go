@@ -24,19 +24,51 @@ import (
 
 // NewMinikubeCommand implements 'kn quickstart minikube' command
 func NewMinikubeCommand() *cobra.Command {
+	var registryPort string
+	var extraMountHostPath string
+	var extraMountContainerPath string
 
 	var minikubeCmd = &cobra.Command{
 		Use:   "minikube",
 		Short: "Quickstart with Minikube",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			fmt.Println("Running Knative Quickstart using Minikube")
-			return minikube.SetUp(name, kubernetesVersion, installServing, installEventing)
+			return minikube.SetUp(
+				name,
+				kubernetesVersion,
+				installServing,
+				installEventing,
+				registryPort,
+				extraMountHostPath,
+				extraMountContainerPath,
+			)
 		},
 	}
-	// Set minikubeCmd options
+
+	// Existing flags
 	clusterNameOption(minikubeCmd, "knative")
 	kubernetesVersionOption(minikubeCmd, "", "kubernetes version to use (1.x.y)")
 	installServingOption(minikubeCmd)
 	installEventingOption(minikubeCmd)
+
+	minikubeCmd.Flags().StringVar(
+		&registryPort,
+		"registry-port",
+		"",
+		"Local registry port to expose inside Minikube",
+	)
+	minikubeCmd.Flags().StringVar(
+		&extraMountHostPath,
+		"extraMountHostPath",
+		"",
+		"Host path to mount into Minikube (e.g. /Users/.../server-functions)",
+	)
+	minikubeCmd.Flags().StringVar(
+		&extraMountContainerPath,
+		"extraMountContainerPath",
+		"",
+		"Container path inside Minikube for the extra mount (e.g. /poly)",
+	)
+
 	return minikubeCmd
 }
