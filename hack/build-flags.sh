@@ -26,10 +26,21 @@ function build_flags() {
   fi
   # Knative component versions
   local branch="`git branch --show-current | cut -d '-' -s -f2`"
-  local serving="`git ls-remote --tags --ref https://github.com/knative/serving.git | grep -F "${branch}" | cut -d '-' -f2 | cut -d 'v' -f2 | sort -Vr | head -n 1`"
   local kourier="`git ls-remote --tags --ref https://github.com/knative-sandbox/net-kourier.git | grep -F "${branch}" | cut -d '-' -f2 | cut -d 'v' -f2 | sort -Vr | head -n 1`"
   local eventing="`git ls-remote --tags --ref https://github.com/knative/eventing.git | grep -F "${branch}" | cut -d '-' -f2 | cut -d 'v' -f2 | sort -Vr | head -n 1`"
 
+  local serving="$(
+    git ls-remote --tags --refs https://github.com/knative/serving.git \
+    | awk -F'/' '{print $NF}' \
+    | grep -Eo 'v[0-9]+\.[0-9]+\.[0-9]+' \
+    | sort -Vr \
+    | head -n 1 \
+    | sed 's/^v//' || echo '1.17.0'
+  )"
+
+  if [[ -z "$serving" ]]; then
+    serving="1.17.0"
+  fi
 
   echo "-X '${VERSION_PACKAGE}.BuildDate=${now}' -X ${VERSION_PACKAGE}.Version=${version} -X ${VERSION_PACKAGE}.GitRevision=${rev} -X ${COMPONENT_PACKAGE}.ServingVersion=${serving} -X ${COMPONENT_PACKAGE}.KourierVersion=${kourier} -X ${COMPONENT_PACKAGE}.EventingVersion=${eventing}"
 }
