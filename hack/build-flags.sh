@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # Copyright 2021 The Knative Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,18 +25,36 @@ function build_flags() {
     [[ -n "${commit}" ]] || (echo "error getting the current commit" && exit 1)
     version="v$(date +%Y%m%d)-local-${commit}"
   fi
-  # Knative component versions
-  local branch="`git branch --show-current | cut -d '-' -s -f2`"
-  local kourier="`git ls-remote --tags --ref https://github.com/knative-sandbox/net-kourier.git | grep -F "${branch}" | cut -d '-' -f2 | cut -d 'v' -f2 | sort -Vr | head -n 1`"
-  local eventing="`git ls-remote --tags --ref https://github.com/knative/eventing.git | grep -F "${branch}" | cut -d '-' -f2 | cut -d 'v' -f2 | sort -Vr | head -n 1`"
 
+  # Knative component versions
+  # For net-kourier:
+  local kourier="$(
+    git ls-remote --tags --refs https://github.com/knative-sandbox/net-kourier.git \
+      | awk -F'/' '{print $NF}' \
+      | grep -Eo 'v[0-9]+\.[0-9]+\.[0-9]+' \
+      | sort -Vr \
+      | head -n 1 \
+      | sed 's/^v//' || echo '1.17.0'
+  )"
+
+  # For knative eventing:
+  local eventing="$(
+    git ls-remote --tags --refs https://github.com/knative/eventing.git \
+      | awk -F'/' '{print $NF}' \
+      | grep -Eo 'v[0-9]+\.[0-9]+\.[0-9]+' \
+      | sort -Vr \
+      | head -n 1 \
+      | sed 's/^v//' || echo '1.17.2'
+  )"
+
+  # For knative serving:
   local serving="$(
     git ls-remote --tags --refs https://github.com/knative/serving.git \
-    | awk -F'/' '{print $NF}' \
-    | grep -Eo 'v[0-9]+\.[0-9]+\.[0-9]+' \
-    | sort -Vr \
-    | head -n 1 \
-    | sed 's/^v//' || echo '1.17.0'
+      | awk -F'/' '{print $NF}' \
+      | grep -Eo 'v[0-9]+\.[0-9]+\.[0-9]+' \
+      | sort -Vr \
+      | head -n 1 \
+      | sed 's/^v//' || echo '1.17.0'
   )"
 
   if [[ -z "$serving" ]]; then
