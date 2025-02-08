@@ -50,6 +50,7 @@ var config = MinikubeConfig{
 }
 
 var domain = config.exposeIp + ".nip.io"
+var defaultRegistryPort = "5000"
 
 // SetUp creates a local Minikube cluster and installs all the relevant Knative components
 func SetUp(
@@ -80,13 +81,13 @@ func SetUp(
 		config.clusterVersionOverride = true
 	}
 
-	if err := createMinikubeCluster(registryPort, extraMountHostPath, extraMountContainerPath); err != nil {
+	if err := createMinikubeCluster(extraMountHostPath, extraMountContainerPath); err != nil {
 		return fmt.Errorf("❌ creating cluster: %w", err)
 	}
 
 	fmt.Println()
 
-	if err := enableMinikubeAddon("registry"); err != nil {
+	if err := enableRegistryAddon(registryPort); err != nil {
 		return fmt.Errorf("❌ enabling registry addon: %w", err)
 	}
 
@@ -181,14 +182,13 @@ func kourierMinikube() error {
 }
 
 func createMinikubeCluster(
-	registryPort string,
 	extraMountHostPath string,
 	extraMountContainerPath string,
 ) error {
 	if err := checkMinikubeVersion(); err != nil {
 		return fmt.Errorf("❌ minikube version: %w", err)
 	}
-	if err := checkForExistingCluster(registryPort, extraMountHostPath, extraMountContainerPath); err != nil {
+	if err := checkForExistingCluster(extraMountHostPath, extraMountContainerPath); err != nil {
 		return fmt.Errorf("❌ existing cluster: %w", err)
 	}
 	return nil
@@ -221,7 +221,6 @@ func checkMinikubeVersion() error {
 }
 
 func checkForExistingCluster(
-	registryPort string,
 	extraMountHostPath string,
 	extraMountContainerPath string,
 ) error {
@@ -255,18 +254,17 @@ func checkForExistingCluster(
 					config.installKnative = false
 					return nil
 				} else {
-					return recreateCluster(registryPort, extraMountHostPath, extraMountContainerPath)
+					return recreateCluster(extraMountHostPath, extraMountContainerPath)
 				}
 			}
 			return nil
 		}
-		return recreateCluster(registryPort, extraMountHostPath, extraMountContainerPath)
+		return recreateCluster(extraMountHostPath, extraMountContainerPath)
 	}
-	return createNewCluster(registryPort, extraMountHostPath, extraMountContainerPath)
+	return createNewCluster(extraMountHostPath, extraMountContainerPath)
 }
 
 func createNewCluster(
-	registryPort string,
 	extraMountHostPath string,
 	extraMountContainerPath string,
 ) error {
@@ -305,13 +303,6 @@ func createNewCluster(
 		"--extra-config=apiserver.service-node-port-range=1-65535",
 	)
 
-	if registryPort != "" {
-		createClusterCmd.Args = append(
-			createClusterCmd.Args,
-			"--ports="+registryPort+":"+registryPort,
-		)
-	}
-
 	// If extra mount paths are specified, pass them to minikube.
 	if extraMountHostPath != "" && extraMountContainerPath != "" {
 		createClusterCmd.Args = append(
@@ -338,7 +329,6 @@ func createNewCluster(
 }
 
 func recreateCluster(
-	registryPort string,
 	extraMountHostPath string,
 	extraMountContainerPath string,
 ) error {
@@ -347,7 +337,7 @@ func recreateCluster(
 	if err := deleteCluster.Run(); err != nil {
 		return fmt.Errorf("❌ delete cluster: %w", err)
 	}
-	if err := createNewCluster(registryPort, extraMountHostPath, extraMountContainerPath); err != nil {
+	if err := createNewCluster(extraMountHostPath, extraMountContainerPath); err != nil {
 		return fmt.Errorf("❌ new cluster: %w", err)
 	}
 	return nil
@@ -406,11 +396,31 @@ func setupMinikubeRegistryHelper() error {
 	return nil
 }
 
-func enableMinikubeAddon(addon string) error {
-	cmd := exec.Command("minikube", "addons", "enable", addon, "--profile", config.clusterName)
+func enableRegistryAddon(registryPort string) error {
+	fmt.Printf("🔌 Enabling registry addon with port %s...\n", registryPort)
+
+	cmd := exec.Command("minikube", "addons", "enable", "registry", "--profile", config.clusterName)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	return cmd.Run()
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("❌ failed to enable registry addon: %v", err)
+	}
+
+	if registryPort != defaultRegistryPort {
+		patchPayload := fmt.Sprintf(
+			`[{"op": "replace", "path": "/spec/template/spec/containers/0/ports/0/hostPort", "value": %s}]`,
+			registryPort,
+		)
+		fmt.Printf("🔧 Patching registry-proxy daemonset to host port %s...\n", registryPort)
+		patchCmd := exec.Command("kubectl", "-n", "kube-system", "patch", "daemonset", "registry-proxy", "--type=json", "-p", patchPayload)
+		patchCmd.Stdout = os.Stdout
+		patchCmd.Stderr = os.Stderr
+		if err := patchCmd.Run(); err != nil {
+			return fmt.Errorf("❌ failed to patch registry-proxy daemonset: %v", err)
+		}
+	}
+
+	return nil
 }
 
 func retryCommand(cmd *exec.Cmd, maxRetries int, delay time.Duration) error {
