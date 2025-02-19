@@ -121,7 +121,7 @@ github.com/spf13/cobra
 # github.com/spf13/jwalterweatherman v1.1.0
 ## explicit
 github.com/spf13/jwalterweatherman
-# github.com/spf13/pflag v1.0.5
+# github.com/spf13/pflag v1.0.6
 ## explicit; go 1.12
 github.com/spf13/pflag
 # github.com/spf13/viper v1.16.0
@@ -170,11 +170,11 @@ go.opentelemetry.io/otel/metric/noop
 ## explicit; go 1.22
 go.opentelemetry.io/otel/trace
 go.opentelemetry.io/otel/trace/embedded
-# golang.org/x/sys v0.29.0
+# golang.org/x/sys v0.30.0
 ## explicit; go 1.18
 golang.org/x/sys/unix
 golang.org/x/sys/windows
-# golang.org/x/text v0.21.0
+# golang.org/x/text v0.22.0
 ## explicit; go 1.18
 golang.org/x/text/encoding
 golang.org/x/text/encoding/internal
@@ -184,10 +184,10 @@ golang.org/x/text/internal/utf8internal
 golang.org/x/text/runes
 golang.org/x/text/transform
 golang.org/x/text/unicode/norm
-# google.golang.org/genproto/googleapis/api v0.0.0-20241015192408-796eee8c2d53
-## explicit; go 1.21
-# google.golang.org/genproto/googleapis/rpc v0.0.0-20241015192408-796eee8c2d53
-## explicit; go 1.21
+# google.golang.org/genproto/googleapis/api v0.0.0-20250207221924-e9438ea467c6
+## explicit; go 1.22
+# google.golang.org/genproto/googleapis/rpc v0.0.0-20250207221924-e9438ea467c6
+## explicit; go 1.22
 # gopkg.in/ini.v1 v1.67.0
 ## explicit
 gopkg.in/ini.v1
@@ -202,8 +202,8 @@ gotest.tools/v3/internal/assert
 gotest.tools/v3/internal/difflib
 gotest.tools/v3/internal/format
 gotest.tools/v3/internal/source
-# k8s.io/apimachinery v0.31.4
-## explicit; go 1.22.0
+# k8s.io/apimachinery v0.32.2
+## explicit; go 1.23.0
 k8s.io/apimachinery/pkg/util/runtime
 k8s.io/apimachinery/pkg/util/wait
 # k8s.io/klog/v2 v2.130.1
@@ -215,13 +215,13 @@ k8s.io/klog/v2/internal/dbg
 k8s.io/klog/v2/internal/serialize
 k8s.io/klog/v2/internal/severity
 k8s.io/klog/v2/internal/sloghandler
-# k8s.io/utils v0.0.0-20240921022957-49e7df575cb6
+# k8s.io/utils v0.0.0-20241210054802-24370beab758
 ## explicit; go 1.18
 k8s.io/utils/clock
-# knative.dev/client/pkg v0.0.0-20250123014217-178db3230101
-## explicit; go 1.22.7
+# knative.dev/client/pkg v0.0.0-20250219014457-a051025a49ee
+## explicit; go 1.23.0
 knative.dev/client/pkg/config
 knative.dev/client/pkg/plugin
-# knative.dev/hack v0.0.0-20250116150306-c142b4835bc5
+# knative.dev/hack v0.0.0-20250219013704-306ce745e077
 ## explicit; go 1.21
 knative.dev/hack
