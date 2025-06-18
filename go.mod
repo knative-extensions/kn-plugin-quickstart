@@ -8,7 +8,7 @@ require (
 	github.com/hashicorp/hcl v1.0.1-vault-5
 	github.com/spf13/cobra v1.8.1
 	gotest.tools/v3 v3.3.0
-	knative.dev/client/pkg v0.0.0-20250424014425-1e24794f765f
+	knative.dev/client/pkg v0.0.0-20250617200959-1c3b47ce739a
 	knative.dev/hack v0.0.0-20250514121446-f525e187efdc
 
 )
@@ -46,13 +46,13 @@ require (
 	go.opentelemetry.io/otel/metric v1.31.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.31.0 // indirect
 	go.opentelemetry.io/otel/trace v1.31.0 // indirect
-	golang.org/x/sys v0.32.0 // indirect
-	golang.org/x/text v0.24.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20250207221924-e9438ea467c6 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250207221924-e9438ea467c6 // indirect
+	golang.org/x/sys v0.33.0 // indirect
+	golang.org/x/text v0.26.0 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20250324211829-b45e905df463 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250324211829-b45e905df463 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/apimachinery v0.32.2 // indirect
+	k8s.io/apimachinery v0.33.1 // indirect
 	k8s.io/klog/v2 v2.130.1 // indirect
 	k8s.io/utils v0.0.0-20241210054802-24370beab758 // indirect
 )
