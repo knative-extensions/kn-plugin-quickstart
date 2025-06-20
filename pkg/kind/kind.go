@@ -68,7 +68,7 @@ func SetUp(name, kVersion string, installServing, installEventing, installKindRe
 	}
 
 	if err := createKindCluster(installKindRegistry, installKindExtraMountHostPath, installKindExtraMountContainerPath); err != nil {
-		return fmt.Errorf("creating cluster: %w", err)
+		return fmt.Errorf("error creating kind cluster: %w", err)
 	}
 	if installKnative {
 		if installServing {
@@ -80,18 +80,18 @@ func SetUp(name, kVersion string, installServing, installEventing, installKindRe
 				registries = fmt.Sprintf("localhost:%s", container_reg_port)
 			}
 			if err := install.Serving(registries); err != nil {
-				return fmt.Errorf("install serving: %w", err)
+				return fmt.Errorf("error installing serving to kind cluster %s: %w", clusterName, err)
 			}
 			if err := install.Kourier(); err != nil {
-				return fmt.Errorf("install kourier: %w", err)
+				return fmt.Errorf("error installing kourier to kind cluster %s: %w", clusterName, err)
 			}
 			if err := install.KourierKind(); err != nil {
-				return fmt.Errorf("configure kourier: %w", err)
+				return fmt.Errorf("error configuring kourier for kind cluster %s: %w", clusterName, err)
 			}
 		}
 		if installEventing {
 			if err := install.Eventing(); err != nil {
-				return fmt.Errorf("install eventing: %w", err)
+				return fmt.Errorf("error installing eventing to king cluster %s: %w", clusterName, err)
 			}
 		}
 	}
@@ -109,7 +109,7 @@ func createKindCluster(registry bool, extraMountHostPath string, extraMountConta
 	}
 	fmt.Println("✅ Checking dependencies...")
 	if err := checkKindVersion(); err != nil {
-		return fmt.Errorf("kind version: %w", err)
+		return fmt.Errorf("error checking kind version: %w", err)
 	}
 	if registry {
 		fmt.Println("💽 Installing local registry...")
@@ -127,7 +127,7 @@ func createKindCluster(registry bool, extraMountHostPath string, extraMountConta
 	}
 
 	if err := checkForExistingCluster(registry, extraMountHostPath, extraMountContainerPath); err != nil {
-		return fmt.Errorf("existing cluster: %w", err)
+		return fmt.Errorf("error while handling or checking for existing kind cluster: %w", err)
 	}
 
 	return nil
@@ -237,13 +237,13 @@ func checkKindVersion() error {
 	versionCheck := exec.Command("kind", "version", "-q")
 	out, err := versionCheck.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("kind version: %w", err)
+		return fmt.Errorf("failed to get kind version: %w", err)
 	}
 	fmt.Printf("    Kind version is: %s", string(out))
 
 	userKindVersion, err := parseKindVersion(string(out))
 	if err != nil {
-		return fmt.Errorf("parsing kind version: %w", err)
+		return fmt.Errorf("error parsing kind version: %w", err)
 	}
 	if userKindVersion < kindVersion {
 		var resp string
@@ -267,7 +267,7 @@ func checkForExistingCluster(registry bool, extraMountHostPath string, extraMoun
 	getClusters := exec.Command("kind", "get", "clusters", "-q")
 	out, err := getClusters.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("check cluster: %w", err)
+		return fmt.Errorf("failed to get kind clusters: %w", err)
 	}
 	// TODO Add tests for regex
 	r := regexp.MustCompile(fmt.Sprintf(`(?m)^%s\n`, clusterName))
@@ -278,7 +278,7 @@ func checkForExistingCluster(registry bool, extraMountHostPath string, extraMoun
 		fmt.Scanf("%s", &resp)
 		if resp == "y" || resp == "Y" {
 			if err := recreateCluster(registry, extraMountHostPath, extraMountContainerPath); err != nil {
-				return fmt.Errorf("new cluster: %w", err)
+				return fmt.Errorf("error while recreating kind cluster %s: %w", clusterName, err)
 			}
 		} else {
 			fmt.Println("\n    Installation skipped")
@@ -287,14 +287,14 @@ func checkForExistingCluster(registry bool, extraMountHostPath string, extraMoun
 			namespaces := string(output)
 			if err != nil {
 				fmt.Println(string(output))
-				return fmt.Errorf("check existing cluster: %w", err)
+				return fmt.Errorf("unable to get kubernetes namspaces for kind cluster %s: %w", clusterName, err)
 			}
 			if strings.Contains(namespaces, "knative") {
 				fmt.Print("Knative installation already exists.\nDelete and recreate the cluster [y/N]: ")
 				fmt.Scanf("%s", &resp)
 				if resp == "y" || resp == "Y" {
 					if err := recreateCluster(registry, extraMountHostPath, extraMountContainerPath); err != nil {
-						return fmt.Errorf("new cluster: %w", err)
+						return fmt.Errorf("failed to recreate kind cluster: %w", err)
 					}
 				} else {
 					fmt.Println("Skipping installation")
@@ -307,11 +307,11 @@ func checkForExistingCluster(registry bool, extraMountHostPath string, extraMoun
 	} else {
 		dcli, err := dclient.NewClientWithOpts(dclient.FromEnv, dclient.WithAPIVersionNegotiation())
 		if err != nil {
-			return fmt.Errorf("new cluster: %w", err)
+			return fmt.Errorf("error initializing new api client: %w", err)
 		}
 
 		if err := createNewCluster(extraMountHostPath, extraMountContainerPath); err != nil {
-			return fmt.Errorf("new cluster: %w", err)
+			return fmt.Errorf("%w", err)
 		}
 		if registry {
 			if err := createLocalRegistry(dcli); err != nil {
@@ -332,25 +332,25 @@ func recreateCluster(registry bool, extraMountHostPath string, extraMountContain
 
 	dcli, err := dclient.NewClientWithOpts(dclient.FromEnv, dclient.WithAPIVersionNegotiation())
 	if err != nil {
-		return fmt.Errorf("delete cluster: %w", err)
+		return fmt.Errorf("error initializing new api client: %w", err)
 	}
 
 	deleteCluster := exec.Command("kind", "delete", "cluster", "--name", clusterName)
 	if err := deleteCluster.Run(); err != nil {
-		return fmt.Errorf("delete cluster: %w", err)
+		return fmt.Errorf("failed to delete kind cluster %s: %w", clusterName, err)
 	}
 	if err := deleteContainerRegistry(dcli); err != nil {
-		return fmt.Errorf("delete container registry: %w", err)
+		return fmt.Errorf("failed to delete container registry: %w", err)
 	}
 	if err := createNewCluster(extraMountHostPath, extraMountContainerPath); err != nil {
-		return fmt.Errorf("new cluster: %w", err)
+		return fmt.Errorf("%w", err)
 	}
 	if registry {
 		if err := createLocalRegistry(dcli); err != nil {
 			return fmt.Errorf("%w", err)
 		}
 		if err := connectLocalRegistry(dcli); err != nil {
-			return fmt.Errorf("local-registry: %w", err)
+			return fmt.Errorf("error while connecting local-registry: %w", err)
 		}
 	}
 	return nil
@@ -391,7 +391,7 @@ nodes:
 	createCluster := exec.Command("kind", "create", "cluster", "--wait=120s", "--config=-")
 	createCluster.Stdin = strings.NewReader(config)
 	if err := runCommandWithOutput(createCluster); err != nil {
-		return fmt.Errorf("kind create: %w", err)
+		return fmt.Errorf("failed to create kind cluster %s: %w", clusterName, err)
 	}
 
 	return nil
