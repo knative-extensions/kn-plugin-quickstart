@@ -59,7 +59,7 @@ func SetUp(name, kVersion string, installServing, installEventing bool) error {
 	}
 
 	if err := createMinikubeCluster(); err != nil {
-		return fmt.Errorf("creating cluster: %w", err)
+		return fmt.Errorf("failed to create minikube cluster: %w", err)
 	}
 	fmt.Print("\n")
 	fmt.Println("To finish setting up networking for minikube, run the following command in a separate terminal window:")
@@ -70,18 +70,18 @@ func SetUp(name, kVersion string, installServing, installEventing bool) error {
 	if installKnative {
 		if installServing {
 			if err := install.Serving(""); err != nil {
-				return fmt.Errorf("install serving: %w", err)
+				return fmt.Errorf("failed to install serving to minikube cluster %s: %w", clusterName, err)
 			}
 			if err := install.Kourier(); err != nil {
-				return fmt.Errorf("install kourier: %w", err)
+				return fmt.Errorf("failed to install kourier to minikube cluster %s: %w", clusterName, err)
 			}
 			if err := install.KourierMinikube(); err != nil {
-				return fmt.Errorf("configure kourier: %w", err)
+				return fmt.Errorf("failed while configuring kourier for minikube cluster %s: %w", clusterName, err)
 			}
 		}
 		if installEventing {
 			if err := install.Eventing(); err != nil {
-				return fmt.Errorf("install eventing: %w", err)
+				return fmt.Errorf("failed to install eventing to minikube cluster %s: %w", clusterName, err)
 			}
 		}
 	}
@@ -95,10 +95,10 @@ func SetUp(name, kVersion string, installServing, installEventing bool) error {
 
 func createMinikubeCluster() error {
 	if err := checkMinikubeVersion(); err != nil {
-		return fmt.Errorf("minikube version: %w", err)
+		return fmt.Errorf("unable to get minikube version: %w", err)
 	}
 	if err := checkForExistingCluster(); err != nil {
-		return fmt.Errorf("existing cluster: %w", err)
+		return fmt.Errorf("failure while handling or checking for existing minikube cluster: %w", err)
 	}
 	return nil
 }
@@ -109,13 +109,13 @@ func checkMinikubeVersion() error {
 	versionCheck := exec.Command("minikube", "version", "--short")
 	out, err := versionCheck.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("minikube version: %w", err)
+		return fmt.Errorf("unable to check minikube version: %w", err)
 	}
 	fmt.Printf("Minikube version is: %s\n", string(out))
 
 	userMinikubeVersion, err := parseMinikubeVersion(string(out))
 	if err != nil {
-		return fmt.Errorf("parsing minikube version: %w", err)
+		return fmt.Errorf("unable to parse minikube version: %w", err)
 	}
 	if userMinikubeVersion < minikubeVersion {
 		var resp string
@@ -143,7 +143,7 @@ func checkForExistingCluster() error {
 		// if there were no profiles, we simply want to create a new one and not stop the install
 		// so if the error is the "MK_USAGE_NO_PROFILE" error, we ignore it and continue onwards
 		if !strings.Contains(string(out), "MK_USAGE_NO_PROFILE") {
-			return fmt.Errorf("check cluster: %w", err)
+			return fmt.Errorf("failed to get existing minikube profiles: %w", err)
 		}
 	}
 	// TODO Add tests for regex
@@ -160,7 +160,7 @@ func checkForExistingCluster() error {
 			namespaces := string(output)
 			if err != nil {
 				fmt.Println(string(output))
-				return fmt.Errorf("check existing cluster: %w", err)
+				return fmt.Errorf("unable to get existing kubernetes namespaces for minikube cluster %s: %w", clusterName, err)
 			}
 			if strings.Contains(namespaces, "knative") {
 				fmt.Print("Knative installation already exists.\nDelete and recreate the cluster [y/N]: ")
@@ -171,20 +171,20 @@ func checkForExistingCluster() error {
 					return nil
 				} else {
 					if err := recreateCluster(); err != nil {
-						return fmt.Errorf("failed recreating cluster: %w", err)
+						return fmt.Errorf("failed while recreating minikube cluster: %w", err)
 					}
 				}
 			}
 			return nil
 		}
 		if err := recreateCluster(); err != nil {
-			return fmt.Errorf("failed recreating cluster: %w", err)
+			return fmt.Errorf("failed while recreating minikube cluster: %w", err)
 		}
 		return nil
 	}
 
 	if err := createNewCluster(); err != nil {
-		return fmt.Errorf("new cluster: %w", err)
+		return fmt.Errorf("%w", err)
 	}
 
 	return nil
@@ -223,7 +223,7 @@ func createNewCluster() error {
 		"--insecure-registry", "10.0.0.0/24",
 		"--addons=registry")
 	if err := runCommandWithOutput(createCluster); err != nil {
-		return fmt.Errorf("minikube create: %w", err)
+		return fmt.Errorf("failed to create new minikube cluster %s: %w", clusterName, err)
 	}
 
 	return nil
@@ -264,10 +264,10 @@ func recreateCluster() error {
 	fmt.Println("deleting cluster...")
 	deleteCluster := exec.Command("minikube", "delete", "--profile", clusterName)
 	if err := deleteCluster.Run(); err != nil {
-		return fmt.Errorf("delete cluster: %w", err)
+		return fmt.Errorf("failed to delete minikube cluster %s: %w", clusterName, err)
 	}
 	if err := createNewCluster(); err != nil {
-		return fmt.Errorf("new cluster: %w", err)
+		return fmt.Errorf("%w", err)
 	}
 	return nil
 }
