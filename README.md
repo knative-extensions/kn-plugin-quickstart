@@ -50,11 +50,6 @@ Set up a local Knative cluster using [KinD](https://kind.sigs.k8s.io/):
 ``` bash
 kn quickstart kind
 ```
-Kind can be configured with a [local container image registry](https://kind.sigs.k8s.io/docs/user/local-registry/) by passing the `--registry` flag:
-
-```bash
-kn quickstart kind --registry
-```
 
 Note: we automatically configure tag resolution for the local registry when this flag is passed
 
@@ -89,6 +84,28 @@ Once you've set up your development environment, you can build the plugin by run
 git clone git@github.com:knative-sandbox/kn-plugin-quickstart.git
 cd kn-plugin-quickstart
 ./hack/build.sh
+```
+
+## Using local registry on Kind
+
+Kind can be configured with a [local container image registry](https://kind.sigs.k8s.io/docs/user/local-registry/) by passing the `--registry` flag:
+
+```bash
+kn quickstart kind --registry
+```
+
+You can pull or build an image:
+
+```bash
+docker build -t <image-name>:<tag> .
+docker pull ghcr.io/knative/helloworld-go:latest
+```
+
+Then tag it and push to the registry:
+
+```bash
+docker tag ghcr.io/knative/helloworld-go:latest localhost:5001/helloworld-go:latest
+docker push localhost:5001/helloworld-go:latest
 ```
 
 ## Using the Nightlies
