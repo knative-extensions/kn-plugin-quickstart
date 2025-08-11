@@ -86,7 +86,7 @@ cd kn-plugin-quickstart
 ./hack/build.sh
 ```
 
-## Using local registry
+## Using local registry on Kind
 
 Kind can be configured with a [local container image registry](https://kind.sigs.k8s.io/docs/user/local-registry/) by passing the `--registry` flag:
 
