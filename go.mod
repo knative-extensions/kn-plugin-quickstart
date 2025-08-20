@@ -8,8 +8,8 @@ require (
 	github.com/hashicorp/hcl v1.0.1-vault-5
 	github.com/spf13/cobra v1.8.1
 	gotest.tools/v3 v3.3.0
-	knative.dev/client/pkg v0.0.0-20250813022541-2223b312d118
-	knative.dev/hack v0.0.0-20250708013849-70d4b00da6ba
+	knative.dev/client/pkg v0.0.0-20250819140350-7b015276c35a
+	knative.dev/hack v0.0.0-20250819212547-d496a6e708d3
 
 )
 
@@ -53,7 +53,7 @@ require (
 	google.golang.org/grpc v1.71.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/apimachinery v0.33.1 // indirect
+	k8s.io/apimachinery v0.33.4 // indirect
 	k8s.io/klog/v2 v2.130.1 // indirect
 	k8s.io/utils v0.0.0-20241210054802-24370beab758 // indirect
 )
