@@ -33,7 +33,13 @@ import (
 	"knative.dev/kn-plugin-quickstart/pkg/install"
 )
 
-var kubernetesVersion = "kindest/node:v1.31.6"
+// NOTE: If you are changing kubernetesVersion and kindVersion, please also
+// update the kubectl and kind versions listed here:
+// https://github.com/knative-extensions/kn-plugin-quickstart/blob/main/README.md
+//
+// NOTE: Latest minimum k8 version needed for knative can be found here:
+// https://github.com/knative/pkg/blob/main/version/version.go#L36
+var kubernetesVersion = "kindest/node:v1.32.0"
 var clusterName string
 var kindVersion = 0.26
 var container_reg_name = "kind-registry"
