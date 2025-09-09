@@ -6,7 +6,11 @@
 
 ## Getting Started
 
-Note: In order to use the `quickstart` plugin, you must install the [Kubernetes CLI `kubectl`](https://kubernetes.io/docs/tasks/tools/install-kubectl) and either [`kind`](https://kind.sigs.k8s.io/docs/user/quick-start) or [`minikube`](https://minikube.sigs.k8s.io/docs/start/).
+In order to use the `quickstart` plugin, you must install:
+
+* [Kubernetes CLI `kubectl`](https://kubernetes.io/docs/tasks/tools/install-kubectl) (1.32.0 or later).
+* [`kind`](https://kind.sigs.k8s.io/docs/user/quick-start) (0.26 or later).
+* Or [`minikube`](https://minikube.sigs.k8s.io/docs/start/) (1.35 or later).
 
 ### Installation
 
@@ -16,15 +20,15 @@ There are two ways to run `kn quickstart`:
 
 1. You can run it standalone, just put it on your system path and make sure it is executable.
 2. You can install it as a plugin of the `kn` client to run:
-    * Follow the [documentation](https://github.com/knative/client/blob/main/docs/README.md#installing-kn) to install `kn client` if you don't have it
-    * Copy the `kn-quickstart` binary to a directory on your `PATH` (for example, `/usr/local/bin`) and make sure its filename is `kn-quickstart`
-    * Run `kn plugin list` to verify that the `kn-quickstart` plugin is installed successfully
+    * Follow the [documentation](https://github.com/knative/client/blob/main/docs/README.md#installing-kn) to install `kn client` if you don't have it.
+    * Copy the `kn-quickstart` binary to a directory on your `PATH` (for example, `/usr/local/bin`) and make sure its filename is `kn-quickstart`.
+    * Run `kn plugin list` to verify that the `kn-quickstart` plugin is installed successfully.
 
 After the plugin is installed, you can use `kn quickstart` to run its related subcommands.
 
 ## Usage
 
-```
+```txt
 Get up and running with a local Knative environment
 
 Usage:
@@ -47,7 +51,7 @@ Use "kn-quickstart [command] --help" for more information about a command.
 
 Set up a local Knative cluster using [KinD](https://kind.sigs.k8s.io/):
 
-``` bash
+```bash
 kn quickstart kind
 ```
 
@@ -58,7 +62,6 @@ Kind can also be configured with an [extra mount](https://kind.sigs.k8s.io/docs/
 ```bash
 kn quickstart kind --extraMountHostPath /home/myname/foo --extraMountContainerPath /foo
 ```
-
 
 ### Quickstart with Minikube
 
@@ -76,7 +79,7 @@ minikube tunnel --profile minikube-knative
 
 ## Building from Source
 
-You must [set up your development environment](https://github.com/knative/client/blob/master/docs/DEVELOPMENT.md#prerequisites) before you build `kn-plugin-quickstart`.
+You must [set up your development environment](https://github.com/knative/client/blob/main/DEVELOPMENT.md#prerequisites) before you build `kn-plugin-quickstart`.
 
 Once you've set up your development environment, you can build the plugin by running the following commands:
 
@@ -112,9 +115,8 @@ docker push localhost:5001/helloworld-go:latest
 
 You can grab the latest nightly binary executable for:
 
-- [macOS](https://storage.googleapis.com/knative-nightly/kn-plugin-quickstart/latest/kn-quickstart-darwin-amd64)
-- [Linux](https://storage.googleapis.com/knative-nightly/kn-plugin-quickstart/latest/kn-quickstart-linux-amd64)
-- [Windows](https://storage.googleapis.com/knative-nightly/kn-plugin-quickstart/latest/kn-quickstart-windows-amd64.exe)
+* [macOS](https://storage.googleapis.com/knative-nightly/kn-plugin-quickstart/latest/kn-quickstart-darwin-amd64)
+* [Linux](https://storage.googleapis.com/knative-nightly/kn-plugin-quickstart/latest/kn-quickstart-linux-amd64)
+* [Windows](https://storage.googleapis.com/knative-nightly/kn-plugin-quickstart/latest/kn-quickstart-windows-amd64.exe)
 
 Add the binary to the system PATH and ensure that it is executable.
-
