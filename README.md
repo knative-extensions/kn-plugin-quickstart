@@ -94,6 +94,14 @@ cd kn-plugin-quickstart
 ./hack/build.sh
 ```
 
+> **Note:** You can also build the plugin with pinned versions.
+``` bash
+SERVING_VERSION=1.19.6 \
+EVENTING_VERSION=1.19.3 \
+KOURIER_VERSION=1.19.5 \
+hack/build.sh --fast
+```
+
 ## Using the Nightlies
 
 You can grab the latest nightly binary executable for:
