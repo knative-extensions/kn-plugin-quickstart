@@ -181,7 +181,17 @@ source_format() {
 
 go_build() {
   echo "🚧 Compile"
-  go build -mod=vendor -ldflags "$(build_flags $(basedir))" -o $PLUGIN "./$MAIN_SOURCE_DIR/..."
+  SERVING_VERSION_LDFLAG=""
+  KOURIER_VERSION_LDFLAG=""
+  EVENTING_VERSION_LDFLAG=""
+
+  [ -n "${SERVING_VERSION:-}" ]  && SERVING_VERSION_LDFLAG="-X ${COMPONENT_PACKAGE}.ServingVersion=${SERVING_VERSION}"
+  [ -n "${KOURIER_VERSION:-}" ]  && KOURIER_VERSION_LDFLAG="-X ${COMPONENT_PACKAGE}.KourierVersion=${KOURIER_VERSION}"
+  [ -n "${EVENTING_VERSION:-}" ] && EVENTING_VERSION_LDFLAG="-X ${COMPONENT_PACKAGE}.EventingVersion=${EVENTING_VERSION}"
+
+  go build -mod=vendor \
+  -ldflags "$(build_flags $(basedir)) ${SERVING_VERSION_LDFLAG} ${KOURIER_VERSION_LDFLAG} ${EVENTING_VERSION_LDFLAG}" \
+  -o $PLUGIN "./$MAIN_SOURCE_DIR/..."
 }
 
 go_test() {

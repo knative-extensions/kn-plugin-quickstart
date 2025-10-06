@@ -601,8 +601,21 @@ func installPrometheusCRDs() error {
 }
 
 func installPrometheusMonitoring() error {
-	const smURL = "https://raw.githubusercontent.com/knative-extensions/monitoring/main/servicemonitor.yaml"
-	fmt.Println("📊 Applying Knative ServiceMonitor bundle")
-	cmd := exec.Command("kubectl", "apply", "-f", smURL)
-	return runCommandWithOutput(cmd)
+	if err := exec.Command("kubectl", "get", "crd", "servicemonitors.monitoring.coreos.com", "-o", "name").Run(); err != nil {
+		return fmt.Errorf("ServiceMonitor CRD not found. Install Prometheus Operator (e.g. kube-prometheus-stack) before applying Knative monitors: %w", err)
+	}
+
+	urls := []string{
+		"https://raw.githubusercontent.com/knative-sandbox/monitoring/main/config/serving-monitors.yaml",
+		"https://raw.githubusercontent.com/knative-sandbox/monitoring/main/config/eventing-monitors.yaml",
+	}
+
+	fmt.Println("📊 Applying Knative ServiceMonitor manifests")
+	for _, u := range urls {
+		cmd := exec.Command("kubectl", "apply", "-f", u)
+		if err := runCommandWithOutput(cmd); err != nil {
+			return fmt.Errorf("applying %s: %w", u, err)
+		}
+	}
+	return nil
 }
