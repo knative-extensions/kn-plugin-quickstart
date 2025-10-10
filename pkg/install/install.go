@@ -132,6 +132,11 @@ func Serving(registries string) error {
 
 	fmt.Println("    Core installed...")
 
+	// Wait for webhook to be ready before attempting to patch configmaps
+	if err := waitForWebhookReady(); err != nil {
+		return fmt.Errorf("webhook: %w", err)
+	}
+
 	if registries != "" {
 		configPatch := fmt.Sprintf(`{"data":{"registries-skipping-tag-resolving":"%s"}}`, registries)
 		ignoreRegistry := exec.Command("kubectl", "patch", "configmap", "-n", "knative-serving", "config-deployment", "-p", configPatch)
@@ -236,4 +241,32 @@ func waitForCRDsEstablished() error {
 // waitForPodsReady waits for all pods in the given namespace to be ready.
 func waitForPodsReady(ns string) error {
 	return runCommand(exec.Command("kubectl", "wait", "pod", "--timeout=10m", "--for=condition=Ready", "-l", "!job-name", "-n", ns))
+}
+
+// waitForWebhookReady waits for the Knative Serving webhook to be ready.
+func waitForWebhookReady() error {
+	fmt.Println("    Waiting for webhook to be ready...")
+
+	// Retry for up to 2 minutes (12 attempts with 10s intervals)
+	for i := 0; i < 12; i++ {
+		// Check if the webhook pod is ready by looking specifically for the webhook deployment
+		checkWebhookDeployment := exec.Command("kubectl", "get", "deployment", "webhook", "-n", "knative-serving", "-o", "jsonpath={.status.readyReplicas}")
+
+		output, err := checkWebhookDeployment.CombinedOutput()
+		if err == nil {
+			// Convert output to string and trim whitespace
+			readyReplicas := strings.TrimSpace(string(output))
+
+			// If we have at least one ready replica, the webhook is considered ready
+			if readyReplicas != "" && readyReplicas != "0" {
+				fmt.Println("    Webhook is ready...")
+				return nil
+			}
+		}
+
+		fmt.Println("    Webhook not ready yet, waiting...")
+		time.Sleep(10 * time.Second)
+	}
+
+	return fmt.Errorf("timeout waiting for webhook to be ready")
 }
