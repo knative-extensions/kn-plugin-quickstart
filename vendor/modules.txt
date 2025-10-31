@@ -223,10 +223,10 @@ k8s.io/klog/v2/internal/sloghandler
 # k8s.io/utils v0.0.0-20241210054802-24370beab758
 ## explicit; go 1.18
 k8s.io/utils/clock
-# knative.dev/client/pkg v0.0.0-20251015022635-a57e38d8224c
+# knative.dev/client/pkg v0.0.0-20251030022238-b66b3da6ff01
 ## explicit; go 1.24.0
 knative.dev/client/pkg/config
 knative.dev/client/pkg/plugin
-# knative.dev/hack v0.0.0-20251015104416-f3f2ddfc1eac
+# knative.dev/hack v0.0.0-20251021013703-4fae78067103
 ## explicit; go 1.24
 knative.dev/hack
