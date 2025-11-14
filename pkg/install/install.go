@@ -248,20 +248,14 @@ func waitForWebhookReady() error {
 	fmt.Println("    Waiting for webhook to be ready...")
 
 	// Retry for up to 2 minutes (12 attempts with 10s intervals)
-	for i := 0; i < 12; i++ {
-		// Check if the webhook pod is ready by looking specifically for the webhook deployment
-		checkWebhookDeployment := exec.Command("kubectl", "get", "deployment", "webhook", "-n", "knative-serving", "-o", "jsonpath={.status.readyReplicas}")
+	for range 12 {
+		// Check if the webhook service has endpoints
+		checkEndpoints := exec.Command("kubectl", "get", "endpoints", "webhook", "-n", "knative-serving", "-o", "jsonpath={.subsets[*].addresses[*].ip}")
 
-		output, err := checkWebhookDeployment.CombinedOutput()
-		if err == nil {
-			// Convert output to string and trim whitespace
-			readyReplicas := strings.TrimSpace(string(output))
-
-			// If we have at least one ready replica, the webhook is considered ready
-			if readyReplicas != "" && readyReplicas != "0" {
-				fmt.Println("    Webhook is ready...")
-				return nil
-			}
+		output, err := checkEndpoints.CombinedOutput()
+		if err == nil && strings.TrimSpace(string(output)) != "" {
+			fmt.Println("    Webhook is ready...")
+			return nil
 		}
 
 		fmt.Println("    Webhook not ready yet, waiting...")
