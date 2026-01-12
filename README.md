@@ -55,8 +55,6 @@ Set up a local Knative cluster using [KinD](https://kind.sigs.k8s.io/):
 kn quickstart kind
 ```
 
-Note: we automatically configure tag resolution for the local registry when this flag is passed
-
 Kind can also be configured with an [extra mount](https://kind.sigs.k8s.io/docs/user/configuration#extra-mounts) so your containers can access files on your local machine.
 
 ```bash
@@ -96,6 +94,8 @@ Kind can be configured with a [local container image registry](https://kind.sigs
 ```bash
 kn quickstart kind --registry
 ```
+
+Note: we automatically configure tag resolution for the local registry when this flag is passed
 
 You can pull or build an image:
 
