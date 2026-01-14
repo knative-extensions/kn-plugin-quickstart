@@ -249,10 +249,15 @@ func waitForWebhookReady() error {
 
 	// Retry for up to 2 minutes (12 attempts with 10s intervals)
 	for range 12 {
-		// Check if the webhook service has endpoints
-		checkEndpoints := exec.Command("kubectl", "get", "endpoints", "webhook", "-n", "knative-serving", "-o", "jsonpath={.subsets[*].addresses[*].ip}")
+		// Check if the webhook service has ready endpointslices
+		// NOTE: We use 'kubectl get' instead of 'kubectl wait' because kubectl wait's JSONPath
+		// doesn't support checking if ANY endpoint is ready (wildcard [*] fails with multiple endpoints)
+		checkEndpointSlices := exec.Command("kubectl", "get", "endpointslice",
+			"-l", "kubernetes.io/service-name=webhook",
+			"-n", "knative-serving",
+			"-o", "jsonpath={.items[*].endpoints[?(@.conditions.ready==true)]}")
 
-		output, err := checkEndpoints.CombinedOutput()
+		output, err := checkEndpointSlices.CombinedOutput()
 		if err == nil && strings.TrimSpace(string(output)) != "" {
 			fmt.Println("    Webhook is ready...")
 			return nil
