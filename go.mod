@@ -8,7 +8,7 @@ require (
 	github.com/hashicorp/hcl v1.0.1-vault-5
 	github.com/spf13/cobra v1.9.1
 	gotest.tools/v3 v3.5.2
-	knative.dev/client/pkg v0.0.0-20260120174010-ce3d8fd535e2
+	knative.dev/client/pkg v0.0.0-20260128022831-382000a93f17
 	knative.dev/hack v0.0.0-20260120115810-bf6758cba446
 )
 
