@@ -68,6 +68,12 @@ Set up a local Knative cluster using [Minikube](https://minikube.sigs.k8s.io/):
 ```bash
 kn quickstart minikube
 ```
+> [!TIP]
+> If you want to use custom minikube flags not included in the command, append them after `--`, for Example:
+> ```bash
+> kn quickstart minikube -- --ports 5000
+> ```
+> Most recent values will take precedent
 
 Note: for Windows/Mac users, after the above command completes, you will need to run the following in a separate terminal window:
 
