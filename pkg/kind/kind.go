@@ -36,15 +36,14 @@ import (
 // NOTE: If you are changing kubernetesVersion and kindVersion, please also
 // update the kubectl and kind versions listed here:
 // https://github.com/knative-extensions/kn-plugin-quickstart/blob/main/README.md
-//
-// NOTE: Latest minimum k8 version needed for knative can be found here:
-// https://github.com/knative/pkg/blob/main/version/version.go#L36
-var kubernetesVersion = "kindest/node:v1.32.0"
-var clusterName string
-var kindVersion = 0.26
-var container_reg_name = "kind-registry"
-var container_reg_port = "5001"
-var installKnative = true
+var (
+	kubernetesVersion  = ""
+	clusterName        string
+	kindVersion        = 0.26
+	container_reg_name = "kind-registry"
+	container_reg_port = "5001"
+	installKnative     = true
+)
 
 // SetUp creates a local Kind cluster and installs all the relevant Knative components
 func SetUp(name, kVersion string, installServing, installEventing, installKindRegistry bool, installKindExtraMountHostPath string, installKindExtraMountContainerPath string) error {
@@ -239,7 +238,6 @@ data:
 // checkKindVersion validates that the user has the correct version of Kind installed.
 // If not, it prompts the user to download a newer version before continuing.
 func checkKindVersion() error {
-
 	versionCheck := exec.Command("kind", "version", "-q")
 	out, err := versionCheck.CombinedOutput()
 	if err != nil {
@@ -366,8 +364,7 @@ func recreateCluster(registry bool, extraMountHostPath string, extraMountContain
 func createNewCluster(extraMountHostPath string, extraMountContainerPath string) error {
 	extraMount := ""
 	if extraMountHostPath != "" && extraMountContainerPath != "" {
-		extraMount = fmt.Sprintf(`
-  extraMounts:
+		extraMount = fmt.Sprintf(`extraMounts:
   - hostPath: %s
     containerPath: %s`, extraMountHostPath, extraMountContainerPath)
 	}
@@ -376,6 +373,11 @@ func createNewCluster(extraMountHostPath string, extraMountContainerPath string)
 		fmt.Println("☸ Creating Kind cluster...")
 	} else {
 		fmt.Println("☸ Creating Kind cluster with extraMounts...")
+	}
+
+	imageString := ""
+	if kubernetesVersion != "" {
+		imageString = fmt.Sprintf(`image: %s`, kubernetesVersion)
 	}
 
 	config := fmt.Sprintf(`
@@ -388,11 +390,12 @@ containerdConfigPatches:
     config_path = "/etc/containerd/certs.d/"
 nodes:
 - role: control-plane
-  image: %s %s
+  %s
+  %s
   extraPortMappings:
   - containerPort: 31080
     listenAddress: 0.0.0.0
-    hostPort: 80`, clusterName, kubernetesVersion, extraMount)
+    hostPort: 80`, clusterName, imageString, extraMount)
 
 	createCluster := exec.Command("kind", "create", "cluster", "--wait=120s", "--config=-")
 	createCluster.Stdin = strings.NewReader(config)
