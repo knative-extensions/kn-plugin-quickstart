@@ -19,6 +19,7 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -39,9 +40,10 @@ var minikubeVersion = 1.35
 var cpus = "3"
 var memory = "3072"
 var installKnative = true
+var customMinikubeArgs = []string{}
 
 // SetUp creates a local Minikube cluster and installs all the relevant Knative components
-func SetUp(name, kVersion string, installServing, installEventing bool) error {
+func SetUp(name, kVersion string, installServing, installEventing bool, minikubeArgs []string) error {
 	start := time.Now()
 
 	// if neither the "install-serving" or "install-eventing" flags are set,
@@ -59,6 +61,26 @@ func SetUp(name, kVersion string, installServing, installEventing bool) error {
 	}
 
 	clusterName = name
+	if len(minikubeArgs) > 0 {
+		customMinikubeArgs = minikubeArgs
+		// check custom flags for name, as that takes precedent and affects functionality the most (most recent)
+		for i, arg := range slices.Backward(minikubeArgs) {
+			customArg, value := parseArg(arg)
+			if customArg == "-p" || customArg == "--profile" {
+				// use value from equal sign if it is there
+				if value != "" {
+					clusterName = value
+				} else if i+1 >= len(customMinikubeArgs) {
+					// edge case, but continue if not filled in and let minikube throw an error for empty arg
+					continue
+				} else {
+					clusterName = customMinikubeArgs[i+1]
+				}
+				break
+			}
+		}
+	}
+
 	if kVersion != "" {
 		kubernetesVersion = kVersion
 		clusterVersionOverride = true
@@ -189,7 +211,7 @@ func checkForExistingCluster() error {
 		return nil
 	}
 
-	if err := createNewCluster(); err != nil {
+	if err := createNewCluster(customMinikubeArgs); err != nil {
 		return fmt.Errorf("%w", err)
 	}
 
@@ -197,7 +219,7 @@ func checkForExistingCluster() error {
 }
 
 // createNewCluster creates a new Minikube cluster
-func createNewCluster() error {
+func createNewCluster(minikubeArgs []string) error {
 	fmt.Println("☸ Creating Minikube cluster...")
 
 	if !clusterVersionOverride {
@@ -228,6 +250,11 @@ func createNewCluster() error {
 		"--wait", "all",
 		"--insecure-registry", "10.0.0.0/24",
 		"--addons=registry")
+
+	if len(minikubeArgs) > 0 {
+		createCluster.Args = append(createCluster.Args, minikubeArgs...)
+	}
+
 	if err := runCommandWithOutput(createCluster); err != nil {
 		return fmt.Errorf("failed to create new minikube cluster %s: %w", clusterName, err)
 	}
@@ -272,8 +299,17 @@ func recreateCluster() error {
 	if err := deleteCluster.Run(); err != nil {
 		return fmt.Errorf("failed to delete minikube cluster %s: %w", clusterName, err)
 	}
-	if err := createNewCluster(); err != nil {
+	if err := createNewCluster(customMinikubeArgs); err != nil {
 		return fmt.Errorf("%w", err)
 	}
 	return nil
+}
+
+func parseArg(arg string) (string, string) {
+	if strings.Contains(arg, "=") {
+		parts := strings.Split(arg, "=")
+		return parts[0], parts[1]
+	}
+
+	return arg, ""
 }
