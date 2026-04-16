@@ -225,6 +225,6 @@ k8s.io/utils/clock
 ## explicit; go 1.25.0
 knative.dev/client/pkg/config
 knative.dev/client/pkg/plugin
-# knative.dev/hack v0.0.0-20260415132636-9909d690ab4d
+# knative.dev/hack v0.0.0-20260415233235-54d1312ccc91
 ## explicit; go 1.24
 knative.dev/hack
