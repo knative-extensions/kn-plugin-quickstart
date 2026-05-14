@@ -28,7 +28,7 @@ func NewKindCommand() *cobra.Command {
 		Short: "Quickstart with Kind",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			fmt.Println("Running Knative Quickstart using Kind")
-			return kind.SetUp(name, kubernetesVersion, installServing, installEventing, installKindRegistry, installKindExtraMountHostPath, installKindExtraMountContainerPath)
+			return kind.SetUp(name, kubernetesVersion, installServing, installEventing, installKindRegistry, installKindExtraMountHostPath, installKindExtraMountContainerPath, kindHostPort)
 		},
 	}
 	// Set kindCmd options
@@ -39,6 +39,7 @@ func NewKindCommand() *cobra.Command {
 	installKindRegistryOption(kindCmd)
 	installKindExtraMountHostPathOption(kindCmd)
 	installKindExtraMountContainerPathOption(kindCmd)
+	kindHostPortOption(kindCmd)
 
 	return kindCmd
 }

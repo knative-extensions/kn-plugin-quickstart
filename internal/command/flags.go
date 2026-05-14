@@ -27,6 +27,7 @@ var installEventing bool
 var installKindRegistry bool
 var installKindExtraMountHostPath string
 var installKindExtraMountContainerPath string
+var kindHostPort int
 
 func clusterNameOption(targetCmd *cobra.Command, flagDefault string) {
 	targetCmd.Flags().StringVarP(
@@ -65,4 +66,8 @@ func installKindExtraMountHostPathOption(targetCmd *cobra.Command) {
 
 func installKindExtraMountContainerPathOption(targetCmd *cobra.Command) {
 	targetCmd.Flags().StringVarP(&installKindExtraMountContainerPath, "extraMountContainerPath", "", "", "set the extraMount containerPath on Kind quickstart cluster")
+}
+
+func kindHostPortOption(targetCmd *cobra.Command) {
+	targetCmd.Flags().IntVar(&kindHostPort, "host-port", 80, "host port to expose Kourier ingress on (use a non-privileged port >=1024 for rootless container runtimes like Podman)")
 }
