@@ -61,6 +61,31 @@ Kind can also be configured with an [extra mount](https://kind.sigs.k8s.io/docs/
 kn quickstart kind --extraMountHostPath /home/myname/foo --extraMountContainerPath /foo
 ```
 
+#### Using a non-privileged host port (Podman / rootless runtimes)
+
+By default, Kourier ingress is exposed on host port `80`. Rootless container runtimes like Podman on macOS cannot bind privileged ports (`<1024`) without additional setup, which causes cluster creation to fail with `rootlessport cannot expose privileged port 80`.
+
+Use `--host-port` to pick an unprivileged port instead:
+
+```bash
+kn quickstart kind --host-port 8080
+```
+
+When you use a non-default host port, the URL Knative prints for a Service (e.g. `http://hello.default.127.0.0.1.sslip.io`) will not include the port. You'll need to add it yourself when calling the service:
+
+```bash
+URL=$(kubectl get ksvc hello -o jsonpath='{.status.url}')
+HOST=${URL#http://}
+curl -H "Host: ${HOST}" http://127.0.0.1:8080
+```
+
+To use Podman, you'll also want to make sure the Podman socket is reachable and tell Kind to use the Podman provider:
+
+```bash
+unset DOCKER_HOST   # if set to a path inside the Podman VM
+export KIND_EXPERIMENTAL_PROVIDER=podman
+```
+
 ### Quickstart with Minikube
 
 Set up a local Knative cluster using [Minikube](https://minikube.sigs.k8s.io/):

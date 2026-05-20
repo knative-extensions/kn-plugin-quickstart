@@ -195,7 +195,7 @@ go_test() {
     reset="[39m"
   fi
 
-  echo "🧪 ${X}Test"
+  echo "🧪 Test"
   set +e
   go test -v ./pkg/... >$test_output 2>&1
   local err=$?
@@ -209,7 +209,7 @@ go_test() {
 }
 
 check_license() {
-  echo "⚖️ ${S}License"
+  echo "⚖️ License"
   local required_keywords=("Authors" "Apache License" "LICENSE-2.0")
   local extensions_to_check=("sh" "go" "yaml" "yml" "json")
 
@@ -284,7 +284,7 @@ cross_build() {
   local ld_flags="$(build_flags $basedir)"
   local failed=0
 
-  echo "⚔️ ${S}Compile"
+  echo "⚔️ Compile"
 
   export CGO_ENABLED=0
   echo "   🐧 ${PLUGIN}-linux-amd64"
@@ -295,27 +295,6 @@ cross_build() {
   GOOS=windows GOARCH=amd64 go build -mod=vendor -ldflags "${ld_flags}" -o ./${PLUGIN}-windows-amd64.exe "./$MAIN_SOURCE_DIR/..." || failed=1
 
   return ${failed}
-}
-
-# Spaced fillers needed for certain emojis in certain terminals
-S=""
-X=""
-
-# Calculate space fixing variables S and X
-apply_emoji_fixes() {
-  # Temporary fix for iTerm issue https://gitlab.com/gnachman/iterm2/issues/7901
-  if [ -n "${ITERM_PROFILE:-}" ]; then
-    S=" "
-    # This issue has been fixed with iTerm2 3.3.7, so let's check for this
-    # We can remove this code altogether if iTerm2 3.3.7 is in common usage everywhere
-    if [ -n "${TERM_PROGRAM_VERSION}" ]; then
-      args=$(echo $TERM_PROGRAM_VERSION | sed -e 's#[^0-9]*\([0-9]*\)[.]\([0-9]*\)[.]\([0-9]*\)\([0-9A-Za-z-]*\)#\1 \2 \3#')
-      expanded=$(printf '%03d%03d%03d' $args)
-      if [ $expanded -lt "003003007" ]; then
-        X=" "
-      fi
-    fi
-  fi
 }
 
 # Display a help message.
@@ -357,8 +336,5 @@ if $(has_flag --debug); then
     export PS4='+($(basename ${BASH_SOURCE[0]}):${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
     set -x
 fi
-
-# Fixe emoji labels for certain terminals
-apply_emoji_fixes
 
 run $*
