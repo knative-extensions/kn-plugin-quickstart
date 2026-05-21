@@ -8,9 +8,9 @@
 
 In order to use the `quickstart` plugin, you must install:
 
-* [Kubernetes CLI `kubectl`](https://kubernetes.io/docs/tasks/tools/install-kubectl) (1.32.0 or later).
-* [`kind`](https://kind.sigs.k8s.io/docs/user/quick-start) (0.26 or later).
-* Or [`minikube`](https://minikube.sigs.k8s.io/docs/start/) (1.35 or later).
+* [Kubernetes CLI `kubectl`](https://kubernetes.io/docs/tasks/tools/install-kubectl) (1.34.0 or later).
+* [`kind`](https://kind.sigs.k8s.io/docs/user/quick-start) (0.30 or later).
+* Or [`minikube`](https://minikube.sigs.k8s.io/docs/start/) (1.37 or later).
 
 ### Installation
 
