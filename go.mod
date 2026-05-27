@@ -7,7 +7,7 @@ require (
 	github.com/docker/go-connections v0.5.0
 	github.com/spf13/cobra v1.10.0
 	gotest.tools/v3 v3.5.2
-	knative.dev/client/pkg v0.0.0-20260521025326-0e8c8cd30b12
+	knative.dev/client/pkg v0.0.0-20260527024141-9584f25b469c
 	knative.dev/hack v0.0.0-20260428014158-b2a37f1b6e7b
 )
 
@@ -45,7 +45,7 @@ require (
 	go.opentelemetry.io/otel/metric v1.43.0 // indirect
 	go.opentelemetry.io/otel/trace v1.43.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
-	golang.org/x/sys v0.44.0 // indirect
+	golang.org/x/sys v0.45.0 // indirect
 	golang.org/x/text v0.37.0 // indirect
 	k8s.io/apimachinery v0.35.5 // indirect
 	k8s.io/klog/v2 v2.130.1 // indirect
