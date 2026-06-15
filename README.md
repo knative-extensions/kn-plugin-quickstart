@@ -89,7 +89,7 @@ You must [set up your development environment](https://github.com/knative/client
 Once you've set up your development environment, you can build the plugin by running the following commands:
 
 ``` bash
-git clone git@github.com:knative-sandbox/kn-plugin-quickstart.git
+gh repo clone polyapi/kn-plugin-quickstart
 cd kn-plugin-quickstart
 ./hack/build.sh
 ```
