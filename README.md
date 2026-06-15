@@ -1,26 +1,46 @@
 # kn-plugin-quickstart
 
-**[This component is BETA](https://github.com/knative/community/tree/main/mechanics/MATURITY-LEVELS.md)**
-
 `kn-plugin-quickstart` is a plugin of the Knative Client, to enable users to quickly set up a local Knative environment from the command line.
 
 ## Getting Started
 
-Note: In order to use the `quickstart` plugin, you must install the [Kubernetes CLI `kubectl`](https://kubernetes.io/docs/tasks/tools/install-kubectl) and either [`kind`](https://kind.sigs.k8s.io/docs/user/quick-start) or [`minikube`](https://minikube.sigs.k8s.io/docs/start/).
+On Mac first run these commands:
 
-### Installation
+```sh
+brew install kubectl
+brew install minikube 
+brew install knative/client/kn
+```
 
-You can download the latest binaries from the [Releases](https://github.com/knative-sandbox/kn-plugin-quickstart/releases) page.
+You will also need bash >=4. On mac, install the latest bash like so:
 
-There are two ways to run `kn quickstart`:
+```sh
+brew install go
+brew install bash
+# this assumes you use zsh as your default shell. replace with the shell of your choice!
+echo 'export PATH="$(brew --prefix)/bin:$PATH"' >> ~/.zshrc && source ~/.zshrc
+```
 
-1. You can run it standalone, just put it on your system path and make sure it is executable.
-2. You can install it as a plugin of the `kn` client to run:
-    * Follow the [documentation](https://github.com/knative/client/blob/main/docs/README.md#installing-kn) to install `kn client` if you don't have it
-    * Copy the `kn-quickstart` binary to a directory on your `PATH` (for example, `/usr/local/bin`) and make sure its filename is `kn-quickstart`
-    * Run `kn plugin list` to verify that the `kn-quickstart` plugin is installed successfully
+## Building from Source
 
-After the plugin is installed, you can use `kn quickstart` to run its related subcommands.
+You must build from source to get some custom PolyAPI kn plugin quickstart goodness.
+
+``` bash
+gh repo clone polyapi/kn-plugin-quickstart
+cd kn-plugin-quickstart
+./hack/build.sh
+chmod +x ./kn-quickstart
+# replace /usr/local/bin with your preferred bin, anywhere on your path should work, this is mac default
+sudo mv ./kn-quickstart /usr/local/bin/
+```
+
+> **Note:** You can also build the plugin with pinned versions.
+``` bash
+SERVING_VERSION=1.19.6 \
+EVENTING_VERSION=1.19.3 \
+KOURIER_VERSION=1.19.5 \
+hack/build.sh --fast
+```
 
 ## Usage
 
@@ -43,7 +63,28 @@ Flags:
 Use "kn-quickstart [command] --help" for more information about a command.
 ```
 
+### Quickstart with Minikube
+
+> `minikube` IS RECOMMENDED. `kind` is for advanced users.
+
+Set up a local Knative cluster using [Minikube](https://minikube.sigs.k8s.io/):
+
+```bash
+kn quickstart minikube
+
+# OR with extra mount
+kn-quickstart minikube --extraMountHostPath /home/myname/foo --extraMountContainerPath /foo
+```
+
+Note: for Windows/Mac users, after the above command completes, you will need to run the following in a separate terminal window:
+
+``` bash
+minikube tunnel --profile minikube-knative
+```
+
 ### Quickstart with KinD
+
+> `minikube` IS RECOMMENDED. `kind` is for advanced users.
 
 Set up a local Knative cluster using [KinD](https://kind.sigs.k8s.io/):
 
@@ -63,52 +104,3 @@ Kind can also be configured with an [extra mount](https://kind.sigs.k8s.io/docs/
 ```bash
 kn quickstart kind --extraMountHostPath /home/myname/foo --extraMountContainerPath /foo
 ```
-
-
-### Quickstart with Minikube
-
-Set up a local Knative cluster using [Minikube](https://minikube.sigs.k8s.io/):
-
-```bash
-kn quickstart minikube
-
-# OR with extra mount
-kn-quickstart minikube --extraMountHostPath /home/myname/foo --extraMountContainerPath /foo
-```
-
-Note: for Windows/Mac users, after the above command completes, you will need to run the following in a separate terminal window:
-
-``` bash
-minikube tunnel --profile minikube-knative
-```
-
-## Building from Source
-
-You must [set up your development environment](https://github.com/knative/client/blob/master/docs/DEVELOPMENT.md#prerequisites) before you build `kn-plugin-quickstart`.
-
-Once you've set up your development environment, you can build the plugin by running the following commands:
-
-``` bash
-gh repo clone polyapi/kn-plugin-quickstart
-cd kn-plugin-quickstart
-./hack/build.sh
-```
-
-> **Note:** You can also build the plugin with pinned versions.
-``` bash
-SERVING_VERSION=1.19.6 \
-EVENTING_VERSION=1.19.3 \
-KOURIER_VERSION=1.19.5 \
-hack/build.sh --fast
-```
-
-## Using the Nightlies
-
-You can grab the latest nightly binary executable for:
-
-- [macOS](https://storage.googleapis.com/knative-nightly/kn-plugin-quickstart/latest/kn-quickstart-darwin-amd64)
-- [Linux](https://storage.googleapis.com/knative-nightly/kn-plugin-quickstart/latest/kn-quickstart-linux-amd64)
-- [Windows](https://storage.googleapis.com/knative-nightly/kn-plugin-quickstart/latest/kn-quickstart-windows-amd64.exe)
-
-Add the binary to the system PATH and ensure that it is executable.
-

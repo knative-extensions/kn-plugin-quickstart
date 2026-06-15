@@ -7,7 +7,6 @@ require (
 	gotest.tools/v3 v3.3.0
 	knative.dev/client-pkg v0.0.0-20240424094157-2bc81392b680
 	knative.dev/hack v0.0.0-20240404013450-1133b37da8d7
-
 )
 
 require (
