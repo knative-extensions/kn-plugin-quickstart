@@ -127,6 +127,9 @@ func createMinikubeCluster() error {
 	if err := checkMinikubeVersion(); err != nil {
 		return fmt.Errorf("unable to get minikube version: %w", err)
 	}
+	if err := install.CheckKubectlVersion(); err != nil {
+		return fmt.Errorf("unable to check kubectl version: %w", err)
+	}
 	if err := checkForExistingCluster(); err != nil {
 		return fmt.Errorf("failure while handling or checking for existing minikube cluster: %w", err)
 	}

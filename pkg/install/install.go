@@ -16,10 +16,46 @@ package install
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
+	"regexp"
+	"strconv"
 	"strings"
 	"time"
 )
+
+// kubectlMinVersion is the minimum kubectl version we recommend. We gate on it
+// because waitForPodsReady relies on `kubectl wait --for=create` with a label
+// selector, which only works correctly on kubectl >= 1.33 (see
+// kubernetes/kubernetes#128662).
+//
+// kubectlMinVersion must match DefaultKubernetesMinVersion in
+// https://github.com/knative/pkg/blob/main/version/version.go (without the
+// leading "v"), matching the kind and minikube cluster versions. The
+// verify-min-k8s-version CI check enforces this. We only compare the major and
+// minor components at runtime; the patch component is kept so the literal
+// matches upstream's format for that check.
+var kubectlMinVersion = "1.34.0"
+
+// kubectlGitVersion matches the "vMAJOR.MINOR" prefix of kubectl's reported
+// git version, e.g. "v1.34.0" or "v1.33.2-eks-1234".
+var kubectlGitVersion = regexp.MustCompile(`^v?(\d+)\.(\d+)`)
+
+// kubectlMinMajor / kubectlMinMinor are parsed from kubectlMinVersion.
+var kubectlMinMajor, kubectlMinMinor = mustParseMinVersion(kubectlMinVersion)
+
+// mustParseMinVersion parses the leading MAJOR.MINOR out of kubectlMinVersion.
+// It panics on a malformed literal, which can only happen if kubectlMinVersion
+// is edited to an invalid value (a programming/CI error, caught by tests).
+func mustParseMinVersion(v string) (int, int) {
+	m := kubectlGitVersion.FindStringSubmatch(v)
+	if m == nil {
+		panic(fmt.Sprintf("kn-plugin-quickstart: malformed kubectlMinVersion %q", v))
+	}
+	major, _ := strconv.Atoi(m[1])
+	minor, _ := strconv.Atoi(m[2])
+	return major, minor
+}
 
 // Component versions are generated at buildtime via the hack/build.sh script
 var ServingVersion string
@@ -238,9 +274,83 @@ func waitForCRDsEstablished() error {
 	return runCommand(exec.Command("kubectl", "wait", "--for=condition=Established", "--all", "crd"))
 }
 
+// CheckKubectlVersion validates that the user has a recent enough version of
+// kubectl installed. If not, it warns the user and prompts them to continue,
+// mirroring the behavior of the kind and minikube version checks.
+func CheckKubectlVersion() error {
+	versionCheck := exec.Command("kubectl", "version", "--client", "-o", "json")
+	out, err := versionCheck.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("failed to get kubectl version: %w", err)
+	}
+
+	major, minor, err := parseKubectlVersion(string(out))
+	if err != nil {
+		return fmt.Errorf("unable to parse kubectl version: %w", err)
+	}
+	fmt.Printf("    kubectl version is: v%d.%d\n", major, minor)
+
+	if major < kubectlMinMajor || (major == kubectlMinMajor && minor < kubectlMinMinor) {
+		var resp string
+		fmt.Printf("WARNING: We recommend at least kubectl v%d.%d, while you are using v%d.%d\n", kubectlMinMajor, kubectlMinMinor, major, minor)
+		fmt.Println("You can download a newer version from https://kubernetes.io/docs/tasks/tools/install-kubectl")
+		fmt.Print("Continue anyway? (not recommended) [y/N]: ")
+		fmt.Scanf("%s", &resp)
+		if resp != "y" && resp != "Y" {
+			fmt.Println("Installation stopped. Please upgrade kubectl and run again")
+			os.Exit(0)
+		}
+	}
+
+	return nil
+}
+
+// parseKubectlVersion extracts the client major and minor version from the
+// JSON output of `kubectl version --client -o json`. It reads the gitVersion
+// field (e.g. "v1.34.0") rather than the major/minor fields, which some
+// distributions emit with non-numeric suffixes (e.g. minor "33+").
+func parseKubectlVersion(jsonOut string) (int, int, error) {
+	// Pull gitVersion out of the JSON without a full struct decode so we stay
+	// resilient to extra fields; fall back to matching any vX.Y in the blob.
+	gitVersion := ""
+	if idx := strings.Index(jsonOut, `"gitVersion"`); idx >= 0 {
+		rest := jsonOut[idx:]
+		if start := strings.Index(rest, `:`); start >= 0 {
+			rest = rest[start+1:]
+			if open := strings.Index(rest, `"`); open >= 0 {
+				rest = rest[open+1:]
+				if close := strings.Index(rest, `"`); close >= 0 {
+					gitVersion = rest[:close]
+				}
+			}
+		}
+	}
+
+	m := kubectlGitVersion.FindStringSubmatch(gitVersion)
+	if m == nil {
+		return 0, 0, fmt.Errorf("could not find a version in kubectl output: %q", gitVersion)
+	}
+	major, err := strconv.Atoi(m[1])
+	if err != nil {
+		return 0, 0, err
+	}
+	minor, err := strconv.Atoi(m[2])
+	if err != nil {
+		return 0, 0, err
+	}
+	return major, minor, nil
+}
+
 // waitForPodsReady waits for all pods in the given namespace to be ready.
+//
+// We pass both --for=create and --for=condition=Ready because kubectl wait
+// exits immediately with "no matching resources found" when no pods match the
+// selector yet (e.g. the deployment controller hasn't created them). --for=create
+// is always evaluated first, so this waits for the pods to appear and then for
+// them to become Ready. This requires kubectl >= 1.33 for label-selector waits,
+// which is within the versions this plugin already supports.
 func waitForPodsReady(ns string) error {
-	return runCommand(exec.Command("kubectl", "wait", "pod", "--timeout=10m", "--for=condition=Ready", "-l", "!job-name", "-n", ns))
+	return runCommand(exec.Command("kubectl", "wait", "pod", "--timeout=10m", "--for=create", "--for=condition=Ready", "-l", "!job-name", "-n", ns))
 }
 
 // waitForWebhookReady waits for the Knative Serving webhook to be ready.

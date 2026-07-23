@@ -120,6 +120,9 @@ func createKindCluster(registry bool, extraMountHostPath string, extraMountConta
 	if err := checkKindVersion(); err != nil {
 		return fmt.Errorf("unable to check kind version: %w", err)
 	}
+	if err := install.CheckKubectlVersion(); err != nil {
+		return fmt.Errorf("unable to check kubectl version: %w", err)
+	}
 	if registry {
 		fmt.Println("💽 Installing local registry...")
 		if err := pullLocalRegistryImage(dcli); err != nil {

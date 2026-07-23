@@ -14,11 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Verifies that the hardcoded Kubernetes minimum version in pkg/kind/kind.go
-# and pkg/minikube/minikube.go matches DefaultKubernetesMinVersion in the
-# version of knative.dev/pkg pinned in our go.sum. We keep a copy locally
-# rather than importing the package to avoid pulling in client-go and its
-# transitive dependency tree.
+# Verifies that the hardcoded Kubernetes minimum version in pkg/kind/kind.go,
+# pkg/minikube/minikube.go, and pkg/install/install.go (the recommended kubectl
+# version) matches DefaultKubernetesMinVersion in the version of knative.dev/pkg
+# pinned in our go.sum. We keep a copy locally rather than importing the package
+# to avoid pulling in client-go and its transitive dependency tree.
 #
 # If --write is passed, the script rewrites the local files in place when
 # they drift from upstream (used by the auto-bump workflow). Default is
@@ -61,27 +61,36 @@ kind_version="$(extract pkg/kind/kind.go \
   's/.*kubernetesVersion[[:space:]]*=[[:space:]]*"kindest\/node:v([0-9.]+)".*/\1/p')"
 minikube_version="$(extract pkg/minikube/minikube.go \
   's/.*kubernetesVersion[[:space:]]*=[[:space:]]*"([0-9.]+)".*/\1/p')"
+kubectl_version="$(extract pkg/install/install.go \
+  's/.*kubectlMinVersion[[:space:]]*=[[:space:]]*"([0-9.]+)".*/\1/p')"
 
+# Each entry is name:var:version:file, where var is the Go variable name holding
+# the version literal. The kind/minikube clusters and the kubectl-version gate in
+# pkg/install all track DefaultKubernetesMinVersion; keeping them in one loop means
+# a single upstream bump updates every site.
 fail=0
-for entry in "kind:$kind_version:pkg/kind/kind.go" "minikube:$minikube_version:pkg/minikube/minikube.go"; do
-  name="${entry%%:*}"
-  rest="${entry#*:}"
+for entry in \
+  "kind:kubernetesVersion:$kind_version:pkg/kind/kind.go" \
+  "minikube:kubernetesVersion:$minikube_version:pkg/minikube/minikube.go" \
+  "kubectl:kubectlMinVersion:$kubectl_version:pkg/install/install.go"; do
+  name="${entry%%:*}"; rest="${entry#*:}"
+  var="${rest%%:*}"; rest="${rest#*:}"
   local_version="${rest%%:*}"
   file="${rest#*:}"
   if [[ -z "$local_version" ]]; then
-    echo "ERROR: could not parse kubernetesVersion from $file" >&2
+    echo "ERROR: could not parse $var from $file" >&2
     fail=1
   elif [[ "$local_version" != "$upstream_version" ]]; then
     if [[ $WRITE -eq 1 ]]; then
-      sed -i.bak -E "s/(kubernetesVersion[[:space:]]*=[[:space:]]*\"(kindest\/node:v)?)${local_version}/\1${upstream_version}/" "$REPO_ROOT/$file"
+      sed -i.bak -E "s/(${var}[[:space:]]*=[[:space:]]*\"(kindest\/node:v)?)${local_version}/\1${upstream_version}/" "$REPO_ROOT/$file"
       rm -f "$REPO_ROOT/$file.bak"
-      echo "UPDATED: $name kubernetesVersion in $file: $local_version -> $upstream_version"
+      echo "UPDATED: $name $var in $file: $local_version -> $upstream_version"
     else
-      echo "ERROR: $name kubernetesVersion in $file is $local_version, upstream is $upstream_version (knative/pkg@$ref)" >&2
+      echo "ERROR: $name $var in $file is $local_version, upstream is $upstream_version (knative/pkg@$ref)" >&2
       fail=1
     fi
   else
-    echo "OK: $name kubernetesVersion ($local_version) matches upstream (knative/pkg@$ref)"
+    echo "OK: $name $var ($local_version) matches upstream (knative/pkg@$ref)"
   fi
 done
 
