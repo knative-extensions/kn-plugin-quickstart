@@ -5,9 +5,9 @@ go 1.25.0
 require (
 	github.com/docker/docker v27.2.1+incompatible
 	github.com/docker/go-connections v0.5.0
-	github.com/spf13/cobra v1.10.0
+	github.com/spf13/cobra v1.10.2
 	gotest.tools/v3 v3.5.2
-	knative.dev/client/pkg v0.0.0-20260821023028-cf7412af6fef
+	knative.dev/client/pkg v0.0.0-20260903093241-99038d94f543
 	knative.dev/hack v0.0.0-20260428014158-b2a37f1b6e7b
 )
 
@@ -47,7 +47,7 @@ require (
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	golang.org/x/sys v0.47.0 // indirect
 	golang.org/x/text v0.41.0 // indirect
-	k8s.io/apimachinery v0.35.7 // indirect
-	k8s.io/klog/v2 v2.130.1 // indirect
-	k8s.io/utils v0.0.0-20251002143259-bc988d571ff4 // indirect
+	k8s.io/apimachinery v0.35.8 // indirect
+	k8s.io/klog/v2 v2.140.0 // indirect
+	k8s.io/utils v0.0.0-20260210185600-b8788abfbbc2 // indirect
 )
