@@ -35,7 +35,7 @@ import (
 // https://github.com/knative/pkg/blob/main/version/version.go (without the
 // leading "v" — minikube's --kubernetes-version flag expects bare semver).
 // The verify-min-k8s-version CI check enforces this.
-var kubernetesVersion = "1.34.0"
+var kubernetesVersion = "1.35.0"
 var clusterName string
 var clusterVersionOverride bool
 var minikubeVersion = 1.37

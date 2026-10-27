@@ -35,7 +35,7 @@ import (
 // verify-min-k8s-version CI check enforces this. We only compare the major and
 // minor components at runtime; the patch component is kept so the literal
 // matches upstream's format for that check.
-var kubectlMinVersion = "1.34.0"
+var kubectlMinVersion = "1.35.0"
 
 // kubectlGitVersion matches the "vMAJOR.MINOR" prefix of kubectl's reported
 // git version, e.g. "v1.34.0" or "v1.33.2-eks-1234".
