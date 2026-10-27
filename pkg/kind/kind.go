@@ -41,7 +41,7 @@ import (
 // https://github.com/knative/pkg/blob/main/version/version.go — the
 // verify-min-k8s-version CI check enforces this.
 var (
-	kubernetesVersion  = "kindest/node:v1.34.0"
+	kubernetesVersion  = "kindest/node:v1.35.0"
 	clusterName        string
 	kindVersion        = 0.30
 	container_reg_name = "kind-registry"
