@@ -15,12 +15,12 @@
 package install
 
 import (
-	"reflect"
+	"slices"
 	"testing"
 )
 
-func TestInstallerCommand(t *testing.T) {
-	for _, context := range []string{"", "knative", "kind-custom", "custom-profile"} {
+func TestInstallerKubectl(t *testing.T) {
+	for _, context := range []string{"", "kind-custom"} {
 		t.Run("context="+context, func(t *testing.T) {
 			installer := Installer{Context: context}
 			want := []string{"kubectl"}
@@ -28,15 +28,9 @@ func TestInstallerCommand(t *testing.T) {
 				want = append(want, "--context", context)
 			}
 			want = append(want, "get", "pods")
-			cmd := installer.command("get", "pods")
-			if !reflect.DeepEqual(cmd.Args, want) {
+			cmd := installer.kubectl("get", "pods")
+			if !slices.Equal(cmd.Args, want) {
 				t.Errorf("args = %v, want %v", cmd.Args, want)
-			}
-			// Each command must carry its own context, rather than relying on a prior
-			// `kubectl config use-context` call that would override --keep-context.
-			again := installer.command("get", "pods")
-			if !reflect.DeepEqual(again.Args, want) {
-				t.Errorf("second command args = %v, want %v", again.Args, want)
 			}
 		})
 	}

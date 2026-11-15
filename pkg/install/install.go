@@ -77,7 +77,7 @@ func (i Installer) Kourier() error {
 	}
 	fmt.Println("    Kourier installed...")
 
-	ingress := i.command("patch", "configmap/config-network", "--namespace", "knative-serving", "--type", "merge", "--patch", "{\"data\":{\"ingress.class\":\"kourier.ingress.networking.knative.dev\"}}")
+	ingress := i.kubectl("patch", "configmap/config-network", "--namespace", "knative-serving", "--type", "merge", "--patch", "{\"data\":{\"ingress.class\":\"kourier.ingress.networking.knative.dev\"}}")
 	if err := runCommand(ingress); err != nil {
 		return fmt.Errorf("ingress error: %w", err)
 	}
@@ -109,7 +109,7 @@ spec:
       port: 80
       targetPort: 8080`
 
-	kourierIngress := i.command("apply", "-f", "-")
+	kourierIngress := i.kubectl("apply", "-f", "-")
 	kourierIngress.Stdin = strings.NewReader(config)
 	if err := runCommand(kourierIngress); err != nil {
 		return fmt.Errorf("kourier service: %w", err)
@@ -117,7 +117,7 @@ spec:
 
 	fmt.Println("    Kourier service installed...")
 
-	domainDns := i.command("patch", "configmap", "-n", "knative-serving", "config-domain", "-p", "{\"data\": {\"127.0.0.1.sslip.io\": \"\"}}")
+	domainDns := i.kubectl("patch", "configmap", "-n", "knative-serving", "config-domain", "-p", "{\"data\": {\"127.0.0.1.sslip.io\": \"\"}}")
 	if err := runCommand(domainDns); err != nil {
 		return fmt.Errorf("domain dns: %w", err)
 	}
@@ -175,7 +175,7 @@ func (i Installer) Serving(registries string) error {
 
 	if registries != "" {
 		configPatch := fmt.Sprintf(`{"data":{"registries-skipping-tag-resolving":"%s"}}`, registries)
-		ignoreRegistry := i.command("patch", "configmap", "-n", "knative-serving", "config-deployment", "-p", configPatch)
+		ignoreRegistry := i.kubectl("patch", "configmap", "-n", "knative-serving", "config-deployment", "-p", configPatch)
 		if err := runCommand(ignoreRegistry); err != nil {
 			return fmt.Errorf("tag resolving configuration: %w", err)
 		}
@@ -234,7 +234,7 @@ metadata:
  name: example-broker
  namespace: default`
 
-	exampleBroker := i.command("apply", "-f", "-")
+	exampleBroker := i.kubectl("apply", "-f", "-")
 	exampleBroker.Stdin = strings.NewReader(config)
 	if err := runCommand(exampleBroker); err != nil {
 		return fmt.Errorf("example broker: %w", err)
@@ -258,7 +258,7 @@ func runCommand(c *exec.Cmd) error {
 // for 10s between each try.
 func (i Installer) retryingApply(path string) error {
 	return retryCommand(func() *exec.Cmd {
-		return i.command("apply", "-f", path)
+		return i.kubectl("apply", "-f", path)
 	}, runCommand, time.Sleep)
 }
 
@@ -279,7 +279,7 @@ func retryCommand(command func() *exec.Cmd, run func(*exec.Cmd) error, sleep fun
 
 // waitForCRDsEstablished waits for all CRDs to be established.
 func (i Installer) waitForCRDsEstablished() error {
-	return runCommand(i.command("wait", "--for=condition=Established", "--all", "crd"))
+	return runCommand(i.kubectl("wait", "--for=condition=Established", "--all", "crd"))
 }
 
 // CheckKubectlVersion validates that the user has a recent enough version of
@@ -358,7 +358,7 @@ func parseKubectlVersion(jsonOut string) (int, int, error) {
 // Waiting for creation with a label selector requires kubectl >= 1.33.
 func (i Installer) waitForPodsReady(ns string) error {
 	return waitForPods(func(condition string) error {
-		return runCommand(i.command("wait", "pod", "--timeout=10m", "--for", condition, "-l", "!job-name", "-n", ns))
+		return runCommand(i.kubectl("wait", "pod", "--timeout=10m", "--for", condition, "-l", "!job-name", "-n", ns))
 	})
 }
 
@@ -378,7 +378,7 @@ func (i Installer) waitForWebhookReady() error {
 		// Check if the webhook service has ready endpointslices
 		// NOTE: We use 'kubectl get' instead of 'kubectl wait' because kubectl wait's JSONPath
 		// doesn't support checking if ANY endpoint is ready (wildcard [*] fails with multiple endpoints)
-		checkEndpointSlices := i.command("get", "endpointslice",
+		checkEndpointSlices := i.kubectl("get", "endpointslice",
 			"-l", "kubernetes.io/service-name=webhook",
 			"-n", "knative-serving",
 			"-o", "jsonpath={.items[*].endpoints[?(@.conditions.ready==true)]}")

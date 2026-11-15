@@ -22,28 +22,10 @@ type Installer struct {
 	Context string
 }
 
-func (i Installer) command(args ...string) *exec.Cmd {
+func (i Installer) kubectl(args ...string) *exec.Cmd {
 	if i.Context != "" {
 		args = append([]string{"--context", i.Context}, args...)
 	}
 	// #nosec G204 -- Fixed executable; arguments are passed directly, never through a shell.
 	return exec.Command("kubectl", args...)
 }
-
-// Keep the package-level entry points available to callers using the current
-// context. Quickstart uses an Installer with an explicit context instead.
-
-// Kourier installs Kourier using the current kubeconfig context.
-func Kourier() error { return (Installer{}).Kourier() }
-
-// KourierKind configures Kourier for Kind using the current kubeconfig context.
-func KourierKind() error { return (Installer{}).KourierKind() }
-
-// KourierMinikube configures Kourier for Minikube using the current context.
-func KourierMinikube() error { return (Installer{}).KourierMinikube() }
-
-// Serving installs Knative Serving using the current kubeconfig context.
-func Serving(registries string) error { return (Installer{}).Serving(registries) }
-
-// Eventing installs Knative Eventing using the current kubeconfig context.
-func Eventing() error { return (Installer{}).Eventing() }
