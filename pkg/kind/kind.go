@@ -82,6 +82,7 @@ func SetUp(name, kVersion string, installServing, installEventing, installKindRe
 	if installKnative {
 		// Creating a cluster selects its context, but reusing one does not.
 		// Fail before applying manifests if the requested context is unavailable.
+		// #nosec G204 -- Fixed executable; the context is one argument, not shell input.
 		if err := runCommandWithOutput(exec.Command("kubectl", "config", "use-context", "kind-"+clusterName)); err != nil {
 			return fmt.Errorf("failed to select kind cluster %s: %w", clusterName, err)
 		}
@@ -241,6 +242,7 @@ data:
   localRegistryHosting.v1: |
     host: "localhost:%s"
     help: "https://kind.sigs.k8s.io/docs/user/local-registry/"`, container_reg_port)
+	// #nosec G204 -- Fixed executable; the context is one argument, not shell input.
 	createLocalRegistryConfigMap := exec.Command("kubectl", "--context", "kind-"+clusterName, "apply", "-f", "-")
 
 	createLocalRegistryConfigMap.Stdin = strings.NewReader(cm)
@@ -302,6 +304,7 @@ func checkForExistingCluster(registry bool, extraMountHostPath string, extraMoun
 			}
 		} else {
 			fmt.Println("\n    Installation skipped")
+			// #nosec G204 -- Fixed executable; the context is one argument, not shell input.
 			checkKnativeNamespace := exec.Command("kubectl", "--context", "kind-"+clusterName, "get", "namespaces")
 			output, err := checkKnativeNamespace.CombinedOutput()
 			namespaces := string(output)
