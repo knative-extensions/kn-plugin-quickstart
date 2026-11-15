@@ -16,10 +16,7 @@ package install
 
 import (
 	"errors"
-	"os/exec"
-	"reflect"
 	"slices"
-	"strings"
 	"testing"
 )
 
@@ -29,36 +26,21 @@ func TestWaitForPods(t *testing.T) {
 		failAt string
 		want   []string
 	}{
-		{name: "creation before readiness", want: []string{"--for=create", "--for=condition=Ready"}},
-		{name: "creation failure", failAt: "--for=create", want: []string{"--for=create"}},
-		{name: "readiness failure", failAt: "--for=condition=Ready", want: []string{"--for=create", "--for=condition=Ready"}},
+		{name: "creation before readiness", want: []string{"create", "condition=Ready"}},
+		{name: "creation failure", failAt: "create", want: []string{"create"}},
+		{name: "readiness failure", failAt: "condition=Ready", want: []string{"create", "condition=Ready"}},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			failure := errors.New("wait failed")
 			var conditions []string
-			err := waitForPods("test-namespace",
-				func(args ...string) *exec.Cmd { return &exec.Cmd{Args: args} },
-				func(cmd *exec.Cmd) error {
-					var found []string
-					for _, arg := range cmd.Args {
-						if strings.HasPrefix(arg, "--for=") {
-							found = append(found, arg)
-						}
-					}
-					if len(found) != 1 {
-						t.Fatalf("want one condition per command, got %v", found)
-					}
-					if !slices.Contains(cmd.Args, "test-namespace") || !slices.Contains(cmd.Args, "!job-name") {
-						t.Errorf("missing namespace or selector: %v", cmd.Args)
-					}
-					conditions = append(conditions, found[0])
-					if found[0] == tt.failAt {
-						return failure
-					}
-					return nil
-				},
-			)
-			if !reflect.DeepEqual(conditions, tt.want) {
+			err := waitForPods(func(condition string) error {
+				conditions = append(conditions, condition)
+				if condition == tt.failAt {
+					return failure
+				}
+				return nil
+			})
+			if !slices.Equal(conditions, tt.want) {
 				t.Errorf("conditions = %v, want %v", conditions, tt.want)
 			}
 			if tt.failAt == "" {

@@ -349,16 +349,16 @@ func parseKubectlVersion(jsonOut string) (int, int, error) {
 // value, so passing it twice would only wait for the last condition.
 // Waiting for creation with a label selector requires kubectl >= 1.33.
 func waitForPodsReady(ns string) error {
-	return waitForPods(ns, func(args ...string) *exec.Cmd {
-		return exec.Command("kubectl", args...)
-	}, runCommand)
+	return waitForPods(func(condition string) error {
+		return runCommand(exec.Command("kubectl", "wait", "pod", "--timeout=10m", "--for", condition, "-l", "!job-name", "-n", ns))
+	})
 }
 
-func waitForPods(ns string, command func(...string) *exec.Cmd, run func(*exec.Cmd) error) error {
-	if err := run(command("wait", "pod", "--timeout=10m", "--for=create", "-l", "!job-name", "-n", ns)); err != nil {
+func waitForPods(wait func(condition string) error) error {
+	if err := wait("create"); err != nil {
 		return err
 	}
-	return run(command("wait", "pod", "--timeout=10m", "--for=condition=Ready", "-l", "!job-name", "-n", ns))
+	return wait("condition=Ready")
 }
 
 // waitForWebhookReady waits for the Knative Serving webhook to be ready.
