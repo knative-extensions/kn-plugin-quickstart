@@ -16,6 +16,7 @@ package minikube
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"regexp"
@@ -91,11 +92,7 @@ func SetUp(name, kVersion string, installServing, installEventing bool, minikube
 	if err := createMinikubeCluster(); err != nil {
 		return fmt.Errorf("failed to create minikube cluster: %w", err)
 	}
-	fmt.Print("\n")
-	fmt.Println("To finish setting up networking for minikube, run the following command in a separate terminal window:")
-	fmt.Println("    minikube tunnel --profile knative")
-	fmt.Println("The tunnel command must be running in a terminal window any time when using the knative quickstart environment.")
-	fmt.Println("\nPress the Enter key to continue")
+	printTunnelInstructions(os.Stdout, clusterName)
 	fmt.Scanln()
 	if installKnative {
 		if installServing {
@@ -121,6 +118,13 @@ func SetUp(name, kVersion string, installServing, installEventing bool, minikube
 	fmt.Println("🎉 Now have some fun with Serverless and Event Driven Apps!")
 
 	return nil
+}
+
+func printTunnelInstructions(out io.Writer, profile string) {
+	fmt.Fprintln(out, "\nTo finish setting up networking for minikube, run the following command in a separate terminal window:")
+	fmt.Fprintf(out, "    minikube tunnel --profile %s\n", profile)
+	fmt.Fprintln(out, "The tunnel command must be running in a terminal window any time when using the knative quickstart environment.")
+	fmt.Fprintln(out, "\nPress the Enter key to continue")
 }
 
 func createMinikubeCluster() error {
