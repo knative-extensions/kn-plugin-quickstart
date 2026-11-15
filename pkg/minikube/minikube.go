@@ -82,6 +82,11 @@ func SetUp(name, kVersion string, installServing, installEventing bool, minikube
 	fmt.Println("\nPress the Enter key to continue")
 	fmt.Scanln()
 	if installKnative {
+		// Reusing a profile (or starting with --keep-context) does not select
+		// its context. Never install into an unrelated current context.
+		if err := runCommandWithOutput(exec.Command("kubectl", "config", "use-context", clusterName)); err != nil {
+			return fmt.Errorf("failed to select minikube cluster %s: %w", clusterName, err)
+		}
 		if installServing {
 			if err := install.Serving(""); err != nil {
 				return fmt.Errorf("failed to install serving to minikube cluster %s: %w", clusterName, err)
@@ -172,7 +177,7 @@ func checkForExistingCluster() error {
 		fmt.Scanf("%s", &resp)
 		if strings.ToLower(resp) != "y" {
 			fmt.Println("Installation skipped")
-			checkKnativeNamespace := exec.Command("kubectl", "get", "namespaces")
+			checkKnativeNamespace := exec.Command("kubectl", "--context", clusterName, "get", "namespaces")
 			output, err := checkKnativeNamespace.CombinedOutput()
 			namespaces := string(output)
 			if err != nil {
