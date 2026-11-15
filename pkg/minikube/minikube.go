@@ -16,7 +16,6 @@ package minikube
 
 import (
 	"fmt"
-	"io"
 	"os"
 	"os/exec"
 	"regexp"
@@ -63,25 +62,9 @@ func SetUp(name, kVersion string, installServing, installEventing bool, minikube
 		os.Exit(1)
 	}
 
-	clusterName = name
+	clusterName = profileName(name, minikubeArgs)
 	if len(minikubeArgs) > 0 {
 		customMinikubeArgs = minikubeArgs
-		// check custom flags for name, as that takes precedent and affects functionality the most (most recent)
-		for i, arg := range slices.Backward(minikubeArgs) {
-			customArg, value := parseArg(arg)
-			if customArg == "-p" || customArg == "--profile" {
-				// use value from equal sign if it is there
-				if value != "" {
-					clusterName = value
-				} else if i+1 >= len(customMinikubeArgs) {
-					// edge case, but continue if not filled in and let minikube throw an error for empty arg
-					continue
-				} else {
-					clusterName = customMinikubeArgs[i+1]
-				}
-				break
-			}
-		}
 	}
 
 	if kVersion != "" {
@@ -92,7 +75,11 @@ func SetUp(name, kVersion string, installServing, installEventing bool, minikube
 	if err := createMinikubeCluster(); err != nil {
 		return fmt.Errorf("failed to create minikube cluster: %w", err)
 	}
-	printTunnelInstructions(os.Stdout, clusterName)
+	fmt.Print("\n")
+	fmt.Println("To finish setting up networking for minikube, run the following command in a separate terminal window:")
+	fmt.Printf("    minikube tunnel --profile %s\n", clusterName)
+	fmt.Println("The tunnel command must be running in a terminal window any time when using the knative quickstart environment.")
+	fmt.Println("\nPress the Enter key to continue")
 	fmt.Scanln()
 	if installKnative {
 		if installServing {
@@ -118,13 +105,6 @@ func SetUp(name, kVersion string, installServing, installEventing bool, minikube
 	fmt.Println("🎉 Now have some fun with Serverless and Event Driven Apps!")
 
 	return nil
-}
-
-func printTunnelInstructions(out io.Writer, profile string) {
-	fmt.Fprintln(out, "\nTo finish setting up networking for minikube, run the following command in a separate terminal window:")
-	fmt.Fprintf(out, "    minikube tunnel --profile %s\n", profile)
-	fmt.Fprintln(out, "The tunnel command must be running in a terminal window any time when using the knative quickstart environment.")
-	fmt.Fprintln(out, "\nPress the Enter key to continue")
 }
 
 func createMinikubeCluster() error {
@@ -312,6 +292,25 @@ func recreateCluster() error {
 		return fmt.Errorf("%w", err)
 	}
 	return nil
+}
+
+// profileName resolves the name used by both cluster setup and tunnel instructions.
+// The last passthrough profile flag takes precedence over quickstart's --name.
+func profileName(name string, args []string) string {
+	for index, arg := range slices.Backward(args) {
+		flag, value := parseArg(arg)
+		if flag != "-p" && flag != "--profile" {
+			continue
+		}
+		if value != "" {
+			return value
+		}
+		if index+1 < len(args) {
+			return args[index+1]
+		}
+		// Leave a missing value for minikube to report as an error.
+	}
+	return name
 }
 
 func parseArg(arg string) (string, string) {
