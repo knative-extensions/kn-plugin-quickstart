@@ -112,8 +112,7 @@ func SetUp(name, kVersion string, installServing, installEventing, installKindRe
 }
 
 func createKindCluster(registry bool, extraMountHostPath string, extraMountContainerPath string, hostPort int) error {
-	dcli, err := checkDocker()
-	if err != nil {
+	if _, err := checkDocker(); err != nil {
 		return err
 	}
 	fmt.Println("✅ Checking dependencies...")
@@ -123,15 +122,9 @@ func createKindCluster(registry bool, extraMountHostPath string, extraMountConta
 	if err := install.CheckKubectlVersion(); err != nil {
 		return fmt.Errorf("unable to check kubectl version: %w", err)
 	}
-	if registry {
-		fmt.Println("💽 Installing local registry...")
-		if err := pullLocalRegistryImage(dcli); err != nil {
-			return fmt.Errorf("%w", err)
-		}
-		if err := createLocalRegistry(dcli); err != nil {
-			return fmt.Errorf("%w", err)
-		}
-	} else {
+	// Do not change the registry until the user has decided whether to
+	// recreate an existing cluster. Declining must leave its registry intact.
+	if !registry {
 		// temporary warning that registry creation is now opt-in
 		// remove in v1.12
 		fmt.Println("\nA local registry is no longer created by default.")
@@ -178,6 +171,17 @@ func pullLocalRegistryImage(dcli *dclient.Client) error {
 		return fmt.Errorf("failed to read image pull response: %w", err)
 	}
 	return nil
+}
+
+func installLocalRegistry(dcli *dclient.Client) error {
+	fmt.Println("💽 Installing local registry...")
+	if err := pullLocalRegistryImage(dcli); err != nil {
+		return err
+	}
+	if err := createLocalRegistry(dcli); err != nil {
+		return err
+	}
+	return connectLocalRegistry(dcli)
 }
 
 func createLocalRegistry(dcli *dclient.Client) error {
@@ -325,10 +329,7 @@ func checkForExistingCluster(registry bool, extraMountHostPath string, extraMoun
 			return fmt.Errorf("%w", err)
 		}
 		if registry {
-			if err := createLocalRegistry(dcli); err != nil {
-				return fmt.Errorf("%w", err)
-			}
-			if err := connectLocalRegistry(dcli); err != nil {
+			if err := installLocalRegistry(dcli); err != nil {
 				return fmt.Errorf("local-registry: %w", err)
 			}
 		}
@@ -350,18 +351,12 @@ func recreateCluster(registry bool, extraMountHostPath string, extraMountContain
 	if err := deleteCluster.Run(); err != nil {
 		return fmt.Errorf("failed to delete kind cluster %s: %w", clusterName, err)
 	}
-	if err := deleteContainerRegistry(dcli); err != nil {
-		return fmt.Errorf("failed to delete container registry: %w", err)
-	}
 	if err := createNewCluster(extraMountHostPath, extraMountContainerPath, hostPort); err != nil {
 		return fmt.Errorf("%w", err)
 	}
 	if registry {
-		if err := createLocalRegistry(dcli); err != nil {
-			return fmt.Errorf("%w", err)
-		}
-		if err := connectLocalRegistry(dcli); err != nil {
-			return fmt.Errorf("unable to connect local-registry: %w", err)
+		if err := installLocalRegistry(dcli); err != nil {
+			return fmt.Errorf("local-registry: %w", err)
 		}
 	}
 	return nil
