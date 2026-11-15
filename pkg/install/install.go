@@ -257,14 +257,16 @@ func runCommand(c *exec.Cmd) error {
 // retryingApply retries a kubectl apply call with the given path 3 times, sleeping
 // for 10s between each try.
 func retryingApply(path string) error {
-	cmd := exec.Command("kubectl", "apply", "-f", path)
 	var err error
 	for i := 0; i < 3; i++ {
-		err = runCommand(cmd)
+		// An exec.Cmd cannot be run more than once, even if its first run fails.
+		err = runCommand(exec.Command("kubectl", "apply", "-f", path))
 		if err == nil {
-			break
+			return nil
 		}
-		time.Sleep(10 * time.Second)
+		if i < 2 {
+			time.Sleep(10 * time.Second)
+		}
 	}
 	return err
 }
