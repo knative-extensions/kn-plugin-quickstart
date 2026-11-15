@@ -82,24 +82,20 @@ func SetUp(name, kVersion string, installServing, installEventing bool, minikube
 	fmt.Println("\nPress the Enter key to continue")
 	fmt.Scanln()
 	if installKnative {
-		// Reusing a profile (or starting with --keep-context) does not select
-		// its context. Never install into an unrelated current context.
-		if err := runCommandWithOutput(exec.Command("kubectl", "config", "use-context", clusterName)); err != nil {
-			return fmt.Errorf("failed to select minikube cluster %s: %w", clusterName, err)
-		}
+		installer := install.Installer{Context: clusterName}
 		if installServing {
-			if err := install.Serving(""); err != nil {
+			if err := installer.Serving(""); err != nil {
 				return fmt.Errorf("failed to install serving to minikube cluster %s: %w", clusterName, err)
 			}
-			if err := install.Kourier(); err != nil {
+			if err := installer.Kourier(); err != nil {
 				return fmt.Errorf("failed to install kourier to minikube cluster %s: %w", clusterName, err)
 			}
-			if err := install.KourierMinikube(); err != nil {
+			if err := installer.KourierMinikube(); err != nil {
 				return fmt.Errorf("failed while configuring kourier for minikube cluster %s: %w", clusterName, err)
 			}
 		}
 		if installEventing {
-			if err := install.Eventing(); err != nil {
+			if err := installer.Eventing(); err != nil {
 				return fmt.Errorf("failed to install eventing to minikube cluster %s: %w", clusterName, err)
 			}
 		}
