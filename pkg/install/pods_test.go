@@ -15,59 +15,58 @@
 package install
 
 import (
-	"os"
-	"path/filepath"
-	"runtime"
+	"errors"
+	"os/exec"
+	"reflect"
+	"slices"
 	"strings"
 	"testing"
 )
 
-func TestWaitForPodsReady(t *testing.T) {
-	if runtime.GOOS == "windows" {
-		t.Skip("fake kubectl uses a shell script")
-	}
-	create := "wait pod --timeout=10m --for=create -l !job-name -n knative-serving"
-	ready := "wait pod --timeout=10m --for=condition=Ready -l !job-name -n knative-serving"
+func TestWaitForPods(t *testing.T) {
 	for _, tt := range []struct {
-		name          string
-		failCondition string
-		wantCalls     []string
-		wantErr       bool
+		name   string
+		failAt string
+		want   []string
 	}{
-		{name: "creation precedes readiness", wantCalls: []string{create, ready}},
-		{name: "creation failure stops readiness wait", failCondition: "--for=create", wantCalls: []string{create}, wantErr: true},
-		{name: "readiness failure is returned", failCondition: "--for=condition=Ready", wantCalls: []string{create, ready}, wantErr: true},
+		{name: "creation before readiness", want: []string{"--for=create", "--for=condition=Ready"}},
+		{name: "creation failure", failAt: "--for=create", want: []string{"--for=create"}},
+		{name: "readiness failure", failAt: "--for=condition=Ready", want: []string{"--for=create", "--for=condition=Ready"}},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
-			dir := t.TempDir()
-			calls := filepath.Join(dir, "calls")
-			t.Setenv("PATH", dir+string(os.PathListSeparator)+os.Getenv("PATH"))
-			t.Setenv("QUICKSTART_TEST_CALLS", calls)
-			t.Setenv("QUICKSTART_TEST_FAIL_CONDITION", tt.failCondition)
-			script := `#!/bin/sh
-printf '%s\n' "$*" >> "$QUICKSTART_TEST_CALLS"
-conditions=0
-for arg in "$@"; do
- case "$arg" in --for=*) conditions=$((conditions + 1));; esac
- if [ "$arg" = "$QUICKSTART_TEST_FAIL_CONDITION" ]; then exit 1; fi
-done
-# kubectl only honors the last --for value; reject this misuse explicitly.
-[ "$conditions" -eq 1 ]
-`
-			if err := os.WriteFile(filepath.Join(dir, "kubectl"), []byte(script), 0755); err != nil {
-				t.Fatal(err)
+			failure := errors.New("wait failed")
+			var conditions []string
+			err := waitForPods("test-namespace",
+				func(args ...string) *exec.Cmd { return &exec.Cmd{Args: args} },
+				func(cmd *exec.Cmd) error {
+					var found []string
+					for _, arg := range cmd.Args {
+						if strings.HasPrefix(arg, "--for=") {
+							found = append(found, arg)
+						}
+					}
+					if len(found) != 1 {
+						t.Fatalf("want one condition per command, got %v", found)
+					}
+					if !slices.Contains(cmd.Args, "test-namespace") || !slices.Contains(cmd.Args, "!job-name") {
+						t.Errorf("missing namespace or selector: %v", cmd.Args)
+					}
+					conditions = append(conditions, found[0])
+					if found[0] == tt.failAt {
+						return failure
+					}
+					return nil
+				},
+			)
+			if !reflect.DeepEqual(conditions, tt.want) {
+				t.Errorf("conditions = %v, want %v", conditions, tt.want)
 			}
-			err := waitForPodsReady("knative-serving")
-			if (err != nil) != tt.wantErr {
-				t.Errorf("waitForPodsReady() error = %v, wantErr %v", err, tt.wantErr)
-			}
-			out, err := os.ReadFile(calls)
-			if err != nil {
-				t.Fatal(err)
-			}
-			want := strings.Join(tt.wantCalls, "\n") + "\n"
-			if string(out) != want {
-				t.Errorf("kubectl calls = %q, want %q", out, want)
+			if tt.failAt == "" {
+				if err != nil {
+					t.Errorf("unexpected error: %v", err)
+				}
+			} else if !errors.Is(err, failure) {
+				t.Errorf("error = %v, want original error", err)
 			}
 		})
 	}
