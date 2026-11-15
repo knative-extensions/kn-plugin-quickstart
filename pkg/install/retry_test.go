@@ -15,60 +15,58 @@
 package install
 
 import (
-	"os"
-	"path/filepath"
-	"runtime"
-	"strconv"
-	"strings"
+	"errors"
+	"os/exec"
 	"testing"
+	"time"
 )
 
-func TestRetryingApply(t *testing.T) {
-	if runtime.GOOS == "windows" {
-		t.Skip("fake kubectl uses a shell script")
-	}
+func TestRetryCommand(t *testing.T) {
 	for _, tt := range []struct {
 		name      string
-		failures  string
+		failures  int
 		wantCalls int
 		wantErr   bool
 	}{
-		{name: "first attempt succeeds", failures: "0", wantCalls: 1},
-		{name: "transient failure", failures: "1", wantCalls: 2},
-		{name: "attempts exhausted", failures: "3", wantCalls: 3, wantErr: true},
+		{name: "immediate success", wantCalls: 1},
+		{name: "transient failure", failures: 1, wantCalls: 2},
+		{name: "attempts exhausted", failures: 3, wantCalls: 3, wantErr: true},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
-			dir := t.TempDir()
-			calls := filepath.Join(dir, "calls")
-			t.Setenv("PATH", dir+string(os.PathListSeparator)+os.Getenv("PATH"))
-			t.Setenv("QUICKSTART_TEST_CALLS", calls)
-			t.Setenv("QUICKSTART_TEST_FAILURES", tt.failures)
-			script := `#!/bin/sh
-count=0
-if [ -f "$QUICKSTART_TEST_CALLS" ]; then
- read -r count < "$QUICKSTART_TEST_CALLS"
-fi
-count=$((count + 1))
-printf '%s\n' "$count" > "$QUICKSTART_TEST_CALLS"
-if [ "$*" != 'apply -f test.yaml' ]; then exit 99; fi
-if [ "$count" -le "$QUICKSTART_TEST_FAILURES" ]; then exit 1; fi
-`
-			if err := os.WriteFile(filepath.Join(dir, "kubectl"), []byte(script), 0755); err != nil {
-				t.Fatal(err)
-			}
-			err := retryingApply("test.yaml")
+			failure := errors.New("apply failed")
+			calls, sleeps := 0, 0
+			seen := map[*exec.Cmd]bool{}
+			err := retryCommand(
+				func() *exec.Cmd { return &exec.Cmd{} },
+				func(cmd *exec.Cmd) error {
+					if seen[cmd] {
+						t.Error("reused a command")
+					}
+					seen[cmd] = true
+					calls++
+					if calls <= tt.failures {
+						return failure
+					}
+					return nil
+				},
+				func(delay time.Duration) {
+					sleeps++
+					if delay != 10*time.Second {
+						t.Errorf("delay = %s, want 10s", delay)
+					}
+				},
+			)
 			if (err != nil) != tt.wantErr {
-				t.Fatalf("retryingApply() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("error = %v, wantErr %v", err, tt.wantErr)
 			}
-			if err != nil && err.Error() != "exit status 1" {
-				t.Fatalf("got %v, want the final kubectl error", err)
+			if tt.wantErr && !errors.Is(err, failure) {
+				t.Errorf("error = %v, want original error", err)
 			}
-			out, readErr := os.ReadFile(calls)
-			if readErr != nil {
-				t.Fatal(readErr)
+			if calls != tt.wantCalls {
+				t.Errorf("calls = %d, want %d", calls, tt.wantCalls)
 			}
-			if got := strings.TrimSpace(string(out)); got != strconv.Itoa(tt.wantCalls) {
-				t.Errorf("kubectl ran %s times, want %d", got, tt.wantCalls)
+			if sleeps != tt.wantCalls-1 {
+				t.Errorf("sleeps = %d, want %d", sleeps, tt.wantCalls-1)
 			}
 		})
 	}
