@@ -103,8 +103,11 @@ kn quickstart minikube
 Note: for Windows/Mac users, after the above command completes, you will need to run the following in a separate terminal window:
 
 ``` bash
-minikube tunnel --profile minikube-knative
+minikube tunnel --profile knative
 ```
+
+If you selected a custom cluster name with `--name` or passed a Minikube
+`--profile` after `--`, use that profile name instead of `knative`.
 
 ## Building from Source
 
