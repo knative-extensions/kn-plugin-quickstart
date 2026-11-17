@@ -80,6 +80,7 @@ func SetUp(name, kVersion string, installServing, installEventing, installKindRe
 		return fmt.Errorf("failed to create kind cluster: %w", err)
 	}
 	if installKnative {
+		installer := install.Installer{Context: "kind-" + clusterName}
 		if installServing {
 			// Disable tag resolution for localhost registry, since there's no
 			// way to redirect Knative Serving to use the kind-registry name.
@@ -88,18 +89,18 @@ func SetUp(name, kVersion string, installServing, installEventing, installKindRe
 			if installKindRegistry {
 				registries = fmt.Sprintf("localhost:%s", container_reg_port)
 			}
-			if err := install.Serving(registries); err != nil {
+			if err := installer.Serving(registries); err != nil {
 				return fmt.Errorf("failed to install serving to kind cluster %s: %w", clusterName, err)
 			}
-			if err := install.Kourier(); err != nil {
+			if err := installer.Kourier(); err != nil {
 				return fmt.Errorf("failed to install kourier to kind cluster %s: %w", clusterName, err)
 			}
-			if err := install.KourierKind(); err != nil {
+			if err := installer.KourierKind(); err != nil {
 				return fmt.Errorf("failed while configuring kourier for kind cluster %s: %w", clusterName, err)
 			}
 		}
 		if installEventing {
-			if err := install.Eventing(); err != nil {
+			if err := installer.Eventing(); err != nil {
 				return fmt.Errorf("failed to install eventing to king cluster %s: %w", clusterName, err)
 			}
 		}
@@ -236,7 +237,8 @@ data:
   localRegistryHosting.v1: |
     host: "localhost:%s"
     help: "https://kind.sigs.k8s.io/docs/user/local-registry/"`, container_reg_port)
-	createLocalRegistryConfigMap := exec.Command("kubectl", "apply", "-f", "-")
+	// #nosec G204 -- Fixed executable; the context is one argument, not shell input.
+	createLocalRegistryConfigMap := exec.Command("kubectl", "--context", "kind-"+clusterName, "apply", "-f", "-")
 
 	createLocalRegistryConfigMap.Stdin = strings.NewReader(cm)
 	// }
@@ -297,7 +299,8 @@ func checkForExistingCluster(registry bool, extraMountHostPath string, extraMoun
 			}
 		} else {
 			fmt.Println("\n    Installation skipped")
-			checkKnativeNamespace := exec.Command("kubectl", "get", "namespaces")
+			// #nosec G204 -- Fixed executable; the context is one argument, not shell input.
+			checkKnativeNamespace := exec.Command("kubectl", "--context", "kind-"+clusterName, "get", "namespaces")
 			output, err := checkKnativeNamespace.CombinedOutput()
 			namespaces := string(output)
 			if err != nil {

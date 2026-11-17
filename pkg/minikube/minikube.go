@@ -82,19 +82,20 @@ func SetUp(name, kVersion string, installServing, installEventing bool, minikube
 	fmt.Println("\nPress the Enter key to continue")
 	fmt.Scanln()
 	if installKnative {
+		installer := install.Installer{Context: clusterName}
 		if installServing {
-			if err := install.Serving(""); err != nil {
+			if err := installer.Serving(""); err != nil {
 				return fmt.Errorf("failed to install serving to minikube cluster %s: %w", clusterName, err)
 			}
-			if err := install.Kourier(); err != nil {
+			if err := installer.Kourier(); err != nil {
 				return fmt.Errorf("failed to install kourier to minikube cluster %s: %w", clusterName, err)
 			}
-			if err := install.KourierMinikube(); err != nil {
+			if err := installer.KourierMinikube(); err != nil {
 				return fmt.Errorf("failed while configuring kourier for minikube cluster %s: %w", clusterName, err)
 			}
 		}
 		if installEventing {
-			if err := install.Eventing(); err != nil {
+			if err := installer.Eventing(); err != nil {
 				return fmt.Errorf("failed to install eventing to minikube cluster %s: %w", clusterName, err)
 			}
 		}
@@ -172,7 +173,7 @@ func checkForExistingCluster() error {
 		fmt.Scanf("%s", &resp)
 		if strings.ToLower(resp) != "y" {
 			fmt.Println("Installation skipped")
-			checkKnativeNamespace := exec.Command("kubectl", "get", "namespaces")
+			checkKnativeNamespace := exec.Command("kubectl", "--context", clusterName, "get", "namespaces")
 			output, err := checkKnativeNamespace.CombinedOutput()
 			namespaces := string(output)
 			if err != nil {
