@@ -343,14 +343,22 @@ func parseKubectlVersion(jsonOut string) (int, int, error) {
 
 // waitForPodsReady waits for all pods in the given namespace to be ready.
 //
-// We pass both --for=create and --for=condition=Ready because kubectl wait
-// exits immediately with "no matching resources found" when no pods match the
-// selector yet (e.g. the deployment controller hasn't created them). --for=create
-// is always evaluated first, so this waits for the pods to appear and then for
-// them to become Ready. This requires kubectl >= 1.33 for label-selector waits,
-// which is within the versions this plugin already supports.
+// First wait for pods to appear, since a readiness wait exits immediately with
+// "no matching resources found" if the deployment controller hasn't created
+// them yet. These must be separate commands: kubectl's --for flag takes a single
+// value, so passing it twice would only wait for the last condition.
+// Waiting for creation with a label selector requires kubectl >= 1.33.
 func waitForPodsReady(ns string) error {
-	return runCommand(exec.Command("kubectl", "wait", "pod", "--timeout=10m", "--for=create", "--for=condition=Ready", "-l", "!job-name", "-n", ns))
+	return waitForPods(func(condition string) error {
+		return runCommand(exec.Command("kubectl", "wait", "pod", "--timeout=10m", "--for", condition, "-l", "!job-name", "-n", ns))
+	})
+}
+
+func waitForPods(wait func(condition string) error) error {
+	if err := wait("create"); err != nil {
+		return err
+	}
+	return wait("condition=Ready")
 }
 
 // waitForWebhookReady waits for the Knative Serving webhook to be ready.
