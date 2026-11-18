@@ -213,10 +213,10 @@ k8s.io/klog/v2/textlogger
 # k8s.io/utils v0.0.0-20260210185600-b8788abfbbc2
 ## explicit; go 1.23
 k8s.io/utils/clock
-# knative.dev/client/pkg v0.0.0-20261027143018-f2bfc7f36474
+# knative.dev/client/pkg v0.0.0-20261110135620-8f0ac119c59f
 ## explicit; go 1.26.0
 knative.dev/client/pkg/config
 knative.dev/client/pkg/plugin
-# knative.dev/hack v0.0.0-20261023132104-4a15c76c8f70
+# knative.dev/hack v0.0.0-20261118025754-120c8f556283
 ## explicit; go 1.24
 knative.dev/hack

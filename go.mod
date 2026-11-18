@@ -7,8 +7,8 @@ require (
 	github.com/docker/go-connections v0.5.0
 	github.com/spf13/cobra v1.10.2
 	gotest.tools/v3 v3.5.2
-	knative.dev/client/pkg v0.0.0-20261027143018-f2bfc7f36474
-	knative.dev/hack v0.0.0-20261023132104-4a15c76c8f70
+	knative.dev/client/pkg v0.0.0-20261110135620-8f0ac119c59f
+	knative.dev/hack v0.0.0-20261118025754-120c8f556283
 )
 
 require (
