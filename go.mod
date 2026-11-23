@@ -8,7 +8,7 @@ require (
 	github.com/spf13/cobra v1.10.2
 	gotest.tools/v3 v3.5.2
 	knative.dev/client/pkg v0.0.0-20261110135620-8f0ac119c59f
-	knative.dev/hack v0.0.0-20261118025754-120c8f556283
+	knative.dev/hack v0.0.0-20261120142159-5e9b644b541f
 )
 
 require (
